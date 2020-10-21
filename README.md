@@ -13,6 +13,7 @@
 API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 ### Dockerfile environmental variables
+### production / development db url: ai2020-backdb:5432
 - POSTGRES_URL (default: localhost:5432)
 - POSTGRES_USER (default: admin)
 - POSTGRES_PASSWORD (default: admin)
