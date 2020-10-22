@@ -17,5 +17,5 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - POSTGRES_URL (default: localhost:5432)
 - POSTGRES_USER (default: admin)
 - POSTGRES_PASSWORD (default: admin)
-
+- POSTGRES_DB (default: postgres)
 
