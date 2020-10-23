@@ -1,4 +1,4 @@
-package com.project.stockexchangeappbackend.Entities;
+package com.project.stockexchangeappbackend.entity;
 
 import lombok.*;
 
@@ -16,15 +16,14 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
-    private Integer id;
+    @GeneratedValue(generator = "ORDER_SEQUENCE")
+    private Long id;
 
-    @ManyToOne(targetEntity = User.class, fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @ManyToOne(targetEntity = User.class)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(targetEntity = Stock.class, fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @ManyToOne(targetEntity = Stock.class)
     @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 
@@ -49,9 +48,9 @@ public class Order {
     @Column(nullable = false, name = "date_closing")
     private OffsetDateTime dateClosing;
 
-    @OneToMany(targetEntity = Transaction.class, mappedBy = "order", cascade = CascadeType.ALL)
-    private List<Transaction> buyingOrder;
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "order")
+    private List<Transaction> buyingOrders;
 
-    @OneToMany(targetEntity = Transaction.class, mappedBy = "order", cascade = CascadeType.ALL)
-    private List<Transaction> sellingOrder;
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "order")
+    private List<Transaction> sellingOrders;
 }

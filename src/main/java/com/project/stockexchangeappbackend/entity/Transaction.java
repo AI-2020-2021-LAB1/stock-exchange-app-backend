@@ -1,8 +1,9 @@
-package com.project.stockexchangeappbackend.Entities;
+package com.project.stockexchangeappbackend.entity;
 
 import lombok.*;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Getter
@@ -15,9 +16,8 @@ import java.time.OffsetDateTime;
 public class Transaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
-    private Integer id;
+    @GeneratedValue(generator = "TRANSACTION_SEQUENCE")
+    private Long id;
 
     @Column(nullable = false, name = "date")
     private OffsetDateTime date;
@@ -25,14 +25,14 @@ public class Transaction {
     @Column(nullable = false, name = "amount")
     private Integer amount;
 
-    @Column(nullable = false, name = "unit_price")
-    private Double unitPrice;
+    @Column(nullable = false, name = "unit_price", precision = 14, scale = 2)
+    private BigDecimal unitPrice;
 
-    @ManyToOne(targetEntity = Order.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = Order.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "order_id", nullable = false)
     private Order buyingOrder;
 
-    @ManyToOne(targetEntity = Order.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @ManyToOne(targetEntity = Order.class, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "order_id", nullable = false)
     private Order sellingOrder;
 }

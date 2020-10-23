@@ -1,9 +1,9 @@
-package com.project.stockexchangeappbackend.Entities;
+package com.project.stockexchangeappbackend.entity;
 
 import lombok.*;
 
-//import javax.validation.constraints.Email;
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -16,9 +16,8 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, name = "ID", nullable = false)
-    private Integer id;
+    @GeneratedValue(generator = "USER_SEQUENCE")
+    private Long id;
 
     @Column(nullable = false, name = "first_name")
     private String firstName;
@@ -27,21 +26,21 @@ public class User {
     private String lastName;
 
     @Column(nullable = true, name = "email")
-    //@Email
     private String email;
 
     @Column(nullable = false, name = "password")
     private String password;
 
     @Column(nullable = false, name = "role")
+    @Enumerated(EnumType.STRING)
     private String role;
 
-    @Column(nullable = false, name = "money")
-    private Double money;
+    @Column(nullable = false, name = "money", precision = 14, scale = 2)
+    private BigDecimal money;
 
-    @OneToMany(targetEntity = Order.class, mappedBy = "user", cascade = CascadeType.REMOVE)
+    @OneToMany(targetEntity = Order.class, mappedBy = "user")
     private List<Order> orders;
 
-    @OneToMany(targetEntity = UserStock.class, mappedBy = "user", cascade = CascadeType.REMOVE)
-    private List<UserStock> userStocks;
+    @OneToMany(targetEntity = Resource.class, mappedBy = "user", cascade = CascadeType.REMOVE)
+    private List<Resource> userStocks;
 }
