@@ -29,10 +29,11 @@ public class Transaction {
     private BigDecimal unitPrice;
 
     @ManyToOne(targetEntity = Order.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "order_id", nullable = false, updatable = false, referencedColumnName = "ID")
+    @JoinColumn(name = "buying_order_id", nullable = false, updatable = false, referencedColumnName = "ID")
     private Order buyingOrder;
 
     @ManyToOne(targetEntity = Order.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "order_id", nullable = false, updatable = false, referencedColumnName = "ID")
+    @JoinColumn(name = "selling_order_id", nullable = false, updatable = false, referencedColumnName = "ID")
     private Order sellingOrder;
+
 }

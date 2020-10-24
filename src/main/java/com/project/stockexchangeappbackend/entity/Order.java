@@ -50,9 +50,10 @@ public class Order {
     @Column(nullable = false, name = "date_closing")
     private OffsetDateTime dateClosing;
 
-    @OneToMany(targetEntity = Transaction.class, mappedBy = "order")
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "buyingOrder")
     private List<Transaction> buyingOrders;
 
-    @OneToMany(targetEntity = Transaction.class, mappedBy = "order")
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "sellingOrder")
     private List<Transaction> sellingOrders;
+
 }

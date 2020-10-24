@@ -43,4 +43,5 @@ public class User {
 
     @OneToMany(targetEntity = Resource.class, mappedBy = "user")
     private List<Resource> userStocks;
+
 }
