@@ -34,7 +34,6 @@ public class UserServiceImpl implements UserService {
                 .lastName(registrationUserDTO.getLastName().trim())
                 .role(Role.USER)
                 .money(BigDecimal.ZERO)
-                .password(passwordEncoder.encode(registrationUserDTO.getPassword()))
                 .build());
        log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
     }

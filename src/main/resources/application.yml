@@ -17,3 +17,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:/db/migration
+
+security:
+  oauth2:
+    client:
+      client-id: ${CLIENT_ID:clientId}
+      client-secret: ${CLIENT_SECRET:clientSecret}
