@@ -27,4 +27,5 @@ public class Resource {
 
     @Column(nullable = false, name = "amount")
     private Integer amount;
+
 }

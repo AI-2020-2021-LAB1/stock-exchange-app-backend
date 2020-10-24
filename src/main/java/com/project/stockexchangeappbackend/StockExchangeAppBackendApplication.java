@@ -6,8 +6,8 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.E
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 
 @SpringBootApplication
-@EnableAuthorizationServer
-@EnableResourceServer
+//@EnableAuthorizationServer
+//@EnableResourceServer
 public class StockExchangeAppBackendApplication {
 
 	public static void main(String[] args) {

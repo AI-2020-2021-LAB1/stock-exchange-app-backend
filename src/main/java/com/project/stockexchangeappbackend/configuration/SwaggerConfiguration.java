@@ -19,7 +19,7 @@ public class SwaggerConfiguration {
         return new Docket(DocumentationType.SWAGGER_2)
                 .useDefaultResponseMessages(false)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("com.project.stockexchangeappbackend.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.project.stockexchangeappbackend.rest"))
                 .paths(PathSelectors.regex("/.*"))
                 .build()
                 .apiInfo(swaggerApiInfo());
