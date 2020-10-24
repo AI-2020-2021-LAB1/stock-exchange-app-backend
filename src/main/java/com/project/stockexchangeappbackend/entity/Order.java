@@ -35,22 +35,11 @@ public class Order {
 
     @Column(nullable = false, name = "type")
     @Enumerated(EnumType.STRING)
-    private Type type;
-
-    public enum Type {
-        BUYING_ORDER,
-        SELLING_ORDER
-    }
+    private OrderType orderType;
 
     @Column(nullable = false, name = "price_type")
     @Enumerated(EnumType.STRING)
     private PriceType priceType;
-
-    public enum PriceType {
-        EQUAL,
-        GREATER_OR_EQUAL,
-        LESS_OR_EQUAL
-    }
 
     @Column(nullable = false, name = "date_creation")
     private OffsetDateTime dateCreation;
