@@ -11,19 +11,20 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+//@EnableWebSecurity
+//@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Autowired
     private CustomDetailsService customDetailsService;
 
     @Bean
     public PasswordEncoder encoder() {
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
 
     @Override
@@ -35,10 +36,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
-                .antMatchers("/api/register", "/api/confirm_email").permitAll()
-                .antMatchers("/api/**").authenticated()
-                .anyRequest().denyAll()
-                .and().sessionManagement()
+/*                .antMatchers("/api/register", "/api/confirm_email").permitAll()
+                .antMatchers("/api/**").authenticated()*/
+                .anyRequest().permitAll()
+                .and().csrf().disable()
+                .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.NEVER);
     }
 
@@ -47,4 +49,5 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
     }
+
 }
