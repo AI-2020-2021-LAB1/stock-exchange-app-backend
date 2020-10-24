@@ -17,11 +17,11 @@ public class Resource {
     @GeneratedValue(generator = "RESOURCE_SEQUENCE")
     private Long id;
 
-    @ManyToOne(targetEntity = User.class)
+    @ManyToOne(targetEntity = User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(targetEntity = Stock.class)
+    @ManyToOne(targetEntity = Stock.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "stock_id", nullable = false)
     private Stock stock;
 

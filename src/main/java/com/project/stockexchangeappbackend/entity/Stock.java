@@ -21,7 +21,7 @@ public class Stock {
     @Column(nullable = false, name = "name", unique = true)
     private String name;
 
-    @Column(nullable = false, name = "abbreviation")
+    @Column(nullable = false, name = "abbreviation", unique = true)
     private String abbreviation;
 
     @Column(nullable = false, name = "current_price", precision = 14, scale = 2)

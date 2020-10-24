@@ -19,25 +19,38 @@ public class Order {
     @GeneratedValue(generator = "ORDER_SEQUENCE")
     private Long id;
 
-    @ManyToOne(targetEntity = User.class)
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(targetEntity = User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "user_id", nullable = false, updatable = false, referencedColumnName = "ID")
     private User user;
 
-    @ManyToOne(targetEntity = Stock.class)
-    @JoinColumn(name = "stock_id", nullable = false)
+    @ManyToOne(targetEntity = Stock.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "stock_id", nullable = false, updatable = false, referencedColumnName = "ID")
     private Stock stock;
 
-    @Column(nullable = false, name = "amount")
+    @Column(nullable = false, name = "amount", updatable = false)
     private Integer amount;
 
     @Column(nullable = false, name = "remaining_amount")
     private Integer remainingAmount;
 
     @Column(nullable = false, name = "type")
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
+    public enum Type {
+        BUYING_ORDER,
+        SELLING_ORDER
+    }
 
     @Column(nullable = false, name = "price_type")
-    private String priceType;
+    @Enumerated(EnumType.STRING)
+    private PriceType priceType;
+
+    public enum PriceType {
+        EQUAL,
+        GREATER_OR_EQUAL,
+        LESS_OR_EQUAL
+    }
 
     @Column(nullable = false, name = "date_creation")
     private OffsetDateTime dateCreation;
