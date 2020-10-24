@@ -25,7 +25,7 @@ public class User {
     @Column(nullable = false, name = "last_name")
     private String lastName;
 
-    @Column(nullable = false, name = "email")
+    @Column(nullable = false, name = "email", unique = true, updatable = false)
     private String email;
 
     @Column(nullable = false, name = "password")
@@ -33,7 +33,7 @@ public class User {
 
     @Column(nullable = false, name = "role")
     @Enumerated(EnumType.STRING)
-    private String role;
+    private Role role;
 
     @Column(nullable = false, name = "money", precision = 14, scale = 2)
     private BigDecimal money;
@@ -41,6 +41,6 @@ public class User {
     @OneToMany(targetEntity = Order.class, mappedBy = "user")
     private List<Order> orders;
 
-    @OneToMany(targetEntity = Resource.class, mappedBy = "user", cascade = CascadeType.REMOVE)
+    @OneToMany(targetEntity = Resource.class, mappedBy = "user")
     private List<Resource> userStocks;
 }

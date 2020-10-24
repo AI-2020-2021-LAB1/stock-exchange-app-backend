@@ -33,7 +33,7 @@ public class Order {
     @Column(nullable = false, name = "remaining_amount")
     private Integer remainingAmount;
 
-    @Column(nullable = false, name = "type")
+    @Column(nullable = false, name = "order_type")
     @Enumerated(EnumType.STRING)
     private OrderType orderType;
 
