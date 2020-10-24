@@ -1,7 +1,8 @@
 package com.project.stockexchangeappbackend.rest;
 
-import com.project.stockexchangeappbackend.dto.StockDto;
-import com.project.stockexchangeappbackend.service.StockService;
+
+import com.project.stockexchangeappbackend.dto.OrderDto;
+import com.project.stockexchangeappbackend.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
@@ -12,21 +13,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/stock")
+@RequestMapping("/aoi/order")
 @RequiredArgsConstructor
-public class StockController {
+public class OrderController {
 
-    private final StockService stockService;
+    private final OrderService orderService;
     private final ModelMapper mapper;
 
-    @GetMapping
-    public String getStocks() {
-        return "stocks";
-    }
-
     @GetMapping("/{id}")
-    public ResponseEntity<StockDto> getStockDetails(@PathVariable long id) {
-        StockDto stockdto = mapper.map(stockService.getStockById(id), StockDto.class);
-        return new ResponseEntity<>(stockdto, HttpStatus.OK);
+    public ResponseEntity<OrderDto> getOrderDetails(@PathVariable Long id) {
+        OrderDto orderDto = mapper.map(orderService.findOrderById(id), OrderDto.class);
+        return new ResponseEntity<>(orderDto, HttpStatus.OK);
     }
 }
