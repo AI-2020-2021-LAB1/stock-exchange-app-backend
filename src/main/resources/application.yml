@@ -26,3 +26,6 @@ security:
       grant-type: password, refresh_token
       access-token-validity-seconds: ${ACCESS_TOKEN_VALIDITY_SECONDS:3600}
       refresh-token-validity-seconds: ${REFRESH_TOKEN_VALIDITY_SECONDS:108000}
+    authorization:
+      jwt:
+        key-value: ${JWT_SECRET:secret}
