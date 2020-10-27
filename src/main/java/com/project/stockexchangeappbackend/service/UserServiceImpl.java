@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
+import javax.persistence.EntityNotFoundException;
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
 
 @Service
@@ -37,5 +39,11 @@ public class UserServiceImpl implements UserService {
                 .build());
        log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
     }
+
+    @Override
+    public User findUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+    }
+
 
 }
