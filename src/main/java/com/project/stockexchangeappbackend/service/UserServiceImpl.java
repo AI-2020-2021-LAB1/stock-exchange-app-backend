@@ -8,9 +8,9 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
-import javax.transaction.Transactional;
 import java.math.BigDecimal;
 
 @Service
@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional
+    @Transactional()
     public void registerUser(RegistrationUserDTO registrationUserDTO) {
         if (userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("User with given email already exists.");
