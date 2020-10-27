@@ -32,12 +32,12 @@ public class RegistrationUserDTO {
     private String email;
 
     @NotBlank(message = "This field is required.")
-    @Length(min = 8, message = "This field must contains at least {min} characters.")
+    @Length(min = 8, message = "This field must contain at least {min} characters.")
     @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])" +
             "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$",
-            message = "This field must contains: minimum eight characters, at least one uppercase letter, " +
+            message = "This field must contain: minimum eight characters, at least one uppercase letter, " +
                     "one lowercase letter, one number and one special character.")
-    @ApiModelProperty(notes = "The user's password. This field must contains: minimum eight characters, " +
+    @ApiModelProperty(notes = "The user's password. This field must contain: minimum eight characters, " +
             "at least one uppercase letter, one lowercase letter, one number and one special character.",
             required = true, allowableValues="range[6, infinity]")
     private String password;

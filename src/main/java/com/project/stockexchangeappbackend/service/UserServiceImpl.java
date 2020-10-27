@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    @Transactional()
+    @Transactional
     public void registerUser(RegistrationUserDTO registrationUserDTO) {
         if (userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("User with given email already exists.");
