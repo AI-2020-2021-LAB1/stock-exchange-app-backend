@@ -1,6 +1,5 @@
 package com.project.stockexchangeappbackend.rest;
 
-
 import com.project.stockexchangeappbackend.dto.OrderDto;
 import com.project.stockexchangeappbackend.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/aoi/order")
+@RequestMapping("/api/order")
 @RequiredArgsConstructor
 public class OrderController {
 
