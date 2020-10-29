@@ -4,6 +4,7 @@ import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +25,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @LogicBusinessMeasureTime
     public void registerUser(RegistrationUserDTO registrationUserDTO) {
         if (userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("User with given email already exists.");
@@ -40,9 +42,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    @LogicBusinessMeasureTime
     public User findUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User Not Found"));
     }
-
 
 }

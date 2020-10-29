@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.security;
 
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -18,6 +19,7 @@ public class CustomDetailsService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
+    @LogicBusinessMeasureTime
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         com.project.stockexchangeappbackend.entity.User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
