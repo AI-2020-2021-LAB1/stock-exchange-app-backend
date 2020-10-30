@@ -29,3 +29,11 @@ security:
     authorization:
       jwt:
         key-value: ${JWT_SECRET:secret}
+
+logging:
+  level:
+    io:
+      swagger:
+        models:
+          parameters:
+            AbstractSerializableParameter: ERROR

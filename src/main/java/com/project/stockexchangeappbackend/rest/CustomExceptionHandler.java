@@ -1,6 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
-import com.project.stockexchangeappbackend.util.ErrorResponse;
+import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
