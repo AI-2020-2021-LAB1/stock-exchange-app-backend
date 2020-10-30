@@ -5,6 +5,7 @@ import lombok.*;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -12,11 +13,10 @@ import java.time.OffsetDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "ORDERS")
-public class Order {
+@Table(name = "ARCHIVED_ORDERS")
+public class ArchivedOrder {
 
     @Id
-    @GeneratedValue(generator = "ORDER_SEQUENCE")
     private Long id;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
@@ -52,5 +52,11 @@ public class Order {
 
     @Column(name = "DATE_CLOSING")
     private OffsetDateTime dateClosing;
+
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "buyingOrder")
+    private List<Transaction> buyingOrders;
+
+    @OneToMany(targetEntity = Transaction.class, mappedBy = "sellingOrder")
+    private List<Transaction> sellingOrders;
 
 }
