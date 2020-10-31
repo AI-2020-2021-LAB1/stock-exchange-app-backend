@@ -7,6 +7,7 @@ import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasu
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 
@@ -20,6 +21,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Order findOrderById(Long id) {
         return orderRepository.findById(id)
                 .orElseGet(() -> modelMapper.map(archivedOrderRepository.findById(id)

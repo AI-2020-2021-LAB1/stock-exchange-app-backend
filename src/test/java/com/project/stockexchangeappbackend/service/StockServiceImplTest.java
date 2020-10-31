@@ -64,7 +64,7 @@ class StockServiceImplTest {
 
     }
 
-    private static void assertStock(Stock output, Stock expected) {
+    public static void assertStock(Stock output, Stock expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getName(), output.getName()),
                 () -> assertEquals(expected.getAbbreviation(), output.getAbbreviation()),
@@ -72,7 +72,7 @@ class StockServiceImplTest {
                 () -> assertEquals(expected.getAmount(), output.getAmount()));
     }
 
-    private static Stock createCustomStock (Long id, String name, String abbreviation,
+    public static Stock createCustomStock (Long id, String name, String abbreviation,
                                             Integer amount, BigDecimal currentPrice) {
         return Stock.builder()
                 .id(id).name(name).abbreviation(abbreviation)

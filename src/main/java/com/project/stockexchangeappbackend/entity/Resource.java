@@ -10,22 +10,22 @@ import javax.persistence.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "resources")
+@Table(name = "RESOURCES")
 public class Resource {
 
     @Id
     @GeneratedValue(generator = "RESOURCE_SEQUENCE")
     private Long id;
 
-    @ManyToOne(targetEntity = User.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "user_id", nullable = false, updatable = false, referencedColumnName = "ID")
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "USER_ID", nullable = false, updatable = false, referencedColumnName = "ID")
     private User user;
 
-    @ManyToOne(targetEntity = Stock.class, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinColumn(name = "stock_id", nullable = false, updatable = false, referencedColumnName = "ID")
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinColumn(name = "STOCK_ID", nullable = false, updatable = false, referencedColumnName = "ID")
     private Stock stock;
 
-    @Column(nullable = false, name = "amount")
+    @Column(name = "AMOUNT", nullable = false)
     private Integer amount;
 
 }
