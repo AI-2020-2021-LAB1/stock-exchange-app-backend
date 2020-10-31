@@ -28,14 +28,6 @@ public class StockController {
 
     private final StockService stockService;
     private final ModelMapper mapper;
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Retrieve stock by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
-    @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully retrieved."),
-            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
-    public StockDTO getStockDetails(@ApiParam(value = "Id of desired stock.", required = true) @PathVariable long id) {
-        return mapper.map(stockService.getStockById(id), StockDTO.class);
-    }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
@@ -80,4 +72,18 @@ public class StockController {
                 .map(stock -> mapper.map(stock, StockDTO.class));
     }
 
+    @GetMapping("/{abbreviation}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @ApiOperation(value = "Retrieve stock by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully retrieved."),
+            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
+    public StockDTO getStockByAbbreviation(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
+                                           @PathVariable String abbreviation) {
+        try {
+            return mapper.map(stockService.getStockById(new Long(abbreviation)), StockDTO.class);
+        } catch (NumberFormatException e) {
+            return mapper.map(stockService.getStockByAbbreviation(abbreviation), StockDTO.class);
+        }
+
+    }
 }

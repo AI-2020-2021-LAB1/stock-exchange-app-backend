@@ -7,7 +7,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 public interface StockService {
 
+
     Stock getStockById(Long id);
     Page<Stock> getStocks(Pageable pageable, Specification<Stock> specification);
+    Stock getStockByAbbreviation(String abbreviation);
 
 }
