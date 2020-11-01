@@ -44,8 +44,8 @@ public class StockController {
                             "Default sort order is ascending. Multiple sort criteria are supported."),
             @ApiImplicitParam(name = "name", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `name` (omitted if null)"),
-            @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
-                    value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
+            @ApiImplicitParam(name = "id", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `id`. (omitted if null)"),
             @ApiImplicitParam(name = "currentPriceGreaterThan", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `currentPrice`. (omitted if null)"),
             @ApiImplicitParam(name = "currentPriceGreaterThanOrEqual", dataType = "integer", paramType = "query",
@@ -72,17 +72,17 @@ public class StockController {
                 .map(stock -> mapper.map(stock, StockDTO.class));
     }
 
-    @GetMapping("/{abbreviation}")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @ApiOperation(value = "Retrieve stock by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public StockDTO getStockByAbbreviation(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
-                                           @PathVariable String abbreviation) {
+                                           @PathVariable String id) {
         try {
-            return mapper.map(stockService.getStockById(new Long(abbreviation)), StockDTO.class);
+            return mapper.map(stockService.getStockById(new Long(id)), StockDTO.class);
         } catch (NumberFormatException e) {
-            return mapper.map(stockService.getStockByAbbreviation(abbreviation), StockDTO.class);
+            return mapper.map(stockService.getStockByAbbreviation(id), StockDTO.class);
         }
 
     }

@@ -33,7 +33,7 @@ public class StockServiceImpl implements StockService {
     @Override
     @LogicBusinessMeasureTime
     public Stock getStockByAbbreviation(String abbreviation) {
-        return repository.findByAbbreviation(abbreviation).orElseThrow(() ->
+        return repository.findByAbbreviationIgnoreCase(abbreviation).orElseThrow(() ->
                 new EntityNotFoundException("Stock Not Found"));
     }
 

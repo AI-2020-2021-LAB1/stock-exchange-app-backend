@@ -28,6 +28,6 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
     Page<Stock> findAll(@Nullable Specification<Stock> var1, Pageable var2);
 
     @DBQueryMeasureTime
-    Optional<Stock> findByAbbreviation(String abbreviation);
+    Optional<Stock> findByAbbreviationIgnoreCase(String abbreviation);
 
 }
