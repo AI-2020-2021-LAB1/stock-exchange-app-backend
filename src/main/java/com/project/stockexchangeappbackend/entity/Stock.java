@@ -11,23 +11,23 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stocks")
+@Table(name = "STOCKS")
 public class Stock {
 
     @Id
     @GeneratedValue(generator = "STOCK_SEQUENCE")
     private Long id;
 
-    @Column(nullable = false, name = "name", unique = true)
+    @Column(name = "NAME", unique = true, nullable = false)
     private String name;
 
-    @Column(nullable = false, name = "abbreviation", unique = true)
+    @Column(name = "ABBREVIATION", unique = true, nullable = false)
     private String abbreviation;
 
-    @Column(nullable = false, name = "current_price", precision = 14, scale = 2)
+    @Column(name = "CURRENT_PRICE", precision = 14, scale = 2, nullable = false)
     private BigDecimal currentPrice;
 
-    @Column(nullable = false, name = "amount")
+    @Column(name = "AMOUNT", nullable = false)
     private Integer amount;
 
 }

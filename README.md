@@ -13,9 +13,14 @@
 API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
 ### Dockerfile environmental variables
-### production / development db url: ai2020-backdb:5432
+
 - POSTGRES_URL (default: localhost:5432)
 - POSTGRES_USER (default: admin)
 - POSTGRES_PASSWORD (default: admin)
 - POSTGRES_DB (default: postgres)
-
+- CLIENT_ID (default: clientId) - OAuth client's id
+- CLIENT_SECRET (default: clientSecret) - OAuth client's secret
+- ACCESS_TOKEN_VALIDITY_SECONDS (default: 3600) - Access token expiration
+- REFRESH_TOKEN_VALIDITY_SECONDS (default: 108000) - Refresh token expiration
+- JWT_SECRET (default: secret) - JWT signed key
+- SPRING_PROFILES_ACTIVE - Spring's profile (setting this variable to `data` will cause clearing the database and inserting samples data)
