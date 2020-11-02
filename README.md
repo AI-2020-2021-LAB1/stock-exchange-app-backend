@@ -24,3 +24,8 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - REFRESH_TOKEN_VALIDITY_SECONDS (default: 108000) - Refresh token expiration
 - JWT_SECRET (default: secret) - JWT signed key
 - SPRING_PROFILES_ACTIVE - Spring's profile (setting this variable to `data` will cause clearing the database and inserting samples data)
+
+### Pre-created users
+Profile `data` provides 40 pre-registered users:
+- Credentials of users with role USER: `FSDBH{1-39}@gmail.com:Admin!23`  
+- Credentials of user with role ADMIN: `admin@admin.pl:Admin!23`  

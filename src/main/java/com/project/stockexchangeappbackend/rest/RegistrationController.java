@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.service.UserService;
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
 
@@ -32,6 +33,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/confirm_email")
+    @ApiIgnore
     public String confirmEmail() {
         return "confirm_email";
     }

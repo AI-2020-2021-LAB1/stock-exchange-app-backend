@@ -45,7 +45,8 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public User findUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
     }
 
 }

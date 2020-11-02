@@ -65,7 +65,7 @@ class OrderServiceImplTest {
         assertThrows(EntityNotFoundException.class, () -> orderService.findOrderById(id));
     }
 
-    private static void assertOrder(Order output, Order expected) {
+    public static void assertOrder(Order output, Order expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
@@ -77,7 +77,7 @@ class OrderServiceImplTest {
                 () -> assertEquals(expected.getPrice(), output.getPrice()));
     }
 
-    private static Order createCustomOrder (Long id) {
+    public static Order createCustomOrder (Long id) {
         return Order.builder()
                 .id(id).amount(100).remainingAmount(100)
                 .dateClosing(OffsetDateTime.now().minusHours(1))
@@ -87,7 +87,7 @@ class OrderServiceImplTest {
                 .build();
     }
 
-    private static ArchivedOrder createCustomArchivedOrder (Order order) {
+    public static ArchivedOrder createCustomArchivedOrder (Order order) {
         return ArchivedOrder.builder()
                 .id(order.getId()).amount(order.getAmount()).remainingAmount(order.getRemainingAmount())
                 .dateClosing(order.getDateClosing()).dateExpiration(order.getDateExpiration())
