@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.entity.Stock;
 import com.project.stockexchangeappbackend.repository.StockRepository;
 import org.junit.jupiter.api.Test;
@@ -75,6 +76,14 @@ class StockServiceImplTest {
     public static Stock createCustomStock (Long id, String name, String abbreviation,
                                             Integer amount, BigDecimal currentPrice) {
         return Stock.builder()
+                .id(id).name(name).abbreviation(abbreviation)
+                .amount(amount).currentPrice(currentPrice)
+                .build();
+    }
+
+    public static StockDTO createCustomStockDTO (Long id, String name, String abbreviation,
+                                                 Integer amount, BigDecimal currentPrice) {
+        return StockDTO.builder()
                 .id(id).name(name).abbreviation(abbreviation)
                 .amount(amount).currentPrice(currentPrice)
                 .build();

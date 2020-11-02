@@ -1,6 +1,8 @@
 package com.project.stockexchangeappbackend.repository;
 
 import com.project.stockexchangeappbackend.entity.Resource;
+import com.project.stockexchangeappbackend.entity.Stock;
+import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,5 +28,8 @@ public interface ResourceRepository extends JpaRepository<Resource, Long>, JpaSp
     @Override
     @DBQueryMeasureTime
     Page<Resource> findAll(@Nullable Specification<Resource> var1, Pageable var2);
+
+    @DBQueryMeasureTime
+    Optional<Resource> findByUserAndStock(User user, Stock stock);
 
 }

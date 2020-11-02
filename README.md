@@ -2,7 +2,7 @@
 
 
 ### Requirements
-- [OpenJDK 14](https://jdk.java.net/14/)
+- [OpenJDK 11](https://jdk.java.net/archive/)
 
 ### Instruction
 1. Build app by running command `./mvnw clean package` on Unix or `mvnw.cmd clean package` on Windows
