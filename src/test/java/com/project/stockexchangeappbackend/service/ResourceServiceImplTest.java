@@ -4,7 +4,6 @@ import com.project.stockexchangeappbackend.entity.Resource;
 import com.project.stockexchangeappbackend.entity.Stock;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -42,7 +41,6 @@ class ResourceServiceImplTest {
     ResourceRepository resourceRepository;
 
     @Test
-    @Disabled
     void shouldPageAndFilterResources(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ONE);
         List<Resource> resources = Arrays.asList(
@@ -54,7 +52,7 @@ class ResourceServiceImplTest {
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
-        when(resourceRepository.findAll(Mockito.any(Specification.class), pageable))
+        when(resourceRepository.findAll(Mockito.any(Specification.class), Mockito.eq(pageable)))
                 .thenReturn(new PageImpl<>(resources, pageable, resources.size()));
         Page<Resource> output = resourceService.getOwnedResources(pageable, resourceSpecification);
         assertEquals(resources.size(), output.getNumberOfElements());

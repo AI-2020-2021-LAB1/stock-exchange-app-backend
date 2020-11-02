@@ -74,16 +74,18 @@ public class UsersController {
                     value = "Filtering criteria for field `name` (omitted if null)"),
             @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
-            @ApiImplicitParam(name = "amountGreaterThan", dataType = "integer", paramType = "query",
+            @ApiImplicitParam(name = "amount>", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `amount`. (omitted if null)"),
-            @ApiImplicitParam(name = "amountGreaterThanOrEqual", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `amount`. (omitted if null)"),
-            @ApiImplicitParam(name = "amountLessThan", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `amount`. (omitted if null)"),
-            @ApiImplicitParam(name = "amountLessThanOrEqual", dataType = "integer", paramType = "query",
+            @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `amount`. (omitted if null)"),
             @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "currentPrice>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `currentPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "currentPrice<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `currentPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "currentPrice", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `currentPrice`. Param is exact value. (omitted if null)")
     })
     public Page<ResourceDTO> getOwnedStocks (@ApiIgnore Pageable pageable, ResourceSpecification specification) {
         return resourceService.getOwnedResources(pageable, specification)

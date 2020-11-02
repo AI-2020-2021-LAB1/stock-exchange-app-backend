@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
@@ -25,5 +27,8 @@ public class ResourceDTO {
 
     @ApiModelProperty(notes = "Owned units' amount of stocks.")
     private Integer amount;
+
+    @ApiModelProperty(notes = "Owned units' average current price per unit.")
+    private BigDecimal currentPrice;
 
 }
