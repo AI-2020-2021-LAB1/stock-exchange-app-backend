@@ -9,6 +9,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/order")
 @CrossOrigin("*")
@@ -33,6 +35,15 @@ public class OrderController {
     public OrderDTO getOrderDetails(@ApiParam(value = "Id of a order.", required = true)
                                         @PathVariable("id") Long id) {
         return mapper.map(orderService.findOrderById(id), OrderDTO.class);
+    }
+
+    @PostMapping
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(value = "Create new order")
+    @ApiResponses(@ApiResponse(code = 200, message = "Order was successfully created."))
+    public void createOrder(@ApiParam(value = "Order object to create.", required = true)
+                                @RequestBody @Valid OrderDTO orderDTO) {
+        orderService.createOrder(orderDTO);
     }
 
 }

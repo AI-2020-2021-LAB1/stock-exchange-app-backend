@@ -1,7 +1,9 @@
 package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
+import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -51,6 +53,25 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message("Validation error")
                 .errors(errors)
+                .build();
+    }
+
+    @ExceptionHandler(InvalidInputDataException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse methodInvalidInputDataException(InvalidInputDataException ex) {
+        return ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(ex.getMessage())
+                .errors(ex.getErrors())
+                .build();
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse httpMessageNotReadableException() {
+        return ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message("Malformed JSON request")
                 .build();
     }
 
