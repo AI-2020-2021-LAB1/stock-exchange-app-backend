@@ -7,6 +7,9 @@ import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -55,6 +58,12 @@ public class OrderServiceImpl implements OrderService {
         order.setDateCreation(OffsetDateTime.now(ZoneId.systemDefault()));
         order.setDateClosing(null);
         orderRepository.save(order);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    public Page<Order> findAllOrders(Pageable pageable, Specification<Order> specification) {
+        return orderRepository.findAll(specification,pageable);
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {
