@@ -11,14 +11,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
+
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static com.project.stockexchangeappbackend.service.ResourceServiceImplTest.createCustomResource;
@@ -45,6 +53,9 @@ class OrderServiceImplTest {
     ArchivedOrderRepository archivedOrderRepository;
 
     @Mock
+    AllOrdersRepository allOrdersRepository;
+
+    @Mock
     StockRepository stockRepository;
 
     @Mock
@@ -53,36 +64,47 @@ class OrderServiceImplTest {
     @Mock
     ResourceRepository resourceRepository;
 
+
     @Test
-    void shouldReturnOrderFromOrderEntity() {
-        Long id = 1L;
+    void shouldPageAndFilterOrders() {
+
         Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
-        Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+        Order order1 = createCustomOrder(1L, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
-        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
-        assertOrder(orderService.findOrderById(id), order);
+        Order order2 = createCustomOrder(2L, 250, 250, OrderType.SELLING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now().minusHours(2), OffsetDateTime.now().plusHours(2), null, user, stock);
+        List<AllOrders> orders = Arrays.asList(
+                createCustomAllOrdersInstance(order1),
+                createCustomAllOrdersInstance(order2)
+        );
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<AllOrders> allOrdersSpecification =
+                (Specification<AllOrders>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("id"), 1);
+        when(allOrdersRepository.findAll(allOrdersSpecification, pageable))
+                .thenReturn(new PageImpl<>(orders, pageable, orders.size()));
+        Page<AllOrders> output = orderService.findAllOrders(pageable, allOrdersSpecification);
+        assertEquals(orders.size(), output.getNumberOfElements());
+        for (int i = 0; i < orders.size(); i++) {
+            assertEquals(output.getContent().get(i), orders.get(i));
+        }
     }
 
     @Test
-    void shouldReturnOrderFromArchivedOrderEntity() {
+    void shouldReturnOrder() {
         Long id = 1L;
         Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
-        Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
-                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
-        ArchivedOrder archivedOrder = createCustomArchivedOrder(order);
-        when(orderRepository.findById(id)).thenReturn(Optional.empty());
-        when(archivedOrderRepository.findById(id)).thenReturn(Optional.of(archivedOrder));
-        when(modelMapper.map(archivedOrder, Order.class)).thenReturn(order);
+        AllOrders order = createCustomAllOrdersInstance(createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock));
+        when(allOrdersRepository.findById(id)).thenReturn(Optional.of(order));
         assertOrder(orderService.findOrderById(id), order);
     }
 
     @Test
     void shouldThrowEntityNotFoundExceptionWhenGettingOrderById() {
         Long id = 1L;
-        when(orderRepository.findById(id)).thenReturn(Optional.empty());
-        when(archivedOrderRepository.findById(id)).thenReturn(Optional.empty());
+        when(allOrdersRepository.findById(id)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> orderService.findOrderById(id));
     }
 
@@ -115,7 +137,7 @@ class OrderServiceImplTest {
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
         Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
-        Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount()-1);
+        Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount() - 1);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
@@ -149,7 +171,7 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", orderDTO.getAmount()-1, BigDecimal.TEN);
+        Stock stock = createCustomStock(1L, "WIG20", "W20", orderDTO.getAmount() - 1, BigDecimal.TEN);
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
         SecurityContextHolder.setContext(securityContext);
 
@@ -202,7 +224,7 @@ class OrderServiceImplTest {
         assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
     }
 
-    public static void assertOrder(Order output, Order expected) {
+    public static void assertOrder(AllOrders output, AllOrders expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
@@ -216,10 +238,10 @@ class OrderServiceImplTest {
                 () -> assertUser(expected.getUser(), output.getUser()));
     }
 
-    public static Order createCustomOrder (Long id, Integer amount, Integer remainingAmount, OrderType orderType,
-                                           PriceType priceType, BigDecimal price, OffsetDateTime dateCreation,
-                                           OffsetDateTime dateExpiration, OffsetDateTime dateClosing, User user,
-                                           Stock stock) {
+    public static Order createCustomOrder(Long id, Integer amount, Integer remainingAmount, OrderType orderType,
+                                          PriceType priceType, BigDecimal price, OffsetDateTime dateCreation,
+                                          OffsetDateTime dateExpiration, OffsetDateTime dateClosing, User user,
+                                          Stock stock) {
         return Order.builder()
                 .id(id).amount(amount).remainingAmount(remainingAmount)
                 .dateCreation(dateCreation).dateClosing(dateClosing).dateExpiration(dateExpiration)
@@ -228,22 +250,29 @@ class OrderServiceImplTest {
                 .build();
     }
 
-    public static ArchivedOrder createCustomArchivedOrder (Order order) {
-        return ArchivedOrder.builder()
-                .id(order.getId()).amount(order.getAmount()).remainingAmount(order.getRemainingAmount())
-                .dateClosing(order.getDateClosing()).dateExpiration(order.getDateExpiration())
-                .dateCreation(order.getDateCreation())
-                .orderType(order.getOrderType())
-                .priceType(order.getPriceType()).price(order.getPrice())
-                .build();
-    }
 
-    public static OrderDTO createCustomOrderDTO (Integer amount, OffsetDateTime dateExpiration, OrderType orderType,
-                                              PriceType priceType, BigDecimal price, StockDTO stockDTO) {
+    public static OrderDTO createCustomOrderDTO(Integer amount, OffsetDateTime dateExpiration, OrderType orderType,
+                                                PriceType priceType, BigDecimal price, StockDTO stockDTO) {
         return OrderDTO.builder()
                 .amount(amount).dateExpiration(dateExpiration)
                 .orderType(orderType).priceType(priceType).price(price)
                 .stock(stockDTO)
+                .build();
+    }
+
+    public static AllOrders createCustomAllOrdersInstance(Order order) {
+        return AllOrders.builder()
+                .id(order.getId())
+                .amount(order.getAmount())
+                .remainingAmount(order.getRemainingAmount())
+                .dateClosing(order.getDateClosing())
+                .dateExpiration(order.getDateExpiration())
+                .dateCreation(order.getDateCreation())
+                .orderType(order.getOrderType())
+                .priceType(order.getPriceType())
+                .price(order.getPrice())
+                .stock(order.getStock())
+                .user(order.getUser())
                 .build();
     }
 
