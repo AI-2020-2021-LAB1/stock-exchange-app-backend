@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.OrderDTO;
+import com.project.stockexchangeappbackend.entity.AllOrders;
 import com.project.stockexchangeappbackend.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,5 +15,5 @@ public interface OrderService {
 
     void createOrder(OrderDTO orderDTO);
 
-    Page<Order> findAllOrders(Pageable pageable, Specification<Order> specification);
+    Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification);
 }

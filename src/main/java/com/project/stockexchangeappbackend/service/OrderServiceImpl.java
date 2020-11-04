@@ -30,6 +30,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final ModelMapper modelMapper;
+    private final AllOrdersRepository allOrdersRepository;
 
     @Override
     @LogicBusinessMeasureTime
@@ -37,7 +38,7 @@ public class OrderServiceImpl implements OrderService {
     public Order findOrderById(Long id) {
         return orderRepository.findById(id)
                 .orElseGet(() -> modelMapper.map(archivedOrderRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Order Not Found")), Order.class));
+                        .orElseThrow(() -> new EntityNotFoundException("Order Not Found")), Order.class));
     }
 
     @Override
@@ -62,8 +63,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
-    public Page<Order> findAllOrders(Pageable pageable, Specification<Order> specification) {
-        return orderRepository.findAll(specification,pageable);
+    public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
+        return allOrdersRepository.findAll(specification, pageable);
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {

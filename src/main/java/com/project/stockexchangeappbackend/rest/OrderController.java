@@ -2,8 +2,7 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.OrderDTO;
-import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.repository.specification.OrderSpecification;
+import com.project.stockexchangeappbackend.repository.specification.AllOrdersSpecification;
 import com.project.stockexchangeappbackend.service.OrderService;
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
@@ -52,8 +51,10 @@ public class OrderController {
 
     @GetMapping
     //@PreAuthorize("hasAnyRole('ADMIN','USER')")
-    public Page<OrderDTO> getOrders(Pageable pageable, OrderSpecification orderSpecification) {
-        return orderService.findAllOrders(pageable, orderSpecification).map(order -> mapper.map(order, OrderDTO.class));
+    public Page<OrderDTO> getOrders(Pageable pageable, AllOrdersSpecification allOrdersSpecification) {
+        Page<OrderDTO> orders = orderService.findAllOrders(pageable, allOrdersSpecification)
+                .map(order -> mapper.map(order, OrderDTO.class));
+        return orders;
     }
 
 }
