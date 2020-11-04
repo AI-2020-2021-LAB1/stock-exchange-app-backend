@@ -35,10 +35,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
-    public Order findOrderById(Long id) {
-        return orderRepository.findById(id)
-                .orElseGet(() -> modelMapper.map(archivedOrderRepository.findById(id)
-                        .orElseThrow(() -> new EntityNotFoundException("Order Not Found")), Order.class));
+    public AllOrders findOrderById(Long id) {
+        return allOrdersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
     }
 
     @Override

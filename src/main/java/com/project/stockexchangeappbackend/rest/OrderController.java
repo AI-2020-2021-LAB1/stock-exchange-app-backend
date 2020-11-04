@@ -103,9 +103,8 @@ public class OrderController {
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
     })
     public Page<OrderDTO> getOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification allOrdersSpecification) {
-        Page<OrderDTO> orders = orderService.findAllOrders(pageable, allOrdersSpecification)
+        return orderService.findAllOrders(pageable, allOrdersSpecification)
                 .map(order -> mapper.map(order, OrderDTO.class));
-        return orders;
     }
 
 }
