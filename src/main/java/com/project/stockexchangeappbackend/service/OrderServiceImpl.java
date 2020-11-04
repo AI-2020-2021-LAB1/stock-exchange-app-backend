@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -55,6 +56,20 @@ public class OrderServiceImpl implements OrderService {
         order.setDateCreation(OffsetDateTime.now(ZoneId.systemDefault()));
         order.setDateClosing(null);
         orderRepository.save(order);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Order> getActiveBuyingOrders() {
+        return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                OrderType.BUYING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Order> getActiveSellingOrdersByStockAndPriceLessThanEqual(Stock stock, BigDecimal maximalPrice) {
+        return orderRepository.findByStockAndOrderTypeAndPriceIsLessThanEqualAndDateExpirationIsAfterAndDateClosingIsNullOrderByPrice(
+                stock, OrderType.SELLING_ORDER, maximalPrice, OffsetDateTime.now(ZoneId.systemDefault()));
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {

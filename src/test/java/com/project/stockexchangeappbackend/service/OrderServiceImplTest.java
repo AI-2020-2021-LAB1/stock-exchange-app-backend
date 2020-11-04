@@ -9,16 +9,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static com.project.stockexchangeappbackend.service.ResourceServiceImplTest.createCustomResource;
@@ -109,7 +112,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotHavingStock(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotHavingStock(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
@@ -127,7 +131,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndSellingOrderIncompatible(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndSellingOrderIncompatible(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.LESS_OR_EQUAL, BigDecimal.ONE, stockDTO);
@@ -145,7 +150,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndNotEnoughStock(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndNotEnoughStock(@Mock SecurityContext securityContext,
+                                                                                   @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
@@ -161,7 +167,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndBuyingOrderIncompatible(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndBuyingOrderIncompatible(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
@@ -177,7 +184,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotFound(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotFound(@Mock SecurityContext securityContext,
+                                                                                 @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
@@ -193,13 +201,54 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockNotFound(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockNotFound(@Mock SecurityContext securityContext,
+                                                                                  @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
 
         when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.empty());
         assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
+    }
+
+    @Test
+    void shouldListActiveBuyingOrders() {
+        Long id = 1L;
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        List<Order> orders = Arrays.asList(
+                createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock),
+                createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock));
+        when(orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                Mockito.eq(OrderType.BUYING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(orders);
+        List<Order> output = orderService.getActiveBuyingOrders();
+        assertEquals(orders.size(), output.size());
+        for (int i=0; i<output.size(); i++) {
+            assertOrder(output.get(i), orders.get(i));
+        }
+    }
+
+    @Test
+    void shouldListActiveSellingOrdersByStock() {
+        Long id = 1L;
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        List<Order> orders = Arrays.asList(
+                createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock),
+                createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock));
+        when(orderRepository.findByStockAndOrderTypeAndPriceIsLessThanEqualAndDateExpirationIsAfterAndDateClosingIsNullOrderByPrice(
+                Mockito.eq(stock), Mockito.eq(OrderType.SELLING_ORDER), Mockito.eq(BigDecimal.ONE), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(orders);
+        List<Order> output = orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(stock, BigDecimal.ONE);
+        assertEquals(orders.size(), output.size());
+        for (int i=0; i<output.size(); i++) {
+            assertOrder(output.get(i), orders.get(i));
+        }
     }
 
     public static void assertOrder(Order output, Order expected) {
