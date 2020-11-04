@@ -23,12 +23,4 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @DBQueryMeasureTime
     Optional<Order> findById(Long id);
 
-    @Override
-    @DBQueryMeasureTime
-    @Query(value = "SELECT * FROM ALL_ORDERS",
-            countQuery = "SELECT COUNT(*) FROM ALL_ORDERS",
-            nativeQuery = true)
-    Page<Order> findAll(@Nullable Specification specification, Pageable pageable);
-
-
 }
