@@ -30,6 +30,19 @@ public class StockExchangeAlgorithmScheduler {
 
     @Scheduled(fixedDelayString = "${application.stock-algorithm.delay-time}")
     public void run() {
+        removeInactiveOrders();
+        executeStockAlgorithm();
+    }
+
+    private void removeInactiveOrders() {
+        log.info("Movement inactive orders started.");
+        long start = System.nanoTime();
+        orderService.moveInactiveOrders();
+        long stop = (System.nanoTime() - start) / 1000000;
+        log.info("Movement inactive orders finished. Execution time: " + stop + " ms.");
+    }
+
+    private void executeStockAlgorithm() {
         log.info("Stock exchange algorithm started.");
         long start = System.nanoTime();
         List<Order> activeBuyingOrder = orderService.getActiveBuyingOrders();
@@ -37,8 +50,8 @@ public class StockExchangeAlgorithmScheduler {
                 .collect(Collectors.groupingByConcurrent(Order::getStock));
         groupedBuyingOrdersByStock.forEach((k,v) ->
                 groupedBuyingOrdersByStock.put(k, v.stream()
-                .sorted(Comparator.comparing(Order::getPrice))
-                .collect(Collectors.toList())));
+                        .sorted(Comparator.comparing(Order::getPrice))
+                        .collect(Collectors.toList())));
 
         ConcurrentMap<Stock, List<Order>> groupedAndSortedSellingOrders =  groupedBuyingOrdersByStock.entrySet()
                 .parallelStream()
@@ -77,7 +90,7 @@ public class StockExchangeAlgorithmScheduler {
                             if (index == buyingOrders.size() - 1) {
                                 break;
                             } else if (!checkDifferentUsersRule(buyingOrder.getUser(), sellingOrder.getUser())
-                                        || !checkEqualPriceTypeRule(buyingOrder, sellingOrder)) {
+                                    || !checkEqualPriceTypeRule(buyingOrder, sellingOrder)) {
                                 index++;
                             } else {
                                 buyingOrders.remove(buyingOrder);
@@ -87,7 +100,7 @@ public class StockExchangeAlgorithmScheduler {
                     }
                 });
         long stop = (System.nanoTime() - start) / 1000000;
-        log.info("Stock exchange algorithm stopped. Execution time: " + stop);
+        log.info("Stock exchange algorithm stopped. Execution time: " + stop + " ms.");
     }
 
     private boolean checkOrderCompatibility(Order buyingOrder, Order sellingOrder) {

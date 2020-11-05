@@ -28,12 +28,14 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Transaction findTransactionById(Long id) {
         return transactionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Transaction Not Found"));
     }
 
     @Override
+    @LogicBusinessMeasureTime
     @Transactional
     public void makeTransaction(Order buyingOrder, Order sellingOrder, int amount, BigDecimal pricePerUnit) {
         ArchivedOrder archivedBuyingOrder = archivedOrderRepository.findById(buyingOrder.getId())

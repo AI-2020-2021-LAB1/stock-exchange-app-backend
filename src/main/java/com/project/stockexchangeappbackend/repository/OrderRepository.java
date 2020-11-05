@@ -34,4 +34,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(Stock stock, User user,
                                                                OrderType orderType, OffsetDateTime dateExpiration);
 
+    @DBQueryMeasureTime
+    List<Order> findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
+            OffsetDateTime offsetDateTime, int remainingAmount);
+
 }

@@ -19,10 +19,13 @@ public class MeasureTimeAspect {
     @Around("@annotation(LogicBusinessMeasureTime)")
     public Object measureLogicBusinessExecutionTime (ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.nanoTime();
+        Object proceed = null;
         try {
-            Object proceed = joinPoint.proceed();
+            proceed = joinPoint.proceed();
             long executionTime = System.nanoTime() - start;
             processingTime.setBusinessLogicExecutionTime(executionTime);
+            return proceed;
+        } catch (BeanCreationException exc) {
             return proceed;
         } catch (Throwable t) {
             long executionTime = System.nanoTime() - start;

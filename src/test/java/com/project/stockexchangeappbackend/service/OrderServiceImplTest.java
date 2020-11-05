@@ -285,6 +285,20 @@ class OrderServiceImplTest {
         }
     }
 
+    @Test
+    void shouldMoveInactiveOrders() {
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        List<Order> orders = Arrays.asList(
+                createCustomOrder(1L, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().minusHours(2), null, user, stock),
+                createCustomOrder(2L, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().minusHours(2), null, user, stock));
+        when(orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
+                Mockito.any(OffsetDateTime.class), Mockito.eq(0))).thenReturn(orders);
+        assertAll(() -> orderService.moveInactiveOrders());
+    }
+
     public static void assertOrder(Order output, Order expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),

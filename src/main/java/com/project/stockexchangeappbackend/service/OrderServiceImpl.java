@@ -59,6 +59,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
         return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
@@ -66,10 +67,23 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public List<Order> getActiveSellingOrdersByStockAndPriceLessThanEqual(Stock stock, BigDecimal maximalPrice) {
         return orderRepository.findByStockAndOrderTypeAndPriceIsLessThanEqualAndDateExpirationIsAfterAndDateClosingIsNullOrderByPrice(
                 stock, OrderType.SELLING_ORDER, maximalPrice, OffsetDateTime.now(ZoneId.systemDefault()));
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void moveInactiveOrders() {
+        orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
+                OffsetDateTime.now(ZoneId.systemDefault()), 0).parallelStream().forEach(order -> {
+                    orderRepository.delete(order);
+                    order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+                    archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
+        });
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {

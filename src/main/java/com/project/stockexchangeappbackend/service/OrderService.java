@@ -13,5 +13,6 @@ public interface OrderService {
     void createOrder(OrderDTO orderDTO);
     List<Order> getActiveBuyingOrders();
     List<Order> getActiveSellingOrdersByStockAndPriceLessThanEqual(Stock stock, BigDecimal maximalPrice);
+    void moveInactiveOrders();
 
 }
