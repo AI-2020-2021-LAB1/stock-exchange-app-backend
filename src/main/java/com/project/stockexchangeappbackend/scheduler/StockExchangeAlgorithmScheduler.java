@@ -3,6 +3,7 @@ package com.project.stockexchangeappbackend.scheduler;
 import com.project.stockexchangeappbackend.entity.Order;
 import com.project.stockexchangeappbackend.entity.PriceType;
 import com.project.stockexchangeappbackend.entity.Stock;
+import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.service.OrderService;
 import com.project.stockexchangeappbackend.service.TransactionService;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
@@ -25,7 +28,7 @@ public class StockExchangeAlgorithmScheduler {
     private final OrderService orderService;
     private final TransactionService transactionService;
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelayString = "${application.stock-algorithm.delay-time}")
     public void run() {
         log.info("Stock exchange algorithm started.");
         long start = System.nanoTime();
@@ -49,8 +52,9 @@ public class StockExchangeAlgorithmScheduler {
                 .forEach(entry -> {
                     List<Order> buyingOrders = entry.getValue();
                     List<Order> sellingOrders = groupedAndSortedSellingOrders.get(entry.getKey());
+                    int index = 0;
                     while (!(buyingOrders.isEmpty() || sellingOrders.isEmpty())) {
-                        Order buyingOrder = buyingOrders.get(0);
+                        Order buyingOrder = buyingOrders.get(index);
                         Order sellingOrder = sellingOrders.get(0);
                         if (checkOrderCompatibility(buyingOrder, sellingOrder)) {
                             BigDecimal transactionPrice = buyingOrder.getPriceType() == PriceType.EQUAL ?
@@ -61,20 +65,24 @@ public class StockExchangeAlgorithmScheduler {
                             sellingOrder.setRemainingAmount(sellingOrder.getRemainingAmount() - transactionAmount);
                             if (buyingOrder.getRemainingAmount() == 0) {
                                 buyingOrder.setDateClosing(transactionTime);
-                            }
-                            if (sellingOrder.getRemainingAmount() == 0) {
-                                sellingOrder.setDateClosing(transactionTime);
-                            }
-                            transactionService.createTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
-                            if (buyingOrder.getRemainingAmount() == 0) {
                                 buyingOrders.remove(buyingOrder);
                             }
                             if (sellingOrder.getRemainingAmount() == 0) {
+                                sellingOrder.setDateClosing(transactionTime);
                                 sellingOrders.remove(sellingOrder);
+                                index = 0;
                             }
+                            transactionService.makeTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
                         } else {
-                            // TODO: when buyer == seller
-                            buyingOrders.remove(buyingOrder);
+                            if (index == buyingOrders.size() - 1) {
+                                break;
+                            } else if (!checkDifferentUsersRule(buyingOrder.getUser(), sellingOrder.getUser())
+                                        || !checkEqualPriceTypeRule(buyingOrder, sellingOrder)) {
+                                index++;
+                            } else {
+                                buyingOrders.remove(buyingOrder);
+                                index = 0;
+                            }
                         }
                     }
                 });
@@ -83,10 +91,18 @@ public class StockExchangeAlgorithmScheduler {
     }
 
     private boolean checkOrderCompatibility(Order buyingOrder, Order sellingOrder) {
-        return !buyingOrder.getUser().getId().equals(sellingOrder.getUser().getId())
-                && buyingOrder.getPrice().compareTo(sellingOrder.getPrice()) >= 0
-                && ((buyingOrder.getPriceType() != PriceType.EQUAL || sellingOrder.getPriceType() != PriceType.EQUAL)
-                    || buyingOrder.getPrice().equals(sellingOrder.getPrice()));
+        return buyingOrder.getPrice().compareTo(sellingOrder.getPrice()) >= 0
+                && checkDifferentUsersRule(buyingOrder.getUser(), sellingOrder.getUser())
+                && checkEqualPriceTypeRule(buyingOrder, sellingOrder);
+    }
+
+    private boolean checkDifferentUsersRule(User buyer, User seller) {
+        return !buyer.getId().equals(seller.getId());
+    }
+
+    private boolean checkEqualPriceTypeRule(Order buyingOrder, Order sellingOrder) {
+        return ((buyingOrder.getPriceType() != PriceType.EQUAL || sellingOrder.getPriceType() != PriceType.EQUAL)
+                || buyingOrder.getPrice().equals(sellingOrder.getPrice()));
     }
 
 }

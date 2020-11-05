@@ -8,6 +8,6 @@ import java.math.BigDecimal;
 public interface TransactionService {
 
     Transaction findTransactionById(Long id);
-    void createTransaction(Order buyingOrder, Order sellingOrder, int amount, BigDecimal pricePerUnit);
+    void makeTransaction(Order buyingOrder, Order sellingOrder, int amount, BigDecimal pricePerUnit);
 
 }

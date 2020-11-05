@@ -21,6 +21,7 @@ import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,6 +108,9 @@ class OrderServiceImplTest {
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull
+            (Mockito.eq(stock), Mockito.eq(user), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
         when(modelMapper.map(orderDTO, Order.class)).thenReturn(order);
         assertAll(() -> orderService.createOrder(orderDTO));
     }
@@ -127,6 +131,33 @@ class OrderServiceImplTest {
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull
+                (Mockito.eq(stock), Mockito.eq(user), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
+        assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotHavingAvailableStock(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
+        OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, stockDTO);
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Order order = createCustomOrder(1L, 100, 100, OrderType.SELLING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(1), null, user, stock);
+        Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
+        SecurityContextHolder.setContext(securityContext);
+
+        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(user.getEmail());
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull
+                (Mockito.eq(stock), Mockito.eq(user), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Collections.singletonList(order));
         assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
     }
 
@@ -146,6 +177,9 @@ class OrderServiceImplTest {
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull
+                (Mockito.eq(stock), Mockito.eq(user), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
         assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
     }
 

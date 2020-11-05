@@ -89,9 +89,16 @@ public class OrderServiceImpl implements OrderService {
                 errors.get("priceType").add("The selling order price's type cannot be LESS_OR_EQUAL.");
             }
             Optional<Resource> resource = resourceRepository.findByUserAndStock(user, stock);
-            if (resource.isEmpty() || resource.get().getAmount() < orderDTO.getAmount()) {
+            int sellingAmountOfStock =
+                    orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                            stock, user, OrderType.SELLING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()))
+                            .stream()
+                            .mapToInt(Order::getRemainingAmount)
+                            .sum();
+            if (resource.isEmpty() || resource.get().getAmount() < orderDTO.getAmount()
+                    || sellingAmountOfStock + orderDTO.getAmount() > resource.get().getAmount()) {
                 errors.putIfAbsent("amount", new ArrayList<>());
-                errors.get("amount").add("The logged in user does not have the specified amount of stocks.");
+                errors.get("amount").add("The logged in user does not have enough available amount of stocks for sale.");
             }
         }
         if (!errors.isEmpty()) {

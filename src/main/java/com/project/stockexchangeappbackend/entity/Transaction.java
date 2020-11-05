@@ -28,11 +28,11 @@ public class Transaction {
     @Column(nullable = false, name = "unit_price", precision = 14, scale = 2, updatable = false)
     private BigDecimal unitPrice;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "BUYING_ORDER_ID", nullable = false, updatable = false, referencedColumnName = "ID")
     private ArchivedOrder buyingOrder;
 
-    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "SELLING_ORDER_ID", nullable = false, updatable = false, referencedColumnName = "ID")
     private ArchivedOrder sellingOrder;
 
