@@ -34,6 +34,10 @@ security:
       jwt:
         key-value: ${JWT_SECRET:secret}
 
+application:
+  stock-algorithm:
+    delay-time: ${STOCK_ALGORITHM_DELAY:1000}
+
 logging:
   level:
     io:

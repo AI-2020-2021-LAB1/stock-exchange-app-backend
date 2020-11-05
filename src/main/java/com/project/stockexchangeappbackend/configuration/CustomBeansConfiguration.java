@@ -13,5 +13,4 @@ public class CustomBeansConfiguration {
     public ProcessingTime responseObject() {
         return new ProcessingTime();
     }
-
 }

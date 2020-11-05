@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -18,10 +19,13 @@ public class MeasureTimeAspect {
     @Around("@annotation(LogicBusinessMeasureTime)")
     public Object measureLogicBusinessExecutionTime (ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.nanoTime();
+        Object proceed = null;
         try {
-            Object proceed = joinPoint.proceed();
+            proceed = joinPoint.proceed();
             long executionTime = System.nanoTime() - start;
             processingTime.setBusinessLogicExecutionTime(executionTime);
+            return proceed;
+        } catch (BeanCreationException exc) {
             return proceed;
         } catch (Throwable t) {
             long executionTime = System.nanoTime() - start;
@@ -34,11 +38,14 @@ public class MeasureTimeAspect {
     @Around("@annotation(DBQueryMeasureTime)")
     public Object measureDBQueryExecutionTime (ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.nanoTime();
+        Object proceed = null;
         try {
-            Object proceed = joinPoint.proceed();
+            proceed = joinPoint.proceed();
             long executionTime = System.nanoTime() - start;
             processingTime.setDatabaseOperationExecutionTime(
                     processingTime.getDatabaseOperationExecutionTime() + executionTime);
+            return proceed;
+        } catch (BeanCreationException exc) {
             return proceed;
         } catch (Throwable t) {
             long executionTime = System.nanoTime() - start;
