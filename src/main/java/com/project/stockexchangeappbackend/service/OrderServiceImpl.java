@@ -62,7 +62,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @LogicBusinessMeasureTime
     public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
-        return allOrdersRepository.findAll(specification, pageable);
+        Page<AllOrders> page = allOrdersRepository.findAll(specification, pageable);
+        return page;
+        //return allOrdersRepository.findAll(specification, pageable);
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {
