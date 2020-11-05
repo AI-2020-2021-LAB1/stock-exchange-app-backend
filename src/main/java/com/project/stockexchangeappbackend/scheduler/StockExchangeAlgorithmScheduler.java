@@ -88,7 +88,8 @@ public class StockExchangeAlgorithmScheduler {
                             transactionService.makeTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
                         } else {
                             if (index == buyingOrders.size() - 1) {
-                                break;
+                                sellingOrders.remove(sellingOrder);
+                                index = 0;
                             } else if (!checkDifferentUsersRule(buyingOrder.getUser(), sellingOrder.getUser())
                                     || !checkEqualPriceTypeRule(buyingOrder, sellingOrder)) {
                                 index++;
