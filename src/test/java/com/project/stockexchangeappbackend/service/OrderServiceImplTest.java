@@ -103,7 +103,7 @@ class OrderServiceImplTest {
         AllOrders order = createCustomAllOrdersInstance(createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock));
         when(allOrdersRepository.findById(id)).thenReturn(Optional.of(order));
-        assertOrder(orderService.findOrderById(id), order);
+        assertOrder(modelMapper.map(orderService.findOrderById(id),Order.class), modelMapper.map(order,Order.class));
     }
 
     @Test
@@ -350,6 +350,21 @@ class OrderServiceImplTest {
                 .build();
     }
 
+    public static ArchivedOrder createCustomArchivedOrder(Order order){
+        return ArchivedOrder.builder()
+                .id(order.getId())
+                .amount(order.getAmount())
+                .remainingAmount(order.getRemainingAmount())
+                .dateClosing(order.getDateClosing())
+                .dateExpiration(order.getDateExpiration())
+                .dateCreation(order.getDateCreation())
+                .orderType(order.getOrderType())
+                .priceType(order.getPriceType())
+                .price(order.getPrice())
+                .stock(order.getStock())
+                .user(order.getUser())
+                .build();
+    }
 
     public static OrderDTO createCustomOrderDTO(Integer amount, OffsetDateTime dateExpiration, OrderType orderType,
                                                 PriceType priceType, BigDecimal price, StockDTO stockDTO) {

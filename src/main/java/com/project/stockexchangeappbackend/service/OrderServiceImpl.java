@@ -65,6 +65,7 @@ public class OrderServiceImpl implements OrderService {
 
     public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
         return allOrdersRepository.findAll(specification, pageable);
+    }
 
     @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
