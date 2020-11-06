@@ -8,10 +8,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomArchivedOrder;
@@ -35,7 +42,7 @@ class TransactionServiceImplTest {
     ArchivedOrderRepository archivedOrderRepository;
 
     @Mock
-    OrderRepository orderRepository;
+    AllOrdersRepository allOrdersRepository;
 
     @Mock
     ResourceRepository resourceRepository;
@@ -55,6 +62,38 @@ class TransactionServiceImplTest {
         assertTransaction(transactionService.findTransactionById(id), transaction);
     }
 
+    @Test
+    void shouldPageAndFilterTransactions() {
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
+        User user1 = createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        User user2 = createCustomUser(2L, "test2@test.pl", "Bobby", "Lawok", BigDecimal.ZERO);
+        Order order1 = createCustomOrder(1L, 100, 0, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().minusHours(2), null, user1, stock);
+        Order order2 = createCustomOrder(2L, 100, 0, OrderType.SELLING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now().minusHours(2), OffsetDateTime.now().minusHours(3), null, user2, stock);
+
+        ArchivedOrder buyingOrder = createCustomArchivedOrder(order1);
+        ArchivedOrder sellingOrder = createCustomArchivedOrder(order2);
+
+        Transaction transaction1 = createCustomTransaction(1, 50, OffsetDateTime.now(),
+                buyingOrder, sellingOrder, buyingOrder.getPrice());
+        Transaction transaction2 = createCustomTransaction(1, 50, OffsetDateTime.now(),
+                buyingOrder, sellingOrder, buyingOrder.getPrice());
+
+        List<Transaction> transactions = Arrays.asList(transaction1, transaction2);
+
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<Transaction> transactionSpecification =
+                (Specification<Transaction>) (root, criteriaQuery, criteriaBuilder) ->
+                        criteriaBuilder.equal(root.get("id"), 1);
+        when(transactionRepository.findAll(transactionSpecification, pageable))
+                .thenReturn(new PageImpl<>(transactions, pageable, transactions.size()));
+        Page<Transaction> output = transactionService.findAllTransactions(pageable, transactionSpecification);
+        assertEquals(transactions.size(), output.getNumberOfElements());
+        for (int i = 0; i < transactions.size(); i++) {
+            assertEquals(transactions.get(i), output.getContent().get(i));
+        }
+    }
 
     @Test
     void shouldThrowNotFoundExceptionWhenGettingTransactionById() {
@@ -157,8 +196,8 @@ class TransactionServiceImplTest {
                 () -> transactionService.makeTransaction(buyingOrder, sellingOrder, buyingOrder.getAmount(), sellingOrder.getPrice()));
     }
 
-    public static Transaction createCustomTransaction (long id, int amount, OffsetDateTime date, ArchivedOrder buyingOrder,
-                                                       ArchivedOrder sellingOrder, BigDecimal price) {
+    public static Transaction createCustomTransaction(long id, int amount, OffsetDateTime date, ArchivedOrder buyingOrder,
+                                                      ArchivedOrder sellingOrder, BigDecimal price) {
         return Transaction.builder()
                 .id(id).amount(amount).date(date)
                 .sellingOrder(sellingOrder).buyingOrder(buyingOrder)

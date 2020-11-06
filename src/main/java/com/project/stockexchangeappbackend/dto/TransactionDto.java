@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.dto;
 
+import com.project.stockexchangeappbackend.entity.ArchivedOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,4 +21,6 @@ public class TransactionDto {
     private BigDecimal unitPrice;
     private Long buyingOrderId;
     private Long sellingOrderId;
+    private OrderDTO sellingOrder;
+    private OrderDTO buyingOrder;
 }
