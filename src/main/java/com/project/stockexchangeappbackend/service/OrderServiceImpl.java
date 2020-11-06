@@ -7,6 +7,9 @@ import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,14 +31,13 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final ResourceRepository resourceRepository;
     private final ModelMapper modelMapper;
+    private final AllOrdersRepository allOrdersRepository;
 
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
-    public Order findOrderById(Long id) {
-        return orderRepository.findById(id)
-                .orElseGet(() -> modelMapper.map(archivedOrderRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Order Not Found")), Order.class));
+    public AllOrders findOrderById(Long id) {
+        return allOrdersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
     }
 
     @Override
@@ -60,6 +62,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
+
+    public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
+        return allOrdersRepository.findAll(specification, pageable);
+
     @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
         return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
@@ -84,6 +90,7 @@ public class OrderServiceImpl implements OrderService {
                     order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
                     archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
         });
+
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {

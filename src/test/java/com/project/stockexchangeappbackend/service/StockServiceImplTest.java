@@ -62,7 +62,6 @@ class StockServiceImplTest {
         for (int i=0; i<stocks.size(); i++) {
             assertStock(output.getContent().get(i), stocks.get(i));
         }
-
     }
 
     public static void assertStock(Stock output, Stock expected) {

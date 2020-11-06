@@ -76,6 +76,5 @@ public class StockController {
         } catch (NumberFormatException e) {
             return mapper.map(stockService.getStockByAbbreviation(id), StockDTO.class);
         }
-
     }
 }
