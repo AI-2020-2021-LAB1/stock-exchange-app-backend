@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -61,10 +62,35 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
+
     public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
-        Page<AllOrders> page = allOrdersRepository.findAll(specification, pageable);
-        return page;
-        //return allOrdersRepository.findAll(specification, pageable);
+        return allOrdersRepository.findAll(specification, pageable);
+
+    @Transactional(readOnly = true)
+    public List<Order> getActiveBuyingOrders() {
+        return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                OrderType.BUYING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()));
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
+    public List<Order> getActiveSellingOrdersByStockAndPriceLessThanEqual(Stock stock, BigDecimal maximalPrice) {
+        return orderRepository.findByStockAndOrderTypeAndPriceIsLessThanEqualAndDateExpirationIsAfterAndDateClosingIsNullOrderByPrice(
+                stock, OrderType.SELLING_ORDER, maximalPrice, OffsetDateTime.now(ZoneId.systemDefault()));
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void moveInactiveOrders() {
+        orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
+                OffsetDateTime.now(ZoneId.systemDefault()), 0).parallelStream().forEach(order -> {
+                    orderRepository.delete(order);
+                    order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+                    archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
+        });
+
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {
@@ -84,9 +110,16 @@ public class OrderServiceImpl implements OrderService {
                 errors.get("priceType").add("The selling order price's type cannot be LESS_OR_EQUAL.");
             }
             Optional<Resource> resource = resourceRepository.findByUserAndStock(user, stock);
-            if (resource.isEmpty() || resource.get().getAmount() < orderDTO.getAmount()) {
+            int sellingAmountOfStock =
+                    orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                            stock, user, OrderType.SELLING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()))
+                            .stream()
+                            .mapToInt(Order::getRemainingAmount)
+                            .sum();
+            if (resource.isEmpty() || resource.get().getAmount() < orderDTO.getAmount()
+                    || sellingAmountOfStock + orderDTO.getAmount() > resource.get().getAmount()) {
                 errors.putIfAbsent("amount", new ArrayList<>());
-                errors.get("amount").add("The logged in user does not have the specified amount of stocks.");
+                errors.get("amount").add("The logged in user does not have enough available amount of stocks for sale.");
             }
         }
         if (!errors.isEmpty()) {
