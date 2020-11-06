@@ -71,20 +71,20 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification) {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
-        Specification<Transaction> userIsPrincipal1 = (root, criteriaQuery, criteriaBuilder) ->
+        Specification<Transaction> userIsBuyer = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("buyingOrder")
                         .join("user")
                         .get("email"), principal);
 
-        Specification<Transaction> userIsPrincipal2 = (root, criteriaQuery, criteriaBuilder) ->
+        Specification<Transaction> userIsSeller = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("sellingOrder")
                         .join("user")
                         .get("email"), principal);
 
-        Specification<Transaction> spec1 = Specification.where(userIsPrincipal1).and(specification);
-        Specification<Transaction> spec2 = Specification.where(userIsPrincipal2).and(specification);
+        Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
+        Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
 
         return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
 
