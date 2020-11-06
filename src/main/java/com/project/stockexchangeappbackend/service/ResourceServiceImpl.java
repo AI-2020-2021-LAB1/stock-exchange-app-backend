@@ -16,7 +16,7 @@ import javax.persistence.criteria.Join;
 
 @Service
 @RequiredArgsConstructor
-public class ResourceServiceImpl implements ResourceService{
+public class ResourceServiceImpl implements ResourceService {
 
     private final ResourceRepository resourceRepository;
 
@@ -24,7 +24,7 @@ public class ResourceServiceImpl implements ResourceService{
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public Page<Resource> getOwnedResources(Pageable pageable, Specification<Resource> resourceSpecification) {
-        String principal = (String)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String principal = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Specification<Resource> userIsPrincipal = (root, criteriaQuery, criteriaBuilder) -> {
             Join<Resource, User> owner = root.join("user");
             return criteriaBuilder.equal(owner.get("email"), principal);
