@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.criteria.Join;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -87,11 +88,23 @@ public class OrderServiceImpl implements OrderService {
     public void moveInactiveOrders() {
         orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
                 OffsetDateTime.now(ZoneId.systemDefault()), 0).parallelStream().forEach(order -> {
-                    orderRepository.delete(order);
-                    order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
-                    archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
+            orderRepository.delete(order);
+            order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+            archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
         });
 
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
+    public Page<AllOrders> getOwnedOrders(Pageable pageable, Specification<AllOrders> specification) {
+        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        Specification<AllOrders> userIsPrincipal = (root, criteriaQuery, criteriaBuilder) -> {
+            Join<Order, User> owner = root.join("user");
+            return criteriaBuilder.equal(owner.get("email"), principal);
+        };
+        return allOrdersRepository.findAll(Specification.where(userIsPrincipal).and(specification), pageable);
     }
 
     private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {

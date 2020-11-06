@@ -11,6 +11,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +66,28 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Page<Transaction> findAllTransactions(Pageable pageable, Specification<Transaction> specification) {
         return transactionRepository.findAll(specification, pageable);
+    }
+
+    @Override
+    public Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification) {
+        String principal = SecurityContextHolder.getContext().getAuthentication().getName();
+        Specification<Transaction> userIsBuyer = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("buyingOrder")
+                        .join("user")
+                        .get("email"), principal);
+
+        Specification<Transaction> userIsSeller = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("sellingOrder")
+                        .join("user")
+                        .get("email"), principal);
+
+        Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
+        Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
+
+        return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+
     }
 
     private void updateOrder(Order order) {

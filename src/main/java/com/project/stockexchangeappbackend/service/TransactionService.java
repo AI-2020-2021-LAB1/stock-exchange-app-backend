@@ -15,4 +15,5 @@ public interface TransactionService {
 
     Page<Transaction> findAllTransactions(Pageable pageable, Specification<Transaction> specification);
 
+    Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification);
 }
