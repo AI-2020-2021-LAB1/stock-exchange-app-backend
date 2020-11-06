@@ -3,7 +3,7 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.dto.TransactionDto;
+import com.project.stockexchangeappbackend.dto.TransactionDTO;
 import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
 import com.project.stockexchangeappbackend.service.TransactionService;
 import io.swagger.annotations.*;
@@ -33,14 +33,14 @@ public class TransactionController {
     @ApiOperation(value = "Retrieve transaction by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Transaction was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given transaction not found.", response = ErrorResponse.class)})
-    public ResponseEntity<TransactionDto> getTransactionDetails(@PathVariable Long id) {
-        TransactionDto transactionDto = mapper.map(transactionService.findTransactionById(id), TransactionDto.class);
+    public ResponseEntity<TransactionDTO> getTransactionDetails(@PathVariable Long id) {
+        TransactionDTO transactionDto = mapper.map(transactionService.findTransactionById(id), TransactionDTO.class);
         return new ResponseEntity<>(transactionDto, HttpStatus.OK);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Page and filter transactions.", response = TransactionDto.class,
+    @ApiOperation(value = "Page and filter transactions.", response = TransactionDTO.class,
             notes = "Required one role of: ADMIN, USER")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered transactions."))
     @ApiImplicitParams({
@@ -74,9 +74,9 @@ public class TransactionController {
             @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
     })
-    public Page<TransactionDto> getTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification) {
+    public Page<TransactionDTO> getTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification) {
         return transactionService.findAllTransactions(pageable, specification)
-                .map(transaction -> mapper.map(transaction, TransactionDto.class));
+                .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
 
 
