@@ -90,8 +90,7 @@ public class UsersController {
                     value = "Filtering criteria for field `currentPrice`. Param is exact value. (omitted if null)")
     })
     public Page<ResourceDTO> getOwnedStocks(@ApiIgnore Pageable pageable, ResourceSpecification specification) {
-        return resourceService.getOwnedResources(pageable, specification)
-                .map(resource -> mapper.map(resource, ResourceDTO.class));
+        return resourceService.getOwnedResources(pageable, specification);
     }
 
     @GetMapping("/order/owned")

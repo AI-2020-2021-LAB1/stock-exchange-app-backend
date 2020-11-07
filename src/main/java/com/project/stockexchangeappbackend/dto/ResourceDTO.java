@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -27,6 +28,10 @@ public class ResourceDTO {
 
     @ApiModelProperty(notes = "Owned units' amount of stocks.")
     private Integer amount;
+
+    @ApiModelProperty(notes = "Owned units' amount of stocks, which can is available for sale.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer amountAvailableForSale;
 
     @ApiModelProperty(notes = "Owned units' average current price per unit.")
     private BigDecimal currentPrice;
