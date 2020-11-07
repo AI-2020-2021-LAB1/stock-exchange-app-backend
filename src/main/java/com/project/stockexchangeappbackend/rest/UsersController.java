@@ -89,14 +89,15 @@ public class UsersController {
                     value = "Filtering criteria for field `currentPrice`. Param is exact value. (omitted if null)")
     })
     public Page<ResourceDTO> getOwnedStocks(@ApiIgnore Pageable pageable, ResourceSpecification specification) {
-        return resourceService.getOwnedResources(pageable, specification)
-                .map(resource -> mapper.map(resource, ResourceDTO.class));
+        return resourceService.getOwnedResources(pageable, specification);
     }
 
     @GetMapping("/order/owned")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter logged user's orders.", response = OrderDTO.class,
-            notes = "Required role of: USER")
+            notes = "Required role of: USER \n" +
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's orders."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -126,24 +127,20 @@ public class UsersController {
                     value = "Filtering criteria for field `priceType`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "orderType", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `orderType`. Param is exact value. (omitted if null)"),
-            @ApiImplicitParam(name = "creationDate", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `creationDate`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "creationDate>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationDate`. (omitted if null)"),
             @ApiImplicitParam(name = "creationDate<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationDate`. (omitted if null)"),
-            @ApiImplicitParam(name = "dateExpiration", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `dateExpiration`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "dateExpiration>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `dateExpiration`. (omitted if null)"),
             @ApiImplicitParam(name = "dateExpiration<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `dateExpiration`. (omitted if null)"),
-            @ApiImplicitParam(name = "dateClosing", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `creationClosing`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "dateClosing>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
+            @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
     })
     public Page<OrderDTO> getOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification) {
         return orderService.getOwnedOrders(pageable, specification)
@@ -153,7 +150,9 @@ public class UsersController {
     @GetMapping("/transaction/owned")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter user's owned transactions.", response = TransactionDTO.class,
-            notes = "Required role of: USER")
+            notes = "Required role of: USER \n" +
+                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered user's owned transactions."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -163,8 +162,6 @@ public class UsersController {
             @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
                     value = "Sorting criteria in the format: property(,asc|desc). " +
                             "Default sort order is ascending. Multiple sort criteria are supported."),
-            @ApiImplicitParam(name = "date", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `date`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "date>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `date`. (omitted if null)"),
             @ApiImplicitParam(name = "date<", dataType = "date", paramType = "query",

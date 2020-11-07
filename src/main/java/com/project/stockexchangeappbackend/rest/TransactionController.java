@@ -1,28 +1,31 @@
 package com.project.stockexchangeappbackend.rest;
 
-
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.dto.TransactionDTO;
 import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
 import com.project.stockexchangeappbackend.service.TransactionService;
 import io.swagger.annotations.*;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 @RestController
 @RequestMapping("/api/transaction")
-@RequiredArgsConstructor
+@CrossOrigin("*")
+@AllArgsConstructor
+@Api(value = "Transaction", description = "REST API for transactions' management", tags = "Transaction")
+@ApiResponses({
+        @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                response = ErrorResponse.class),
+        @ApiResponse(code = 401, message = "Unauthorized.")
+})
 public class TransactionController {
 
     private final TransactionService transactionService;
@@ -41,7 +44,9 @@ public class TransactionController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @ApiOperation(value = "Page and filter transactions.", response = TransactionDTO.class,
-            notes = "Required one role of: ADMIN, USER")
+            notes = "Required one role of: ADMIN, USER \n" +
+                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered transactions."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -51,8 +56,6 @@ public class TransactionController {
             @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
                     value = "Sorting criteria in the format: property(,asc|desc). " +
                             "Default sort order is ascending. Multiple sort criteria are supported."),
-            @ApiImplicitParam(name = "date", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `date`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "date>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `date`. (omitted if null)"),
             @ApiImplicitParam(name = "date<", dataType = "date", paramType = "query",
