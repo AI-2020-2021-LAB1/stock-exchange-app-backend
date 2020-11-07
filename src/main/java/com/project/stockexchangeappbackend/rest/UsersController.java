@@ -152,7 +152,7 @@ public class UsersController {
 
     @GetMapping("/transaction/owned")
     @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "Page and filter user's owned transactions.", response = TransactionDto.class,
+    @ApiOperation(value = "Page and filter user's owned transactions.", response = TransactionDTO.class,
             notes = "Required role of: USER")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered user's owned transactions."))
     @ApiImplicitParams({
@@ -190,11 +190,10 @@ public class UsersController {
             @ApiImplicitParam(name = "isBuyer", dataType = "boolean", paramType = "query",
                     value = "Filtering criteria for field buyingOrder. (true if null)"),
     })
-    public Page<TransactionDto> getOwnedTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification,
+    public Page<TransactionDTO> getOwnedTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification,
                                                      @RequestParam(required = false, defaultValue = "true") boolean isSeller,
                                                      @RequestParam(required = false, defaultValue = "true") boolean isBuyer) {
         return transactionService.getOwnedTransactions(pageable, specification, isSeller, isBuyer)
-                .map(transaction -> mapper.map(transaction, TransactionDto.class));
+                .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
-
 }
