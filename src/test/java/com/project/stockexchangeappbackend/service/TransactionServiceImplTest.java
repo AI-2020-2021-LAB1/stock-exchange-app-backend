@@ -45,6 +45,9 @@ class TransactionServiceImplTest {
     AllOrdersRepository allOrdersRepository;
 
     @Mock
+    OrderRepository orderRepository;
+
+    @Mock
     ResourceRepository resourceRepository;
 
     @Mock
