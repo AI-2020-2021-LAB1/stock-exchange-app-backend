@@ -11,9 +11,11 @@ import java.math.BigDecimal;
 public interface TransactionService {
 
     Transaction findTransactionById(Long id);
+
     void makeTransaction(Order buyingOrder, Order sellingOrder, int amount, BigDecimal pricePerUnit);
 
     Page<Transaction> findAllTransactions(Pageable pageable, Specification<Transaction> specification);
 
-    Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification);
+    Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification,
+                                           boolean isSeller, boolean isBuyer);
 }

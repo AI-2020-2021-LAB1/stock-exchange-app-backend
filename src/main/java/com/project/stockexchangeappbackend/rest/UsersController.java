@@ -36,7 +36,6 @@ public class UsersController {
     private final TransactionService transactionService;
     private final ModelMapper mapper;
 
-
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Retrieve user by id", response = StockDTO.class, notes = "Required role: ADMIN")
@@ -186,10 +185,15 @@ public class UsersController {
                     value = "Filtering criteria for field `name` (omitted if null)"),
             @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
+            @ApiImplicitParam(name = "isSeller", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field sellingOrder. (true if null)"),
+            @ApiImplicitParam(name = "isBuyer", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field buyingOrder. (true if null)"),
     })
-    public Page<TransactionDTO> getOwnedTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification) {
-        return transactionService.getOwnedTransactions(pageable, specification)
+    public Page<TransactionDTO> getOwnedTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification,
+                                                     @RequestParam(required = false, defaultValue = "true") boolean isSeller,
+                                                     @RequestParam(required = false, defaultValue = "true") boolean isBuyer) {
+        return transactionService.getOwnedTransactions(pageable, specification, isSeller, isBuyer)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
-
 }
