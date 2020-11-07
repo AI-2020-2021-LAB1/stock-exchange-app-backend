@@ -27,4 +27,7 @@ public interface OrderService {
     Page<AllOrders> getOwnedOrders(Pageable pageable, Specification<AllOrders> specification);
 
     Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification);
+
+    void deactivateOrder(Long id);
+
 }

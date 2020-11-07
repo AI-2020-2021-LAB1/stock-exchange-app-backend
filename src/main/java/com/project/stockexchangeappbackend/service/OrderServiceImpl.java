@@ -63,11 +63,30 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
-
+    @Transactional(readOnly = true)
     public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
         return allOrdersRepository.findAll(specification, pageable);
     }
 
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void deactivateOrder(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
+        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!order.getUser().getEmail().equals(username)) {
+            throw new AccessDeniedException("Access Denied");
+        }
+        orderRepository.delete(order);
+        ArchivedOrder archivedOrder = archivedOrderRepository.findById(id)
+                .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
+        archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+        archivedOrderRepository.save(archivedOrder);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
         return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(

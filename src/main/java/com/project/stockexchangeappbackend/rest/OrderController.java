@@ -107,4 +107,14 @@ public class OrderController {
                 .map(order -> mapper.map(order, OrderDTO.class));
     }
 
+    @PostMapping("/{id}/deactivation")
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(value = "Deactivate order")
+    @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully deactivated."),
+            @ApiResponse(code = 404, message = "Order not found.", response = ErrorResponse.class)})
+    public void deactivateOrder(@ApiParam(value = "The order's id to deactivation.", required = true)
+                                    @PathVariable("id") Long id) {
+        orderService.deactivateOrder(id);
+    }
+
 }

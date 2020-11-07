@@ -100,10 +100,12 @@ class OrderServiceImplTest {
         Long id = 1L;
         Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
-        AllOrders order = createCustomAllOrdersInstance(createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
-                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock));
-        when(allOrdersRepository.findById(id)).thenReturn(Optional.of(order));
-        assertOrder(modelMapper.map(orderService.findOrderById(id),Order.class), modelMapper.map(order,Order.class));
+        Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
+        AllOrders allOrder = createCustomAllOrdersInstance(order);
+
+        when(allOrdersRepository.findById(id)).thenReturn(Optional.of(allOrder));
+        assertAllOrder(orderService.findOrderById(id), allOrder);
     }
 
     @Test
@@ -323,7 +325,83 @@ class OrderServiceImplTest {
         assertAll(() -> orderService.moveInactiveOrders());
     }
 
+    @Test
+    void shouldDeactivateOrder(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        Long id = 1L;
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Order order = createCustomOrder(id, 100, 90, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.TEN, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(2),
+                null, user, stock);
+        ArchivedOrder archivedOrder = createCustomArchivedOrder(order);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(user.getEmail());
+        when(archivedOrderRepository.findById(id)).thenReturn(Optional.of(archivedOrder));
+        assertAll(() -> orderService.deactivateOrder(id));
+    }
+
+    @Test
+    void shouldDeactivateOrderAndNotArchived(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        Long id = 1L;
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.TEN, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(2),
+                null, user, stock);
+        ArchivedOrder archivedOrder = createCustomArchivedOrder(order);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(user.getEmail());
+        when(archivedOrderRepository.findById(id)).thenReturn(Optional.empty());
+        when(modelMapper.map(order, ArchivedOrder.class)).thenReturn(archivedOrder);
+        assertAll(() -> orderService.deactivateOrder(id));
+    }
+
+    @Test
+    void shouldThrowAccessDeniedExceptionWhenDeactivatingOrder(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        Long id = 1L;
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.TEN, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(2),
+                null, user, stock);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn("user02");
+        assertThrows(AccessDeniedException.class, () -> orderService.deactivateOrder(id));
+    }
+
+    @Test
+    void shouldThrowEntityNotFoundExceptionWhenDeactivatingOrder() {
+        Long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> orderService.deactivateOrder(id));
+    }
+
     public static void assertOrder(Order output, Order expected) {
+
+        assertAll(() -> assertEquals(expected.getId(), output.getId()),
+                () -> assertEquals(expected.getAmount(), output.getAmount()),
+                () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
+                () -> assertEquals(expected.getDateCreation(), output.getDateCreation()),
+                () -> assertEquals(expected.getDateExpiration(), output.getDateExpiration()),
+                () -> assertEquals(expected.getDateClosing(), output.getDateClosing()),
+                () -> assertEquals(expected.getOrderType(), output.getOrderType()),
+                () -> assertEquals(expected.getPriceType(), output.getPriceType()),
+                () -> assertEquals(expected.getPrice(), output.getPrice()),
+                () -> assertStock(expected.getStock(), output.getStock()),
+                () -> assertUser(expected.getUser(), output.getUser()));
+    }
+
+    public static void assertAllOrder(AllOrders output, AllOrders expected) {
 
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
