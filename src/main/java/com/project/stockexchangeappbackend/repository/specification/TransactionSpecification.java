@@ -11,12 +11,8 @@ import org.springframework.data.jpa.domain.Specification;
 @Join(path = "buyingOrder", alias = "o")
 @Join(path = "o.stock", alias = "s")
 @And({
-        @Spec(path = "date", spec = GreaterThanOrEqual.class, params = {"dateCreation>"},
-                config = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"),
-        @Spec(path = "date", spec = LessThanOrEqual.class, params = {"dateCreation<"},
-                config = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"),
-        @Spec(path = "date", spec = Equal.class, params = {"dateCreation"},
-                config = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"),
+        @Spec(path = "date", spec = GreaterThanOrEqual.class, params = {"date>"}),
+        @Spec(path = "date", spec = LessThanOrEqual.class, params = {"date<"}),
         @Spec(path = "amount", spec = GreaterThanOrEqual.class, params = {"amount>"}),
         @Spec(path = "amount", spec = LessThanOrEqual.class, params = {"amount<"}),
         @Spec(path = "amount", spec = Equal.class, params = {"amount"}),

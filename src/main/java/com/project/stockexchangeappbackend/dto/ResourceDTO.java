@@ -29,7 +29,7 @@ public class ResourceDTO {
     @ApiModelProperty(notes = "Owned units' amount of stocks.")
     private Integer amount;
 
-    @ApiModelProperty(notes = "Owned units' amount of stocks, which can is available for sale.")
+    @ApiModelProperty(notes = "Owned units' amount of stocks, which is available for sale.")
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer amountAvailableForSale;
 

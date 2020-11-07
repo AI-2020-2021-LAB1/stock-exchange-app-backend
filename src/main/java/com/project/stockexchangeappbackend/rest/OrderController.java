@@ -53,7 +53,9 @@ public class OrderController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @ApiOperation(value = "Page and filter orders.", response = OrderDTO.class,
-            notes = "Required one role of: ADMIN, USER")
+            notes = "Required one role of: ADMIN, USER \n" +
+                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered orders."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -83,24 +85,20 @@ public class OrderController {
                     value = "Filtering criteria for field `priceType`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "orderType", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `orderType`. Param is exact value. (omitted if null)"),
-            @ApiImplicitParam(name = "creationDate", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `creationDate`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "creationDate>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationDate`. (omitted if null)"),
             @ApiImplicitParam(name = "creationDate<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationDate`. (omitted if null)"),
-            @ApiImplicitParam(name = "dateExpiration", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `dateExpiration`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "dateExpiration>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `dateExpiration`. (omitted if null)"),
             @ApiImplicitParam(name = "dateExpiration<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `dateExpiration`. (omitted if null)"),
-            @ApiImplicitParam(name = "dateClosing", dataType = "date", paramType = "query",
-                    value = "Filtering criteria for field `creationClosing`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "dateClosing>", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
+            @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
     })
     public Page<OrderDTO> getOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification allOrdersSpecification) {
         return orderService.findAllOrders(pageable, allOrdersSpecification)
