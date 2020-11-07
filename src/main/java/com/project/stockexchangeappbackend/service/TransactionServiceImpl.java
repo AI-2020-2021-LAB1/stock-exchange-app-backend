@@ -69,7 +69,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification) {
+    public Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification,
+                                                  boolean isSeller, boolean isBuyer) {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
         Specification<Transaction> userIsBuyer = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
@@ -86,7 +87,14 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
         Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
 
-        return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+        if (isBuyer && isSeller)
+            return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+        else if (isBuyer)
+            return transactionRepository.findAll(Specification.where(spec1), pageable);
+        else if (isSeller)
+            return transactionRepository.findAll(Specification.where(spec2), pageable);
+        else return Page.empty();
+
 
     }
 
