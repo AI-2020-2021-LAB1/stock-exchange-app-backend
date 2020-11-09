@@ -183,9 +183,11 @@ public class UsersController {
             @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
             @ApiImplicitParam(name = "isSeller", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for field sellingOrder. (true if null)"),
+                    value = "Filtering criteria for field sellingOrder. " +
+                            "Include transactions where user is selling (not required, default true"),
             @ApiImplicitParam(name = "isBuyer", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for field buyingOrder. (true if null)"),
+                    value = "Filtering criteria for field buyingOrder. " +
+                            "Include transactions where user is buying. (not required, default true)"),
     })
     public Page<TransactionDTO> getOwnedTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification,
                                                      @RequestParam(required = false, defaultValue = "true") boolean isSeller,

@@ -1,6 +1,5 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.OrderDTO;
 import com.project.stockexchangeappbackend.entity.ArchivedOrder;
 import com.project.stockexchangeappbackend.entity.Order;
 import com.project.stockexchangeappbackend.entity.Resource;
@@ -97,24 +96,22 @@ public class TransactionServiceImpl implements TransactionService {
         } else {
             return Page.empty();
         }
-
-
     }
 
     @Override
     public Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
                                                     long orderId) {
-        Specification<Transaction> userIsBuyer = (root, criteriaQuery, criteriaBuilder) ->
+        Specification<Transaction> withBuyingOrder = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("buyingOrder")
                         .get("id"), orderId);
-        Specification<Transaction> userIsSeller = (root, criteriaQuery, criteriaBuilder) ->
+        Specification<Transaction> withSellingOrder = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("sellingOrder")
                         .get("id"), orderId);
 
-        Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
-        Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
+        Specification<Transaction> spec1 = Specification.where(withBuyingOrder).and(specification);
+        Specification<Transaction> spec2 = Specification.where(withSellingOrder).and(specification);
 
         return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
     }
