@@ -33,7 +33,7 @@ paths:
           description: "User's login (required if password grant type selected)"
           required: false
           type: "string"
-        - name: "passwprd"
+        - name: "password"
           in: "formData"
           description: "Password's login (required if password grant type selected)"
           required: false

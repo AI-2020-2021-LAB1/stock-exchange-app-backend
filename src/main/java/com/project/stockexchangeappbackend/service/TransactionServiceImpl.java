@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.OrderDTO;
 import com.project.stockexchangeappbackend.entity.ArchivedOrder;
 import com.project.stockexchangeappbackend.entity.Order;
 import com.project.stockexchangeappbackend.entity.Resource;
@@ -87,15 +88,35 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
         Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
 
-        if (isBuyer && isSeller)
+        if (isBuyer && isSeller) {
             return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
-        else if (isBuyer)
+        } else if (isBuyer) {
             return transactionRepository.findAll(Specification.where(spec1), pageable);
-        else if (isSeller)
+        } else if (isSeller) {
             return transactionRepository.findAll(Specification.where(spec2), pageable);
-        else return Page.empty();
+        } else {
+            return Page.empty();
+        }
 
 
+    }
+
+    @Override
+    public Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
+                                                    long orderId) {
+        Specification<Transaction> userIsBuyer = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("buyingOrder")
+                        .get("id"), orderId);
+        Specification<Transaction> userIsSeller = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("sellingOrder")
+                        .get("id"), orderId);
+
+        Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
+        Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
+
+        return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
     }
 
     private void updateOrder(Order order) {

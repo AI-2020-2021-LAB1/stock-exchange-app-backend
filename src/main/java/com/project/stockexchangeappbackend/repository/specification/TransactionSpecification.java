@@ -1,7 +1,10 @@
 package com.project.stockexchangeappbackend.repository.specification;
 
 import com.project.stockexchangeappbackend.entity.Transaction;
-import net.kaczmarzyk.spring.data.jpa.domain.*;
+import net.kaczmarzyk.spring.data.jpa.domain.Equal;
+import net.kaczmarzyk.spring.data.jpa.domain.GreaterThanOrEqual;
+import net.kaczmarzyk.spring.data.jpa.domain.LessThanOrEqual;
+import net.kaczmarzyk.spring.data.jpa.domain.LikeIgnoreCase;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Join;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
@@ -22,5 +25,6 @@ import org.springframework.data.jpa.domain.Specification;
         @Spec(path = "s.name", spec = LikeIgnoreCase.class, params = {"name"}),
         @Spec(path = "s.abbreviation", spec = LikeIgnoreCase.class, params = {"abbreviation"}),
 })
+
 public interface TransactionSpecification extends Specification<Transaction> {
 }
