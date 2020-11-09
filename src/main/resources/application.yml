@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: stock-exchange
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_URL:localhost:5432}/${POSTGRES_DB:postgres}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:admin}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+security:
+  oauth2:
+    client:
+      client-id: ${CLIENT_ID:clientId}
+      client-secret: ${CLIENT_SECRET:clientSecret}
+      grant-type: password, refresh_token
+      access-token-validity-seconds: ${ACCESS_TOKEN_VALIDITY_SECONDS:3600}
+      refresh-token-validity-seconds: ${REFRESH_TOKEN_VALIDITY_SECONDS:108000}
+    authorization:
+      jwt:
+        key-value: ${JWT_SECRET:secret}
+
+application:
+  stock-algorithm:
+    delay-time: ${STOCK_ALGORITHM_DELAY:1000}
+
+logging:
+  level:
+    io:
+      swagger:
+        models:
+          parameters:
+            AbstractSerializableParameter: ERROR
