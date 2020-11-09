@@ -2,8 +2,11 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.OrderDTO;
+import com.project.stockexchangeappbackend.dto.TransactionDTO;
 import com.project.stockexchangeappbackend.repository.specification.AllOrdersSpecification;
+import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
 import com.project.stockexchangeappbackend.service.OrderService;
+import com.project.stockexchangeappbackend.service.TransactionService;
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -29,6 +32,7 @@ import javax.validation.Valid;
 public class OrderController {
 
     private final OrderService orderService;
+    private final TransactionService transactionService;
     private final ModelMapper mapper;
 
     @GetMapping("/{id}")
@@ -105,13 +109,55 @@ public class OrderController {
                 .map(order -> mapper.map(order, OrderDTO.class));
     }
 
+    @GetMapping("/{id}/transactions")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @ApiOperation(value = "Page and filter order's transactions.", response = TransactionDTO.class,
+            notes = "Required one role of: ADMIN, USER \n" +
+                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered order's transactions."))
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page.", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. Multiple sort criteria are supported."),
+            @ApiImplicitParam(name = "date>", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `date`. (omitted if null)"),
+            @ApiImplicitParam(name = "date<", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `date`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "unitPrice>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `unitPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "unitPrice<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `unitPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "unitPrice", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `unitPrice`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "name", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `name` (omitted if null)"),
+            @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
+    })
+    public Page<TransactionDTO> getTransactionsByOrder(@PathVariable(name = "id") long orderId, @ApiIgnore Pageable pageable,
+                                                       TransactionSpecification transactionSpecification) {
+        return transactionService.getTransactionsByOrder(pageable, transactionSpecification, orderId)
+                .map(transaction -> mapper.map(transaction, TransactionDTO.class));
+    }
+
     @PostMapping("/{id}/deactivation")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Deactivate order")
     @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully deactivated."),
             @ApiResponse(code = 404, message = "Order not found.", response = ErrorResponse.class)})
     public void deactivateOrder(@ApiParam(value = "The order's id to deactivation.", required = true)
-                                    @PathVariable("id") Long id) {
+                                @PathVariable("id") Long id) {
         orderService.deactivateOrder(id);
     }
 

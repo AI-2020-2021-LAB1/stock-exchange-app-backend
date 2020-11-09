@@ -18,4 +18,7 @@ public interface TransactionService {
 
     Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification,
                                            boolean isSeller, boolean isBuyer);
+
+    Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
+                                             long orderId);
 }

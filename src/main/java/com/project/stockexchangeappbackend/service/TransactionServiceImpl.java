@@ -87,15 +87,33 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
         Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
 
-        if (isBuyer && isSeller)
+        if (isBuyer && isSeller) {
             return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
-        else if (isBuyer)
+        } else if (isBuyer) {
             return transactionRepository.findAll(Specification.where(spec1), pageable);
-        else if (isSeller)
+        } else if (isSeller) {
             return transactionRepository.findAll(Specification.where(spec2), pageable);
-        else return Page.empty();
+        } else {
+            return Page.empty();
+        }
+    }
 
+    @Override
+    public Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
+                                                    long orderId) {
+        Specification<Transaction> withBuyingOrder = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("buyingOrder")
+                        .get("id"), orderId);
+        Specification<Transaction> withSellingOrder = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("sellingOrder")
+                        .get("id"), orderId);
 
+        Specification<Transaction> spec1 = Specification.where(withBuyingOrder).and(specification);
+        Specification<Transaction> spec2 = Specification.where(withSellingOrder).and(specification);
+
+        return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
     }
 
     private void updateOrder(Order order) {
