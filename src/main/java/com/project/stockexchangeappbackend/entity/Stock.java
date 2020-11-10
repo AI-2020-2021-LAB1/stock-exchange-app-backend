@@ -30,4 +30,7 @@ public class Stock {
     @Column(name = "AMOUNT", nullable = false)
     private Integer amount;
 
+    @Column(name = "PRICE_CHANGE_RATIO", nullable = false)
+    private Double priceChangeRatio;
+
 }

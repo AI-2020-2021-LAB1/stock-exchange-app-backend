@@ -64,6 +64,27 @@ class StockServiceImplTest {
         }
     }
 
+    @Test
+    void shouldReturnAllStocks() {
+        List<Stock> stocks = Arrays.asList(
+                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20)),
+                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20)));
+        when(stockRepository.findAll()).thenReturn(stocks);
+        List<Stock> output = stockService.getAllStocks();
+        assertEquals(stocks.size(), output.size());
+        for (int i=0; i<stocks.size(); i++) {
+            assertStock(output.get(i), stocks.get(i));
+        }
+    }
+
+    @Test
+    void shouldUpdateStock() {
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20));
+        when(stockRepository.save(stock)).thenReturn(stock);
+        assertAll(() -> stockService.updateStock(stock));
+
+    }
+
     public static void assertStock(Stock output, Stock expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getName(), output.getName()),

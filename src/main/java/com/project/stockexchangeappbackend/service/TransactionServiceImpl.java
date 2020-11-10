@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -114,6 +115,21 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> spec2 = Specification.where(withSellingOrder).and(specification);
 
         return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+    }
+
+    @Override
+    public List<Transaction> getTransactionsByStockIdForPricing(Long stockId, Integer amount) {
+        List<Transaction> transactions = transactionRepository.getTransactionsByStockId(stockId);
+        int sumOfAmount = amount;
+        for (int i=0; i<transactions.size(); i++) {
+            if (sumOfAmount <= 0) {
+                transactions.remove(i);
+                i--;
+            } else {
+                sumOfAmount -= transactions.get(i).getAmount();
+            }
+        }
+        return transactions;
     }
 
     private void updateOrder(Order order) {

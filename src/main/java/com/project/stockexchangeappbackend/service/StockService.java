@@ -5,11 +5,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.List;
+
 public interface StockService {
 
 
     Stock getStockById(Long id);
     Page<Stock> getStocks(Pageable pageable, Specification<Stock> specification);
     Stock getStockByAbbreviation(String abbreviation);
+    List<Stock> getAllStocks();
+    void updateStock(Stock stock);
 
 }

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,6 +27,10 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
     @Override
     @DBQueryMeasureTime
     Page<Stock> findAll(@Nullable Specification<Stock> var1, Pageable var2);
+
+    @Override
+    @DBQueryMeasureTime
+    List<Stock> findAll();
 
     @DBQueryMeasureTime
     Optional<Stock> findByAbbreviationIgnoreCase(String abbreviation);

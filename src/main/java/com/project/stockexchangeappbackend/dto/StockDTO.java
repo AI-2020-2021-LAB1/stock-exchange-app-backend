@@ -31,4 +31,7 @@ public class StockDTO {
     @ApiModelProperty(notes = "The stock's amount of units.")
     private Integer amount;
 
+    @ApiModelProperty(notes = "The stock's price change ratio.")
+    private Double priceChangeRatio;
+
 }

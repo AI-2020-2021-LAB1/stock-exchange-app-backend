@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +38,18 @@ public class StockServiceImpl implements StockService {
     public Stock getStockByAbbreviation(String abbreviation) {
         return repository.findByAbbreviationIgnoreCase(abbreviation).orElseThrow(() ->
                 new EntityNotFoundException("Stock Not Found"));
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    public List<Stock> getAllStocks() {
+        return repository.findAll();
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    public void updateStock(Stock stock) {
+        repository.save(stock);
     }
 
 }

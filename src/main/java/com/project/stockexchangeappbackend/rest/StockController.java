@@ -57,7 +57,11 @@ public class StockController {
             @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `amount`. (omitted if null)"),
             @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "priceChangeRatio>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)"),
+            @ApiImplicitParam(name = "priceChangeRatio<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `priceChangeRatio`. Param is exact value. (omitted if null)")
     })
     public Page<StockDTO> getStocks(@ApiIgnore Pageable pageable, StockSpecification stockSpecification) {
         return stockService.getStocks(pageable, stockSpecification)
@@ -72,9 +76,10 @@ public class StockController {
     public StockDTO getStockByAbbreviation(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
                                            @PathVariable String id) {
         try {
-            return mapper.map(stockService.getStockById(new Long(id)), StockDTO.class);
+            return mapper.map(stockService.getStockById(Long.valueOf(id)), StockDTO.class);
         } catch (NumberFormatException e) {
             return mapper.map(stockService.getStockByAbbreviation(id), StockDTO.class);
         }
     }
+
 }

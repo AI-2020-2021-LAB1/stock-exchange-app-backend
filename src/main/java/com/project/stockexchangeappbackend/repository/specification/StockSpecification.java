@@ -14,7 +14,9 @@ import org.springframework.data.jpa.domain.Specification;
         @Spec(path = "currentPrice", spec = Equal.class, params={"currentPrice"}),
         @Spec(path = "amount", spec = GreaterThanOrEqual.class, params={"amount>"}),
         @Spec(path = "amount", spec = LessThanOrEqual.class, params={"amount<"}),
-        @Spec(path = "amount", spec = Equal.class, params={"amount"})
+        @Spec(path = "amount", spec = Equal.class, params={"amount"}),
+        @Spec(path = "priceChangeRatio", spec = GreaterThanOrEqual.class, params = "priceChangeRatio>"),
+        @Spec(path = "priceChangeRatio", spec = LessThanOrEqual.class, params = "priceChangeRatio<"),
 })
 public interface StockSpecification extends Specification<Stock> {
 }

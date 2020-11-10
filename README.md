@@ -23,7 +23,8 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - ACCESS_TOKEN_VALIDITY_SECONDS (default: 3600) - Access token expiration
 - REFRESH_TOKEN_VALIDITY_SECONDS (default: 108000) - Refresh token expiration
 - JWT_SECRET (default: secret) - JWT signed key
-- STOCK_ALGORITHM_DELAY (default: 1000) - time in milliseconds between two next execution of stock exchange algorithm
+- STOCK_ALGORITHM_CYCLE (default: 1000) - time in milliseconds between two next execution of stock exchange algorithm
+- FIXING_PRICE_CYCLE (default: 15000) - time in milliseconds of refreshing stocks' price per unit
 - SPRING_PROFILES_ACTIVE - Spring's profile (setting this variable to `data` will cause clearing the database and inserting samples data)
 
 ### Pre-created users
