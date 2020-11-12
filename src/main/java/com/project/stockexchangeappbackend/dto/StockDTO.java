@@ -32,11 +32,9 @@ public class StockDTO {
     private String abbreviation;
 
     @ApiModelProperty(notes = "The stock's average current price per unit.")
-    @Null(message = "This field cannot be changed by admin")
     private BigDecimal currentPrice;
 
     @ApiModelProperty(notes = "The stock's amount of units.")
-    @NotNull(message = "This field is required.")
     private Integer amount;
 
 }
