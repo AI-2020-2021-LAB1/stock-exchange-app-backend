@@ -73,12 +73,8 @@ public class StockController {
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public StockDTO getStockByAbbreviation(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
                                            @PathVariable String id) {
-//        try {
-//            return mapper.map(stockService.getStockById(new Long(id)), StockDTO.class);
-//        } catch (NumberFormatException e) {
-//            return mapper.map(stockService.getStockByAbbreviation(id), StockDTO.class);
-//        }
-        return mapper.map(stockService.getStockByIdOrAbbreviation(id),StockDTO.class);
+
+        return mapper.map(stockService.getStockByIdOrAbbreviation(id), StockDTO.class);
     }
 
     @PatchMapping("/{id}")
