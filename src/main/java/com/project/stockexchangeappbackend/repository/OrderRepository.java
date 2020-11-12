@@ -44,4 +44,7 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     List<Order> findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
             OffsetDateTime offsetDateTime, int remainingAmount);
 
+    @DBQueryMeasureTime
+    List<Order> findByUser(User user);
+
 }

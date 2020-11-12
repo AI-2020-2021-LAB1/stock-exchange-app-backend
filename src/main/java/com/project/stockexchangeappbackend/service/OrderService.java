@@ -30,4 +30,6 @@ public interface OrderService {
 
     void deactivateOrder(Long id);
 
+    List<Order> getOrdersByUser(Long id);
+
 }

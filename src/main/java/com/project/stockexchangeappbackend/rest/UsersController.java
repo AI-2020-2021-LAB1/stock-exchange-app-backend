@@ -17,6 +17,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin("*")
@@ -96,8 +99,8 @@ public class UsersController {
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter logged user's orders.", response = OrderDTO.class,
             notes = "Required role of: USER \n" +
-            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's orders."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -194,6 +197,18 @@ public class UsersController {
                                                      @RequestParam(required = false, defaultValue = "true") boolean isBuyer) {
         return transactionService.getOwnedTransactions(pageable, specification, isSeller, isBuyer)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
+    }
+
+    @GetMapping("/{id}/order")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "List user's orders", response = StockDTO.class,
+            notes = "Required role: ADMIN")
+    @ApiResponses(@ApiResponse(code = 200, message = "Successfully listed user's orders"))
+    public List<OrderDTO> getUserOwnedOrders(@ApiParam(value = "The users's id.", required = true) @PathVariable Long id) {
+        return orderService.getOrdersByUser(id)
+                .stream()
+                .map(order -> mapper.map(order, OrderDTO.class))
+                .collect(Collectors.toList());
     }
 
 }

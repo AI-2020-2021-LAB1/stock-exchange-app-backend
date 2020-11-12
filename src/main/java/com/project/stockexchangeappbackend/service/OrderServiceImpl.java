@@ -88,6 +88,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
+    public List<Order> getOrdersByUser(Long id) {
+        User user = userRepository.getOne(id);
+        return orderRepository.findByUser(user);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
         return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
                 OrderType.BUYING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()));
