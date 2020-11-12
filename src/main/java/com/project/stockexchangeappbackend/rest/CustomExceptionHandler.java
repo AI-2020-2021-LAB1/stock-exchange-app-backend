@@ -2,7 +2,6 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -31,7 +30,7 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
                 .build();
     }
 
-    @ExceptionHandler({EntityExistsException.class, ConstraintViolationException.class})
+    @ExceptionHandler({EntityExistsException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleConflict(RuntimeException exc) {
         return ErrorResponse.builder()
