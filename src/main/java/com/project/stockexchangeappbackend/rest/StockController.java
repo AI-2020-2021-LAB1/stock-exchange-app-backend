@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import java.util.List;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/stock")
@@ -81,11 +82,18 @@ public class StockController {
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public StockDTO getStockByAbbreviation(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
                                            @PathVariable String id) {
-        try {
-            return mapper.map(stockService.getStockById(Long.valueOf(id)), StockDTO.class);
-        } catch (NumberFormatException e) {
-            return mapper.map(stockService.getStockByAbbreviation(id), StockDTO.class);
-        }
+        return mapper.map(stockService.getStockByIdOrAbbreviation(id), StockDTO.class);
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Update stock")
+    @ApiResponses(@ApiResponse(code = 200, message = "Stock was successfully updated."))
+    public void updateStock(
+            @ApiParam(value = "Stock object to update.", required = true) @Valid @RequestBody StockDTO stockDTO,
+            @ApiParam(value = "Abbreviation or id of desired stock", required = true)
+            @PathVariable String id) {
+        stockService.updateStock(stockDTO, id);
     }
 
     @GetMapping("/{id}/index")

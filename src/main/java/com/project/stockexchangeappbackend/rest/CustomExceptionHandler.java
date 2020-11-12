@@ -23,7 +23,7 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
 
     @ExceptionHandler({EntityNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleEntityNotFoundException (EntityNotFoundException exc) {
+    public ErrorResponse handleEntityNotFoundException(EntityNotFoundException exc) {
         return ErrorResponse.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .message(exc.getMessage())
@@ -32,12 +32,13 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
 
     @ExceptionHandler({EntityExistsException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleConflict (RuntimeException exc) {
+    public ErrorResponse handleConflict(RuntimeException exc) {
         return ErrorResponse.builder()
                 .status(HttpStatus.CONFLICT.value())
                 .message(exc.getMessage())
                 .build();
     }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
