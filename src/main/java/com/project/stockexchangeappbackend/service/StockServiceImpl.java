@@ -52,8 +52,8 @@ public class StockServiceImpl implements StockService {
             throw new EntityExistsException("Stock with given abbreviation already exists");
         }
         Stock stock = getStockByIdOrAbbreviation(id);
-        stock.setAbbreviation(stockDTO.getAbbreviation());
-        stock.setName(stockDTO.getName());
+        stock.setAbbreviation(stockDTO.getAbbreviation().trim());
+        stock.setName(stockDTO.getName().trim());
         stockRepository.save(stock);
     }
 
