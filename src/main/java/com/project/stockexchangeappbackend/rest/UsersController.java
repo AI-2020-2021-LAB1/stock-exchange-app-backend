@@ -38,7 +38,7 @@ public class UsersController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation(value = "Retrieve user by id", response = StockDTO.class, notes = "Required role: ADMIN")
+    @ApiOperation(value = "Retrieve user by id", response = UserDto.class, notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
     public UserDto getDetails(@ApiParam(value = "Id of desired user.", required = true) @PathVariable Long id) {
@@ -195,4 +195,5 @@ public class UsersController {
         return transactionService.getOwnedTransactions(pageable, specification, isSeller, isBuyer)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
+
 }

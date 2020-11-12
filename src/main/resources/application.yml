@@ -35,8 +35,10 @@ security:
         key-value: ${JWT_SECRET:secret}
 
 application:
-  stock-algorithm:
-    delay-time: ${STOCK_ALGORITHM_DELAY:1000}
+  stock:
+    algorithm-cycle: ${STOCK_ALGORITHM_CYCLE:1000}
+    fixingPriceCycle: ${FIXING_PRICE_CYCLE:15000}
+    maxPriceHistoryPeriod: ${MAX_PRICE_HISTORY_PERIOD:24}
 
 logging:
   level:

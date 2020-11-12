@@ -17,9 +17,7 @@ import org.springframework.data.jpa.domain.Specification;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomArchivedOrder;
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
@@ -197,6 +195,31 @@ class TransactionServiceImplTest {
 
         assertThrows(EntityNotFoundException.class,
                 () -> transactionService.makeTransaction(buyingOrder, sellingOrder, buyingOrder.getAmount(), sellingOrder.getPrice()));
+    }
+
+    @Test
+    void shouldReturnTransactionByStockIdForPricing() {
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
+        User user1 = createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Order order1 = createCustomOrder(1L, stock.getAmount(), 0, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().minusHours(2), null, user1, stock);
+        ArchivedOrder buyingOrder = createCustomArchivedOrder(order1);
+        Transaction transaction1 = createCustomTransaction(1, stock.getAmount(), OffsetDateTime.now().plusDays(1),
+                buyingOrder, null, buyingOrder.getPrice());
+        Transaction transaction2 = createCustomTransaction(2, 50, OffsetDateTime.now(),
+                buyingOrder, null, buyingOrder.getPrice());
+        List<Transaction> transactions = new ArrayList<>();
+        transactions.add(transaction1);
+        transactions.add(transaction2);
+        List<Transaction> expected = Collections.singletonList(transaction1);
+        when(transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount()))
+                .thenReturn(transactions);
+        List<Transaction> output = transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount());
+        assertEquals(expected.size(), output.size());
+        for (int i = 0; i < transactions.size(); i++) {
+            assertEquals(expected.get(i), output.get(i));
+        }
+
     }
 
     public static Transaction createCustomTransaction(long id, int amount, OffsetDateTime date, ArchivedOrder buyingOrder,

@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
+
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -44,13 +46,23 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    public List<Stock> getAllStocks() {
+        return stockRepository.findAll();
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    public Stock updateStock(Stock stock) {
+        return stockRepository.save(stock);
+    }
+
     @Transactional
+    @LogicBusinessMeasureTime
     public void updateStock(StockDTO stockDTO, String id) {
         Stock stock = getStockByIdOrAbbreviation(id);
         Optional<Stock> stockOptional = stockRepository.findByNameOrAbbreviationIgnoreCase(stockDTO.getName().trim(),
                 stockDTO.getAbbreviation().trim());
         if (stockOptional.isPresent() && !stock.getId().equals(stockOptional.get().getId())) {
-
             throw new EntityExistsException("Stock with given details already exists");
         }
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
@@ -58,9 +70,10 @@ public class StockServiceImpl implements StockService {
         stockRepository.save(stock);
     }
 
+    @LogicBusinessMeasureTime
     public Stock getStockByIdOrAbbreviation(String id) {
         try {
-            return getStockById(new Long(id));
+            return getStockById(Long.valueOf(id));
         } catch (NumberFormatException e) {
             return getStockByAbbreviation(id);
         }

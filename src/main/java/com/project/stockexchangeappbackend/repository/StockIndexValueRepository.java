@@ -1,9 +1,9 @@
 package com.project.stockexchangeappbackend.repository;
 
 import com.project.stockexchangeappbackend.entity.Stock;
+import com.project.stockexchangeappbackend.entity.StockIndexValue;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -14,28 +14,22 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecificationExecutor<Stock> {
+public interface StockIndexValueRepository extends JpaRepository<StockIndexValue, Long>,
+                                                    JpaSpecificationExecutor<StockIndexValue> {
 
     @Override
     @DBQueryMeasureTime
-    <S extends Stock> S save(S s);
+    <S extends StockIndexValue> S save(S s);
 
     @Override
     @DBQueryMeasureTime
-    Optional<Stock> findById(Long id);
+    Optional<StockIndexValue> findById(Long id);
 
     @Override
     @DBQueryMeasureTime
-    Page<Stock> findAll(@Nullable Specification<Stock> var1, Pageable var2);
-
-    @Override
-    @DBQueryMeasureTime
-    List<Stock> findAll();
+    List<StockIndexValue> findAll(@Nullable Specification<StockIndexValue> specification, Sort sort);
 
     @DBQueryMeasureTime
-    Optional<Stock> findByAbbreviationIgnoreCase(String abbreviation);
-
-    @DBQueryMeasureTime
-    Optional<Stock> findByNameOrAbbreviationIgnoreCase(String name, String abbreviation);
+    Optional<StockIndexValue> findFirstByStockOrderByTimestampAsc(Stock stock);
 
 }
