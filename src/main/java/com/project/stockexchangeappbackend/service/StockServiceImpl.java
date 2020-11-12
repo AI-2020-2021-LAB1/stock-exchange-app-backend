@@ -36,7 +36,6 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
-    @Transactional
     public Stock getStockByAbbreviation(String abbreviation) {
         return stockRepository.findByAbbreviationIgnoreCase(abbreviation).orElseThrow(() ->
                 new EntityNotFoundException("Stock Not Found"));
@@ -44,6 +43,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional
     public void updateStock(StockDTO stockDTO, String id) {
         if (stockRepository.findByNameIgnoreCase(stockDTO.getName()).isPresent()) {
             throw new EntityExistsException("Stock with given name already exists");
