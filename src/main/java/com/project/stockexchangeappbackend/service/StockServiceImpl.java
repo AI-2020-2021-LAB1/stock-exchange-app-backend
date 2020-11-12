@@ -46,20 +46,13 @@ public class StockServiceImpl implements StockService {
     @LogicBusinessMeasureTime
     @Transactional
     public void updateStock(StockDTO stockDTO, String id) {
+        Stock stock = getStockByIdOrAbbreviation(id);
         Optional<Stock> stockOptional = stockRepository.findByNameOrAbbreviationIgnoreCase(stockDTO.getName().trim(),
                 stockDTO.getAbbreviation().trim());
-        if (stockOptional.isPresent()) {
-            try {
-                if (!stockOptional.get().getId().equals(new Long(id))) {
-                    throw new EntityExistsException("Stock with given details already exists");
-                }
-            } catch (NumberFormatException e) {
-                if (!stockOptional.get().getAbbreviation().equals(id)) {
-                    throw new EntityExistsException("Stock with given details already exists");
-                }
-            }
+        if (stockOptional.isPresent() && !stock.getId().equals(stockOptional.get().getId())) {
+
+            throw new EntityExistsException("Stock with given details already exists");
         }
-        Stock stock = getStockByIdOrAbbreviation(id);
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
         stock.setName(stockDTO.getName().trim());
         stockRepository.save(stock);
