@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 
 @Service
@@ -44,13 +45,16 @@ public class StockServiceImpl implements StockService {
     @Override
     @LogicBusinessMeasureTime
     public void updateStock(StockDTO stockDTO, String id) {
+        if (stockRepository.findByNameIgnoreCase(stockDTO.getName()).isPresent()) {
+            throw new EntityExistsException("Stock with given name already exists");
+        }
+        if (stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation()).isPresent()) {
+            throw new EntityExistsException("Stock with given abbreviation already exists");
+        }
         Stock stock = getStockByIdOrAbbreviation(id);
-        stock.setAmount(stockDTO.getAmount());
-        stock.setCurrentPrice(stockDTO.getCurrentPrice());
         stock.setAbbreviation(stockDTO.getAbbreviation());
         stock.setName(stockDTO.getName());
         stockRepository.save(stock);
-
     }
 
     public Stock getStockByIdOrAbbreviation(String id) {

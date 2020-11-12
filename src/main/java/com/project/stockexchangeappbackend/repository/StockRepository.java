@@ -30,4 +30,7 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
     @DBQueryMeasureTime
     Optional<Stock> findByAbbreviationIgnoreCase(String abbreviation);
 
+    @DBQueryMeasureTime
+    Optional<Stock> findByNameIgnoreCase(String name);
+
 }

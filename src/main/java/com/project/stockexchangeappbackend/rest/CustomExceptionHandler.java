@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -23,21 +24,22 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
 
     @ExceptionHandler({EntityNotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleEntityNotFoundException (EntityNotFoundException exc) {
+    public ErrorResponse handleEntityNotFoundException(EntityNotFoundException exc) {
         return ErrorResponse.builder()
                 .status(HttpStatus.NOT_FOUND.value())
                 .message(exc.getMessage())
                 .build();
     }
 
-    @ExceptionHandler({EntityExistsException.class})
+    @ExceptionHandler({EntityExistsException.class, ConstraintViolationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleConflict (RuntimeException exc) {
+    public ErrorResponse handleConflict(RuntimeException exc) {
         return ErrorResponse.builder()
                 .status(HttpStatus.CONFLICT.value())
                 .message(exc.getMessage())
                 .build();
     }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

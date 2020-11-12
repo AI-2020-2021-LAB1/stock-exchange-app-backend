@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
@@ -31,7 +32,7 @@ public class StockDTO {
     private String abbreviation;
 
     @ApiModelProperty(notes = "The stock's average current price per unit.")
-    @NotNull(message = "This field is required.")
+    @Null(message = "This field cannot be changed by admin")
     private BigDecimal currentPrice;
 
     @ApiModelProperty(notes = "The stock's amount of units.")
