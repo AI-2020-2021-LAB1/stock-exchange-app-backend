@@ -81,8 +81,7 @@ class StockServiceImplTest {
     void shouldUpdateStock() {
         Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20));
         when(stockRepository.save(stock)).thenReturn(stock);
-        assertAll(() -> stockService.updateStock(stock));
-
+        assertStock(stockService.updateStock(stock), stock);
     }
 
     public static void assertStock(Stock output, Stock expected) {

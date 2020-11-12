@@ -2,7 +2,10 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.StockDTO;
+import com.project.stockexchangeappbackend.dto.StockIndexValueDTO;
+import com.project.stockexchangeappbackend.repository.specification.StockIndexValueSpecification;
 import com.project.stockexchangeappbackend.repository.specification.StockSpecification;
+import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
@@ -12,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/stock")
@@ -27,6 +32,7 @@ import springfox.documentation.annotations.ApiIgnore;
 public class StockController {
 
     private final StockService stockService;
+    private final StockIndexValueService stockIndexValueService;
     private final ModelMapper mapper;
 
     @GetMapping
@@ -61,7 +67,7 @@ public class StockController {
             @ApiImplicitParam(name = "priceChangeRatio>", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)"),
             @ApiImplicitParam(name = "priceChangeRatio<", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `priceChangeRatio`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)")
     })
     public Page<StockDTO> getStocks(@ApiIgnore Pageable pageable, StockSpecification stockSpecification) {
         return stockService.getStocks(pageable, stockSpecification)
@@ -80,6 +86,25 @@ public class StockController {
         } catch (NumberFormatException e) {
             return mapper.map(stockService.getStockByAbbreviation(id), StockDTO.class);
         }
+    }
+
+    @GetMapping("/{id}/index")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @ApiOperation(value = "Retrieve stock's indexes history by stock id", response = StockIndexValueDTO.class,
+            notes = "Required one role of: ADMIN, USER")
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully retrieved."),
+            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "datetime>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `timestamp` (omitted if null)."),
+            @ApiImplicitParam(name = "dateime<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `timestamp` (omitted if null).")
+    })
+    public List<StockIndexValueDTO> getIndexes(StockIndexValueSpecification specification,
+                               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
+                               @ApiParam(value = "Interval", defaultValue = "1")
+                               @RequestParam(value = "interval", defaultValue = "1") Integer interval) {
+        return stockIndexValueService.getStockIndexValues(stockId, specification, interval);
     }
 
 }

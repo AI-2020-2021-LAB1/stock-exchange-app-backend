@@ -48,8 +48,8 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
-    public void updateStock(Stock stock) {
-        repository.save(stock);
+    public Stock updateStock(Stock stock) {
+        return repository.save(stock);
     }
 
 }

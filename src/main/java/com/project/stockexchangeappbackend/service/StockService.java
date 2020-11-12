@@ -14,6 +14,6 @@ public interface StockService {
     Page<Stock> getStocks(Pageable pageable, Specification<Stock> specification);
     Stock getStockByAbbreviation(String abbreviation);
     List<Stock> getAllStocks();
-    void updateStock(Stock stock);
+    Stock updateStock(Stock stock);
 
 }

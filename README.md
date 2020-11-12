@@ -25,6 +25,7 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - JWT_SECRET (default: secret) - JWT signed key
 - STOCK_ALGORITHM_CYCLE (default: 1000) - time in milliseconds between two next execution of stock exchange algorithm
 - FIXING_PRICE_CYCLE (default: 15000) - time in milliseconds of refreshing stocks' price per unit
+- MAX_PRICE_HISTORY_PERIOD (default: 24) - time in hours of storing stock's price history
 - SPRING_PROFILES_ACTIVE - Spring's profile (setting this variable to `data` will cause clearing the database and inserting samples data)
 
 ### Pre-created users
