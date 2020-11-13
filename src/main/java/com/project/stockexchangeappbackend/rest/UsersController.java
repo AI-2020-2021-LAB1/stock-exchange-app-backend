@@ -4,6 +4,7 @@ import com.project.stockexchangeappbackend.dto.*;
 import com.project.stockexchangeappbackend.repository.specification.AllOrdersSpecification;
 import com.project.stockexchangeappbackend.repository.specification.ResourceSpecification;
 import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
+import com.project.stockexchangeappbackend.repository.specification.UserSpecification;
 import com.project.stockexchangeappbackend.service.OrderService;
 import com.project.stockexchangeappbackend.service.ResourceService;
 import com.project.stockexchangeappbackend.service.TransactionService;
@@ -41,21 +42,40 @@ public class UsersController {
     @ApiOperation(value = "Retrieve user by id", response = UserDTO.class, notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
-    public UserDTO getDetails(@ApiParam(value = "Id of desired user.", required = true) @PathVariable Long id) {
+    public UserDTO getUser(@ApiParam(value = "Id of desired user.", required = true) @PathVariable Long id) {
         return mapper.map(userService.findUserById(id), UserDTO.class);
     }
 
-    @PutMapping
-    @ApiIgnore
-    public String changeDetails() {
-        return "change_details";
-    }
-
-    @GetMapping("/users")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    @ApiIgnore
-    public String getUsers() {
-        return "users_list";
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Page and filter users", response = UserDTO.class, notes = "Required role: ADMIN")
+    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered users."))
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page.", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. Multiple sort criteria are supported."),
+            @ApiImplicitParam(name = "email", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `email` (omitted if null)"),
+            @ApiImplicitParam(name = "firstName", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `firstName`. (omitted if null)"),
+            @ApiImplicitParam(name = "lastName", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `lastName`. (omitted if null)"),
+            @ApiImplicitParam(name = "role", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `role`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "money>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `money`. (omitted if null)"),
+            @ApiImplicitParam(name = "money<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `money`. (omitted if null)"),
+            @ApiImplicitParam(name = "money", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `money`. Param is exact value. (omitted if null)")
+    })
+    public Page<UserDTO> getUsers(@ApiIgnore Pageable pageable, UserSpecification specification) {
+        return userService.getUsers(pageable, specification)
+                .map(user -> mapper.map(user, UserDTO.class));
     }
 
     @GetMapping("/stock/owned")
@@ -252,4 +272,5 @@ public class UsersController {
         return orderService.getOrdersByUser(pageable, specification, id)
                 .map(order -> mapper.map(order, OrderDTO.class));
     }
+
 }
