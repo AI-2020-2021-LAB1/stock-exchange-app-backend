@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.Length;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -25,7 +24,7 @@ public class CreateStockDTO {
     private String name;
 
     @ApiModelProperty(notes = "The stock's abbreviation.")
-    @Length(min = 3, max = 3, message = "Size of the abbreviation must be exact {max} characters long.")
+    @Size(min = 3, max = 3, message = "Size of the abbreviation must be exact {max} characters long.")
     @NotBlank(message = "This field is required.")
     private String abbreviation;
 

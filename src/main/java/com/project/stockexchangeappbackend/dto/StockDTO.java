@@ -6,9 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
 @NoArgsConstructor
@@ -25,7 +25,7 @@ public class StockDTO {
     @NotBlank(message = "This field is required.")
     private String name;
 
-    @Length(min = 3, max = 3, message = "Size of the abbreviation must be exact {max} characters long.")
+    @Size(min = 3, max = 3, message = "Size of the abbreviation must be exact {max} characters long.")
     @ApiModelProperty(notes = "The stock's abbreviation.")
     @NotBlank(message = "This field is required.")
     private String abbreviation;
