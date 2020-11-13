@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -60,7 +59,8 @@ public class StockServiceImpl implements StockService {
     @LogicBusinessMeasureTime
     public void updateStock(StockDTO stockDTO, String id) {
         Stock stock = getStockByIdOrAbbreviation(id);
-        Optional<Stock> stockOptional = stockRepository.findByNameOrAbbreviationIgnoreCase(stockDTO.getName().trim(),
+        Optional<Stock> stockOptional = stockRepository.findByNameIgnoreCaseOrAbbreviationIgnoreCase(
+                stockDTO.getName().trim(),
                 stockDTO.getAbbreviation().trim());
         if (stockOptional.isPresent() && !stock.getId().equals(stockOptional.get().getId())) {
             throw new EntityExistsException("Stock with given details already exists");

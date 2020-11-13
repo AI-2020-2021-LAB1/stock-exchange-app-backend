@@ -17,9 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @RestController
 @RequestMapping("/api/user")
 @CrossOrigin("*")
@@ -201,14 +198,58 @@ public class UsersController {
 
     @GetMapping("/{id}/order")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation(value = "List user's orders", response = StockDTO.class,
-            notes = "Required role: ADMIN")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully listed user's orders"))
-    public List<OrderDTO> getUserOwnedOrders(@ApiParam(value = "The users's id.", required = true) @PathVariable Long id) {
-        return orderService.getOrdersByUser(id)
-                .stream()
-                .map(order -> mapper.map(order, OrderDTO.class))
-                .collect(Collectors.toList());
+    @ApiOperation(value = "List user's orders", response = OrderDTO.class,
+            notes = "Required role of: ADMIN \n" +
+                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered user's orders"))
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page.", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. Multiple sort criteria are supported."),
+            @ApiImplicitParam(name = "name", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `name` (omitted if null)"),
+            @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
+            @ApiImplicitParam(name = "price>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `price`. (omitted if null)"),
+            @ApiImplicitParam(name = "price<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `price`. (omitted if null)"),
+            @ApiImplicitParam(name = "price", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `price`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "amount>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "priceType", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `priceType`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "orderType", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `orderType`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "creationDate>", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `creationDate`. (omitted if null)"),
+            @ApiImplicitParam(name = "creationDate<", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `creationDate`. (omitted if null)"),
+            @ApiImplicitParam(name = "dateExpiration>", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `dateExpiration`. (omitted if null)"),
+            @ApiImplicitParam(name = "dateExpiration<", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `dateExpiration`. (omitted if null)"),
+            @ApiImplicitParam(name = "dateClosing>", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
+            @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
+            @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
+    })
+    public Page<OrderDTO> getUserOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification,
+                                             @ApiParam(value = "The users's id.", required = true)
+                                             @PathVariable Long id) {
+        return orderService.getOrdersByUser(pageable, specification, id)
+                .map(order -> mapper.map(order, OrderDTO.class));
     }
-
 }
