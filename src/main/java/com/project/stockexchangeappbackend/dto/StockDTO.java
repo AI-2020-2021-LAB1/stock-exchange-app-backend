@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
@@ -27,7 +25,7 @@ public class StockDTO {
     @NotBlank(message = "This field is required.")
     private String name;
 
-    @Size(min = 3, max = 3, message = "Size of the abbreviation must be equal {max}.")
+    @Size(min = 3, max = 3, message = "Size of the abbreviation must be exact {max} characters long.")
     @ApiModelProperty(notes = "The stock's abbreviation.")
     @NotBlank(message = "This field is required.")
     private String abbreviation;

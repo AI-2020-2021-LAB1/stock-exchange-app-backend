@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
+import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -76,6 +77,16 @@ class UserServiceImplTest {
                 .id(id).email(email)
                 .firstName(firstName).lastName(lastName)
                 .money(money)
+                .build();
+    }
+
+    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
+                                         Role role) {
+        return User.builder()
+                .id(id).email(email)
+                .firstName(firstName).lastName(lastName)
+                .money(money)
+                .role(role)
                 .build();
     }
 

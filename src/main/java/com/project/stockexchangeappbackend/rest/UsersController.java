@@ -38,11 +38,11 @@ public class UsersController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation(value = "Retrieve user by id", response = UserDto.class, notes = "Required role: ADMIN")
+    @ApiOperation(value = "Retrieve user by id", response = UserDTO.class, notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
-    public UserDto getDetails(@ApiParam(value = "Id of desired user.", required = true) @PathVariable Long id) {
-        return mapper.map(userService.findUserById(id), UserDto.class);
+    public UserDTO getDetails(@ApiParam(value = "Id of desired user.", required = true) @PathVariable Long id) {
+        return mapper.map(userService.findUserById(id), UserDTO.class);
     }
 
     @PutMapping
