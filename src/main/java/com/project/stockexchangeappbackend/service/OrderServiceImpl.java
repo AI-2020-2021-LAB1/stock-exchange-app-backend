@@ -88,6 +88,18 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
+    public Page<AllOrders> getOrdersByUser(Pageable pageable, Specification<AllOrders> specification, Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User does not exist"));
+        Specification<AllOrders> orderByUser = (root, criteriaQuery, criteriaBuilder) -> {
+            Join<Order, User> owner = root.join("user");
+            return criteriaBuilder.equal(owner.get("email"), user.getEmail());
+        };
+        return allOrdersRepository.findAll(Specification.where(specification).and(orderByUser),pageable);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
         return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
                 OrderType.BUYING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()));

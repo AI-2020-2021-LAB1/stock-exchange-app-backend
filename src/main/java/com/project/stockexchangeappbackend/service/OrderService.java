@@ -30,4 +30,6 @@ public interface OrderService {
 
     void deactivateOrder(Long id);
 
+    Page<AllOrders> getOrdersByUser(Pageable pageable, Specification<AllOrders> specification, Long id);
+
 }

@@ -23,4 +23,6 @@ public interface AllOrdersRepository extends JpaRepository<AllOrders, Long>, Jpa
     @Override
     @DBQueryMeasureTime
     Optional<AllOrders> findById(Long id);
+
+
 }
