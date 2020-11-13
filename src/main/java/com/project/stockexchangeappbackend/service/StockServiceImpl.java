@@ -1,10 +1,18 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.CreateStockDTO;
+import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.StockDTO;
+import com.project.stockexchangeappbackend.entity.Resource;
+import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.Stock;
+import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.StockRepository;
+import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -13,14 +21,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StockServiceImpl implements StockService {
 
     private final StockRepository stockRepository;
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     @LogicBusinessMeasureTime
@@ -77,6 +91,55 @@ public class StockServiceImpl implements StockService {
         } catch (NumberFormatException e) {
             return getStockByAbbreviation(id);
         }
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void createStock(CreateStockDTO stockDTO) {
+        Stock stock = validateCreateStockDTO(stockDTO);
+        stock.setResources(stock.getResources().stream()
+                .collect(Collectors.groupingBy(Resource::getUser))
+                .values().stream()
+                .map(res -> {
+                    res.get(0).setAmount(res.stream().mapToInt(Resource::getAmount).sum());
+                    return res.get(0);
+                }).collect(Collectors.toList()));
+        stockRepository.save(stock);
+    }
+
+    private Stock validateCreateStockDTO(CreateStockDTO stockDTO) {
+        Map<String, List<String>> errors = new HashMap<>();
+        stockRepository.findByNameIgnoreCase(stockDTO.getName().trim()).ifPresent(stock -> {
+            throw new EntityExistsException("Stock with given name already exists.");
+        });
+        stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation().trim()).ifPresent(stock -> {
+            throw new EntityExistsException("Stock with given abbreviation already exists.");
+        });
+        Stock stock = modelMapper.map(stockDTO, Stock.class);
+        stock.setPriceChangeRatio(.0);
+        stock.setResources(stockDTO.getOwners().stream().map(ownerDTO -> {
+            int index = stockDTO.getOwners().indexOf(ownerDTO);
+            Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
+            if (user.isEmpty()) {
+                errors.put("owners[" + index +"]", List.of("User not found."));
+            } else if (user.get().getRole() == Role.ADMIN) {
+                errors.put("owners[" + index +"]", List.of("Given user is admin."));
+            }
+            return Resource.builder()
+                    .stock(stock)
+                    .amount(ownerDTO.getAmount())
+                    .user(user.orElse(null))
+                    .build();
+        }).collect(Collectors.toList()));
+        if (stockDTO.getAmount() != stockDTO.getOwners().stream().mapToInt(OwnerDTO::getAmount).sum()) {
+            errors.put("amount",
+                    List.of("Given amount of stocks must be equal sum of amounts specified in owners' list."));
+        }
+        if (!errors.isEmpty()) {
+            throw new InvalidInputDataException("Data validation", errors);
+        }
+        return stock;
     }
 
 }

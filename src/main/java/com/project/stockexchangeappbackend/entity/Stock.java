@@ -4,6 +4,7 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,5 +33,8 @@ public class Stock {
 
     @Column(name = "PRICE_CHANGE_RATIO", nullable = false)
     private Double priceChangeRatio;
+
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.PERSIST)
+    private List<Resource> resources;
 
 }
