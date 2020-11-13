@@ -273,4 +273,41 @@ public class UsersController {
                 .map(order -> mapper.map(order, OrderDTO.class));
     }
 
+    @GetMapping("/{id}/stock")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Page and filter user's stocks.", response = StockDTO.class,
+            notes = "Required role: ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's stocks."),
+            @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)
+    })
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page.", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. Multiple sort criteria are supported."),
+            @ApiImplicitParam(name = "name", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `name` (omitted if null)"),
+            @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "currentPrice>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `currentPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "currentPrice<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `currentPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "currentPrice", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `currentPrice`. Param is exact value. (omitted if null)")
+    })
+    public Page<ResourceDTO> getUsersStocks(@ApiIgnore Pageable pageable, ResourceSpecification specification,
+                                            @ApiParam("The user's id") @PathVariable Long id) {
+        return resourceService.getUsersResources(pageable, specification, id);
+    }
+
 }
