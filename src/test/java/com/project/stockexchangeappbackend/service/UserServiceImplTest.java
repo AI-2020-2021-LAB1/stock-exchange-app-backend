@@ -8,12 +8,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,6 +70,24 @@ class UserServiceImplTest {
         Long id = 1L;
         when(userRepository.findById(id)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> userService.findUserById(id));
+    }
+
+    @Test
+    void shouldPageAndFilterUsers() {
+        List<User> users = Arrays.asList(
+                createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO),
+                createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN)
+        );
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<User> specification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("lastName"), "Kowal");
+        when(userRepository.findAll(Mockito.any(Specification.class), Mockito.eq(pageable)))
+                .thenReturn(new PageImpl<>(users, pageable, users.size()));
+        Page<User> output = userService.getUsers(pageable, specification);
+        assertEquals(users.size(), output.getNumberOfElements());
+        for (int i = 0; i < users.size(); i++) {
+            assertUser(output.getContent().get(i), users.get(i));
+        }
     }
 
     public static void assertUser(User output, User expected) {
