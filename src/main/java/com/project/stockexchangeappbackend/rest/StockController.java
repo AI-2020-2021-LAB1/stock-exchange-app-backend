@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
+import com.project.stockexchangeappbackend.dto.CreateStockDTO;
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.dto.StockIndexValueDTO;
@@ -16,8 +17,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
-import java.util.List;
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/stock")
@@ -113,6 +114,14 @@ public class StockController {
                                @ApiParam(value = "Interval", defaultValue = "1")
                                @RequestParam(value = "interval", defaultValue = "1") Integer interval) {
         return stockIndexValueService.getStockIndexValues(stockId, specification, interval);
+    }
+
+    @PostMapping
+    @ApiOperation(value = "Create new stock", notes = "Required role ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully created."),
+            @ApiResponse(code = 409, message = "Given stock already exist.", response = ErrorResponse.class)})
+    public void create(@RequestBody @Valid CreateStockDTO stockDTO) {
+        stockService.createStock(stockDTO);
     }
 
 }

@@ -25,7 +25,7 @@ public class RequiredFieldsValidation implements ConstraintValidator<RequiredFie
                 return Optional.ofNullable(
                         new PropertyDescriptor(field, o.getClass()).getReadMethod().invoke(o))
                         .isPresent();
-            }  catch (IntrospectionException | IllegalAccessException | InvocationTargetException e) {
+            }  catch (IntrospectionException | IllegalAccessException | InvocationTargetException | NullPointerException e) {
                 return false;
             }
         });
