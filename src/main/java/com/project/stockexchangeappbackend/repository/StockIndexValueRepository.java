@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,5 +32,8 @@ public interface StockIndexValueRepository extends JpaRepository<StockIndexValue
 
     @DBQueryMeasureTime
     Optional<StockIndexValue> findFirstByStockOrderByTimestampAsc(Stock stock);
+
+    @DBQueryMeasureTime
+    Optional<StockIndexValue> findFirstByStockAndTimestampBeforeOrderByTimestampDesc(Stock stock, OffsetDateTime dateTime);
 
 }

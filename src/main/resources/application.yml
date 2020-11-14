@@ -39,6 +39,7 @@ application:
     algorithm-cycle: ${STOCK_ALGORITHM_CYCLE:1000}
     fixingPriceCycle: ${FIXING_PRICE_CYCLE:15000}
     maxPriceHistoryPeriod: ${MAX_PRICE_HISTORY_PERIOD:24}
+    stockPriceChangeRatioPeriod: ${STOCK_PRICE_CHANGE_RATIO_PERIOD:3600000}
 
 logging:
   level:

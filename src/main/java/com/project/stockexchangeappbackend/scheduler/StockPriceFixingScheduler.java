@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
@@ -37,11 +36,6 @@ public class StockPriceFixingScheduler {
                             .mapToInt(Transaction::getAmount)
                             .average()
                             .orElseGet(() -> stock.getCurrentPrice().doubleValue()));
-                    double priceChangeRatio = stock.getCurrentPrice().doubleValue() <= 0.00001 ?
-                            0.0d : newPrice.subtract(stock.getCurrentPrice())
-                            .divide(stock.getCurrentPrice(), RoundingMode.CEILING)
-                            .doubleValue();
-                    stock.setPriceChangeRatio(priceChangeRatio);
                     stock.setCurrentPrice(newPrice);
                     stockIndexValueService.appendValue(StockIndexValue.builder()
                             .timestamp(OffsetDateTime.now(ZoneId.systemDefault()))

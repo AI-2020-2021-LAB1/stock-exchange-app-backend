@@ -9,5 +9,6 @@ public class StockIndexTimeProperties {
 
     private Integer maxPriceHistoryPeriod;
     private Integer fixingPriceCycle;
+    private Integer stockPriceChangeRatioPeriod;
 
 }
