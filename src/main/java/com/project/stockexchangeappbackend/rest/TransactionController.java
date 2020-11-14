@@ -82,5 +82,4 @@ public class TransactionController {
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
 
-
 }

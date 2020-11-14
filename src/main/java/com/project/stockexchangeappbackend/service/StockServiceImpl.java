@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -34,33 +35,39 @@ public class StockServiceImpl implements StockService {
     private final OrderRepository orderRepository;
     private final ArchivedOrderRepository archivedOrderRepository;
     private final ResourceRepository resourceRepository;
+    private final StockIndexValueRepository stockIndexValueRepository;
     private final ModelMapper modelMapper;
 
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public Stock getStockById(Long id) {
-        return stockRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Stock Not Found"));
+        return stockRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new EntityNotFoundException("Stock Not Found"));
     }
 
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public Page<Stock> getStocks(Pageable pageable, Specification<Stock> specification) {
-        return stockRepository.findAll(specification, pageable);
+        Specification<Stock> stockNotDeleted = (root, criteriaQuery, criteriaBuilder) ->
+            criteriaBuilder.equal(root.get("isDeleted"), false);
+        return stockRepository.findAll(Specification.where(stockNotDeleted).and(specification), pageable);
     }
 
     @Override
     @LogicBusinessMeasureTime
     public Stock getStockByAbbreviation(String abbreviation) {
-        return stockRepository.findByAbbreviationIgnoreCase(abbreviation).orElseThrow(() ->
-                new EntityNotFoundException("Stock Not Found"));
+        return stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(abbreviation)
+                .orElseThrow(() -> new EntityNotFoundException("Stock Not Found"));
     }
 
     @Override
     @LogicBusinessMeasureTime
     public List<Stock> getAllStocks() {
-        return stockRepository.findAll();
+        Specification<Stock> stockNotDeleted = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("isDeleted"), false);
+        return stockRepository.findAll(Specification.where(stockNotDeleted));
     }
 
     @Override
@@ -84,6 +91,7 @@ public class StockServiceImpl implements StockService {
         stockRepository.save(stock);
     }
 
+    @Override
     @LogicBusinessMeasureTime
     public Stock getStockByIdOrAbbreviation(String id) {
         try {
@@ -115,6 +123,8 @@ public class StockServiceImpl implements StockService {
         Stock stock = stockRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Stock not found"));
         stock.setIsDeleted(true);
+        stock.setAmount(0);
+        stock.setCurrentPrice(BigDecimal.ZERO);
         orderRepository.findByStock(stock).forEach(order -> {
             orderRepository.delete(order);
             ArchivedOrder archivedOrder = archivedOrderRepository.findById(id)
@@ -123,18 +133,30 @@ public class StockServiceImpl implements StockService {
             archivedOrderRepository.save(archivedOrder);
         });
         resourceRepository.deleteByStock(stock);
+        stockIndexValueRepository.deleteByStock(stock);
+        stock.getResources().clear();
         stockRepository.save(stock);
     }
 
     private Stock validateCreateStockDTO(CreateStockDTO stockDTO) {
         Map<String, List<String>> errors = new HashMap<>();
-        stockRepository.findByNameIgnoreCase(stockDTO.getName().trim()).ifPresent(stock -> {
+        Optional<Stock> stockInDBName = stockRepository.findByNameIgnoreCase(stockDTO.getName().trim());
+        if (stockInDBName.isPresent() && !stockInDBName.get().getIsDeleted()) {
             throw new EntityExistsException("Stock with given name already exists.");
-        });
-        stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation().trim()).ifPresent(stock -> {
+        }
+        Optional<Stock> stockInDBAbbreviation = stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation().trim());
+        if (stockInDBAbbreviation.isPresent() && !stockInDBAbbreviation.get().getIsDeleted()) {
             throw new EntityExistsException("Stock with given abbreviation already exists.");
-        });
-        Stock stock = modelMapper.map(stockDTO, Stock.class);
+        }
+        Stock stock = stockInDBName.isPresent() && (stockInDBAbbreviation.isEmpty() ||
+                stockInDBName.get().getId().equals(stockInDBAbbreviation.get().getId())) ?
+                stockInDBName.get() : stockInDBAbbreviation
+                                    .orElseGet(() -> modelMapper.map(stockDTO, Stock.class));
+        stock.setName(stockDTO.getName().trim());
+        stock.setAbbreviation(stockDTO.getAbbreviation().trim());
+        stock.setIsDeleted(false);
+        stock.setAmount(stockDTO.getAmount());
+        stock.setCurrentPrice(stockDTO.getCurrentPrice());
         stock.setPriceChangeRatio(.0);
         stock.setResources(stockDTO.getOwners().stream().map(ownerDTO -> {
             int index = stockDTO.getOwners().indexOf(ownerDTO);

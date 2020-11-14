@@ -81,7 +81,7 @@ public class StockController {
     @ApiOperation(value = "Retrieve stock by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
-    public StockDTO getStockByAbbreviation(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
+    public StockDTO getStock(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
                                            @PathVariable String id) {
         return mapper.map(stockService.getStockByIdOrAbbreviation(id), StockDTO.class);
     }

@@ -34,7 +34,7 @@ public class Stock {
     @Column(name = "PRICE_CHANGE_RATIO", nullable = false)
     private Double priceChangeRatio;
 
-    @OneToMany(mappedBy = "stock", cascade = CascadeType.PERSIST)
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.MERGE)
     private List<Resource> resources;
 
     @Column(name = "IS_DELETED", nullable = false)

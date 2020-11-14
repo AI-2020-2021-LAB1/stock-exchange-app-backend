@@ -45,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
     @LogicBusinessMeasureTime
     @Transactional
     public void createOrder(OrderDTO orderDTO) {
-        Stock stock = stockRepository.findById(orderDTO.getStock().getId())
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())
                 .orElseThrow(() -> new InvalidInputDataException("Validation error",
                         Map.of("stock", "Stock company not found.")));
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -123,7 +123,6 @@ public class OrderServiceImpl implements OrderService {
             order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
             archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
         });
-
     }
 
     @Override
