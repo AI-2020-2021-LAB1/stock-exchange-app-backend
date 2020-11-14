@@ -24,10 +24,7 @@ import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
@@ -99,7 +96,7 @@ class StockServiceImplTest {
         List<Stock> stocks = Arrays.asList(
                 createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20)),
                 createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20)));
-        when(stockRepository.findAll()).thenReturn(stocks);
+        when(stockRepository.findAll(Mockito.any(Specification.class))).thenReturn(stocks);
         List<Stock> output = stockService.getAllStocks();
         assertEquals(stocks.size(), output.size());
         for (int i=0; i<stocks.size(); i++) {
@@ -277,6 +274,7 @@ class StockServiceImplTest {
         return Stock.builder()
                 .id(id).name(name).abbreviation(abbreviation)
                 .amount(amount).currentPrice(currentPrice)
+                .resources(new ArrayList<>())
                 .build();
     }
 
@@ -285,6 +283,7 @@ class StockServiceImplTest {
         return Stock.builder()
                 .id(id).name(name).abbreviation(abbreviation)
                 .amount(amount).currentPrice(currentPrice)
+                .resources(new ArrayList<>())
                 .isDeleted(isDeleted)
                 .build();
     }
