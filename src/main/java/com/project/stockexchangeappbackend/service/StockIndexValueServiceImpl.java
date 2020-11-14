@@ -50,7 +50,7 @@ public class StockIndexValueServiceImpl implements StockIndexValueService {
     @Transactional(readOnly = true)
     public List<StockIndexValueDTO> getStockIndexValues(Long stockId, Specification<StockIndexValue> specification,
                                                      Integer interval) {
-        Stock stock = stockRepository.findById(stockId)
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(stockId)
                 .orElseThrow(() -> new EntityNotFoundException("Stock not found"));
         List<List<StockIndexValue>> results = new ArrayList<>();
         results.add(new ArrayList<>());

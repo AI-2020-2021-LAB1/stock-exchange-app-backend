@@ -79,7 +79,7 @@ class StockIndexValueServiceImplTest {
                 new StockIndexValueDTO(results.subList(2,3)),
                 new StockIndexValueDTO(results.subList(0,1)));
 
-        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
                 .thenReturn(results);
         List<StockIndexValueDTO> output = stockIndexValueService.getStockIndexValues(stockId, null, interval);
@@ -94,7 +94,7 @@ class StockIndexValueServiceImplTest {
         Long stockId = 1L;
         Integer interval = 1;
         Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN);
-        when(stockRepository.findById(stockId)).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
                 .thenReturn(Collections.emptyList());
         assertEquals(0, stockIndexValueService.getStockIndexValues(stockId, null, interval).size());
@@ -104,7 +104,7 @@ class StockIndexValueServiceImplTest {
     void shouldThrowExceptionNotFoundWhenGettingStockIndexHistory() {
         Long stockId = 1L;
         Integer interval = 1;
-        when(stockRepository.findById(stockId)).thenReturn(Optional.empty());
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
                 () -> stockIndexValueService.getStockIndexValues(stockId, null, interval));
     }

@@ -41,7 +41,6 @@ import static com.project.stockexchangeappbackend.service.UserServiceImplTest.cr
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
-
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
 
@@ -72,7 +71,6 @@ class OrderServiceImplTest {
 
     @Test
     void shouldPageAndFilterOrders() {
-
         Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
         Order order1 = createCustomOrder(1L, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
@@ -128,7 +126,7 @@ class OrderServiceImplTest {
         Resource resource = createCustomResource(1L, stock, user, stock.getAmount());
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
@@ -151,7 +149,7 @@ class OrderServiceImplTest {
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount() - 1);
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
@@ -175,7 +173,7 @@ class OrderServiceImplTest {
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
@@ -197,7 +195,7 @@ class OrderServiceImplTest {
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
@@ -218,7 +216,7 @@ class OrderServiceImplTest {
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
@@ -235,7 +233,7 @@ class OrderServiceImplTest {
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
@@ -252,7 +250,7 @@ class OrderServiceImplTest {
         User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
         SecurityContextHolder.setContext(securityContext);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.empty());
@@ -266,7 +264,7 @@ class OrderServiceImplTest {
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
 
-        when(stockRepository.findById(orderDTO.getStock().getId())).thenReturn(Optional.empty());
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.empty());
         assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
     }
 

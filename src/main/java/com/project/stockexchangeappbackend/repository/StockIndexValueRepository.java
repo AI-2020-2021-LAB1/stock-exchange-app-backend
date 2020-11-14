@@ -34,6 +34,9 @@ public interface StockIndexValueRepository extends JpaRepository<StockIndexValue
     Optional<StockIndexValue> findFirstByStockOrderByTimestampAsc(Stock stock);
 
     @DBQueryMeasureTime
+    void deleteByStock(Stock stock);
+
+    @DBQueryMeasureTime
     Optional<StockIndexValue> findFirstByStockAndTimestampBeforeOrderByTimestampDesc(Stock stock, OffsetDateTime dateTime);
 
 }

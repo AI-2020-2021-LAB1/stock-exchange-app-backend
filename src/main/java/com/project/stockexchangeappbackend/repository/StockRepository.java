@@ -24,6 +24,9 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
     @DBQueryMeasureTime
     Optional<Stock> findById(Long id);
 
+    @DBQueryMeasureTime
+    Optional<Stock> findByIdAndIsDeletedFalse(Long id);
+
     @Override
     @DBQueryMeasureTime
     Page<Stock> findAll(@Nullable Specification<Stock> var1, Pageable var2);
@@ -34,6 +37,9 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
 
     @DBQueryMeasureTime
     Optional<Stock> findByAbbreviationIgnoreCase(String abbreviation);
+
+    @DBQueryMeasureTime
+    Optional<Stock> findByAbbreviationIgnoreCaseAndIsDeletedFalse(String abbreviation);
 
     @DBQueryMeasureTime
     Optional<Stock> findByNameIgnoreCaseOrAbbreviationIgnoreCase(String name, String abbreviation);
