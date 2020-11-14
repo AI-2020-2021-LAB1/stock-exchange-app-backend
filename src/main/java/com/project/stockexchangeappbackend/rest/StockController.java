@@ -117,11 +117,21 @@ public class StockController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Create new stock", notes = "Required role ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully created."),
             @ApiResponse(code = 409, message = "Given stock already exist.", response = ErrorResponse.class)})
     public void create(@RequestBody @Valid CreateStockDTO stockDTO) {
         stockService.createStock(stockDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Delete existing stock", notes = "Required role ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully deleted."),
+            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
+    public void delete(@ApiParam("The id of stock to delete.") @PathVariable Long id) {
+        stockService.deleteStock(id);
     }
 
 }

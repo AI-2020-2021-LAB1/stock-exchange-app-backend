@@ -3,13 +3,9 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.dto.CreateStockDTO;
 import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.entity.Resource;
-import com.project.stockexchangeappbackend.entity.Role;
-import com.project.stockexchangeappbackend.entity.Stock;
-import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
-import com.project.stockexchangeappbackend.repository.StockRepository;
-import com.project.stockexchangeappbackend.repository.UserRepository;
+import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -21,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
-
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +31,9 @@ public class StockServiceImpl implements StockService {
 
     private final StockRepository stockRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final ArchivedOrderRepository archivedOrderRepository;
+    private final ResourceRepository resourceRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -105,6 +105,24 @@ public class StockServiceImpl implements StockService {
                     res.get(0).setAmount(res.stream().mapToInt(Resource::getAmount).sum());
                     return res.get(0);
                 }).collect(Collectors.toList()));
+        stockRepository.save(stock);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void deleteStock(Long id) {
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found"));
+        stock.setIsDeleted(true);
+        orderRepository.findByStock(stock).forEach(order -> {
+            orderRepository.delete(order);
+            ArchivedOrder archivedOrder = archivedOrderRepository.findById(id)
+                    .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
+            archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+            archivedOrderRepository.save(archivedOrder);
+        });
+        resourceRepository.deleteByStock(stock);
         stockRepository.save(stock);
     }
 

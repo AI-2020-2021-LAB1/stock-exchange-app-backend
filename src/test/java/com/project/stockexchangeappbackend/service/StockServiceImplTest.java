@@ -4,12 +4,9 @@ import com.project.stockexchangeappbackend.dto.CreateStockDTO;
 import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.dto.UserDTO;
-import com.project.stockexchangeappbackend.entity.Role;
-import com.project.stockexchangeappbackend.entity.Stock;
-import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
-import com.project.stockexchangeappbackend.repository.StockRepository;
-import com.project.stockexchangeappbackend.repository.UserRepository;
+import com.project.stockexchangeappbackend.repository.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,11 +23,15 @@ import org.springframework.data.jpa.domain.Specification;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomArchivedOrder;
+import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -46,6 +47,15 @@ class StockServiceImplTest {
 
     @Mock
     UserRepository userRepository;
+
+    @Mock
+    OrderRepository orderRepository;
+
+    @Mock
+    ArchivedOrderRepository archivedOrderRepository;
+
+    @Mock
+    ResourceRepository resourceRepository;
 
     @Mock
     ModelMapper modelMapper;
@@ -192,7 +202,31 @@ class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
 
         assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO));
+    }
 
+    @Test
+    void shouldDeleteStock() {
+        Long stockId = 1L;
+        Stock stock = createCustomStock(stockId, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20));
+        User user = createCustomUser(1L, "test@test.com", "John", "Kowal", BigDecimal.ZERO);
+        List<Order> stocksOrders = List.of(createCustomOrder(1L, 100, 100,
+                OrderType.SELLING_ORDER, PriceType.EQUAL, BigDecimal.TEN, OffsetDateTime.now().minusDays(1),
+                OffsetDateTime.now().plusHours(1), null, user, stock));
+        List<ArchivedOrder> archivedOrders = stocksOrders.stream()
+                .map(OrderServiceImplTest::createCustomArchivedOrder)
+                .collect(Collectors.toList());
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(orderRepository.findByStock(stock)).thenReturn(stocksOrders);
+        when(modelMapper.map(Mockito.any(Order.class), Mockito.eq(ArchivedOrder.class)))
+                .thenReturn(archivedOrders.get(0));
+        assertAll(() -> stockService.deleteStock(stockId));
+    }
+
+    @Test
+    void shouldThrowEntityNotFoundExceptionWhenDeletingStock() {
+        Long stockId = 1L;
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> stockService.deleteStock(stockId));
     }
 
     public static void assertStock(Stock output, Stock expected) {
@@ -234,7 +268,5 @@ class StockServiceImplTest {
                 .user(UserDTO.builder().id(userId).build())
                 .build();
     }
-
-
 
 }
