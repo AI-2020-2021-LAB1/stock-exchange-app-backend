@@ -15,9 +15,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,6 +77,14 @@ public class StockIndexValueServiceImpl implements StockIndexValueService {
         return results.parallelStream()
                 .map(StockIndexValueDTO::new)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
+    public Optional<StockIndexValue> getFirstStockIndexValueBeforeMinutesAgo(Stock stock, Integer minutes) {
+        return stockIndexValueRepository.findFirstByStockAndTimestampBeforeOrderByTimestampDesc(
+                stock, OffsetDateTime.now(ZoneId.systemDefault()).minusMinutes(minutes));
     }
 
     private Specification<StockIndexValue> getSpecificationById(Long stockId) {

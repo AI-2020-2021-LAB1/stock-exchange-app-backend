@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.project.stockexchangeappbackend.service.StockServiceImplTest.assertStock;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.createCustomStock;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -108,12 +109,33 @@ class StockIndexValueServiceImplTest {
                 () -> stockIndexValueService.getStockIndexValues(stockId, null, interval));
     }
 
+    @Test
+    void shouldReturnFirstHistoryValueBefore() {
+        Long stockId = 1L;
+        Integer minutes = 1;
+        Stock stock = createCustomStock(stockId, "WIG20", "W20", 100, BigDecimal.TEN);
+        StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, BigDecimal.TEN,
+                OffsetDateTime.now().minusMinutes(minutes));
+        when(stockIndexValueRepository.findFirstByStockAndTimestampBeforeOrderByTimestampDesc(
+                Mockito.eq(stock), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Optional.of(stockIndexValue));
+        assertStockIndexValue(stockIndexValue,
+                stockIndexValueService.getFirstStockIndexValueBeforeMinutesAgo(stock, minutes).get());
+    }
+
     public void assertStockIndexValueDTO(StockIndexValueDTO expected, StockIndexValueDTO output) {
         assertAll(() -> assertEquals(expected.getTimestamp(), output.getTimestamp()),
                 () -> assertEquals(expected.getOpen(), output.getOpen()),
                 () -> assertEquals(expected.getMin(), output.getMin()),
                 () -> assertEquals(expected.getMax(), output.getMax()),
                 () -> assertEquals(expected.getClose(), output.getClose()));
+    }
+
+    public void assertStockIndexValue(StockIndexValue expected, StockIndexValue output) {
+        assertAll(() -> assertEquals(expected.getTimestamp(), output.getTimestamp()),
+                () -> assertEquals(expected.getValue(), output.getValue()),
+                () -> assertStock(output.getStock(), expected.getStock()),
+                () -> assertEquals(expected.getId(), output.getId()));
     }
 
     public StockIndexValue createCustomStockIndexValue(Stock stock, BigDecimal value, OffsetDateTime timestamp) {
