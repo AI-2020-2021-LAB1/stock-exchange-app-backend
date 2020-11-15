@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/user")
@@ -76,6 +77,15 @@ public class UsersController {
     public Page<UserDTO> getUsers(@ApiIgnore Pageable pageable, UserSpecification specification) {
         return userService.getUsers(pageable, specification)
                 .map(user -> mapper.map(user, UserDTO.class));
+    }
+
+    @GetMapping("/details")
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(value = "Retrieve logged in user", response = UserDTO.class, notes = "Required role: USER")
+    @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
+            @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
+    public UserDTO getUser(Principal principal) {
+        return mapper.map(userService.findUserByEmail(principal.getName()), UserDTO.class);
     }
 
     @GetMapping("/stock/owned")
