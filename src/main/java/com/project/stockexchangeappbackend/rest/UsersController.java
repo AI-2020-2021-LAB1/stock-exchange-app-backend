@@ -79,7 +79,7 @@ public class UsersController {
                 .map(user -> mapper.map(user, UserDTO.class));
     }
 
-    @GetMapping("/details")
+    @GetMapping("/config/user-data")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Retrieve logged in user", response = UserDTO.class, notes = "Required role: USER")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
