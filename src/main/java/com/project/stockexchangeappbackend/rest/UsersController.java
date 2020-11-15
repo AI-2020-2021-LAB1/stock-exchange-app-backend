@@ -103,6 +103,22 @@ public class UsersController {
          return mapper.map(userService.changeUserPassword(user.getId(), password), UserDTO.class);
     }
 
+    @PostMapping("/config/user-data")
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(value = "Change logged in user first and last name", response = UserDTO.class, notes = "Required role: USER")
+    @ApiResponses({@ApiResponse(code = 200, message = "User first and last name was successfully changed."),
+            @ApiResponse(code = 404, message = "Failed to change user first and last name.", response = ErrorResponse.class)})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "firstName", dataType = "string", paramType = "body",
+                    value = "First Name"),
+            @ApiImplicitParam(name = "lastName", dataType = "string", paramType = "body",
+                    value = "Last Name"),
+    })
+    public UserDTO changeDetails(@RequestParam String firstName, @RequestParam String lastName, Principal principal) {
+        User user = userService.findUserByEmail(principal.getName());
+        return mapper.map(userService.changeUserDetails(user.getId(), firstName, lastName), UserDTO.class);
+    }
+
     @GetMapping("/stock/owned")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter logged user's stocks.", response = StockDTO.class,

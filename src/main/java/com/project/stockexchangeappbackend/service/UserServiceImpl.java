@@ -78,6 +78,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public User changeUserDetails(Long id, String firstName, String lastName) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        userRepository.save(user);
+        return user;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public Page<User> getUsers(Pageable pageable, Specification<User> specification) {

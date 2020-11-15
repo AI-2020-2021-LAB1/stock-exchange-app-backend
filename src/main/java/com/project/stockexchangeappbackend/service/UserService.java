@@ -12,6 +12,7 @@ public interface UserService {
     User findUserById(Long id);
     User findUserByEmail(String email);
     User changeUserPassword(Long id, String password);
+    User changeUserDetails(Long id, String firstName, String lastName);
     Page<User> getUsers(Pageable pageable, Specification<User>  specification);
 
 }
