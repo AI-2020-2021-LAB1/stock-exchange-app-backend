@@ -1,6 +1,8 @@
 package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
+import com.project.stockexchangeappbackend.entity.ArchivedOrder;
+import com.project.stockexchangeappbackend.entity.Order;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.UserRepository;
@@ -10,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Service
 @Slf4j
@@ -60,6 +66,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
     }
 
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public User changeUserPassword(Long id, String password) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+        return user;
+    }
 
     @Override
     @Transactional(readOnly = true)

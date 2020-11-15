@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.*;
+import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.specification.AllOrdersSpecification;
 import com.project.stockexchangeappbackend.repository.specification.ResourceSpecification;
 import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
@@ -86,6 +87,20 @@ public class UsersController {
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
     public UserDTO getUser(Principal principal) {
         return mapper.map(userService.findUserByEmail(principal.getName()), UserDTO.class);
+    }
+
+    @PostMapping("/config/change-password")
+    @PreAuthorize("hasRole('USER')")
+    @ApiOperation(value = "Change logged in user password", response = UserDTO.class, notes = "Required role: USER")
+    @ApiResponses({@ApiResponse(code = 200, message = "User password was successfully changed."),
+            @ApiResponse(code = 404, message = "Failed to change user password.", response = ErrorResponse.class)})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "password", dataType = "string", paramType = "body",
+                    value = "New password"),
+    })
+    public UserDTO changePassword(@RequestParam String password, Principal principal) {
+         User user = userService.findUserByEmail(principal.getName());
+         return mapper.map(userService.changeUserPassword(user.getId(), password), UserDTO.class);
     }
 
     @GetMapping("/stock/owned")

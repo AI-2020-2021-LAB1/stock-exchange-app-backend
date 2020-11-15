@@ -11,6 +11,7 @@ public interface UserService {
     void registerUser(RegistrationUserDTO registrationUserDTO);
     User findUserById(Long id);
     User findUserByEmail(String email);
+    User changeUserPassword(Long id, String password);
     Page<User> getUsers(Pageable pageable, Specification<User>  specification);
 
 }
