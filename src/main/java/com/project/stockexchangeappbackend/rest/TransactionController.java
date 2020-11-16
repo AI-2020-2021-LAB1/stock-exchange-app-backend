@@ -33,18 +33,17 @@ public class TransactionController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Retrieve transaction by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
+    @ApiOperation(value = "Retrieve transaction by id", response = TransactionDTO.class,
+            notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Transaction was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given transaction not found.", response = ErrorResponse.class)})
-    public ResponseEntity<TransactionDTO> getTransactionDetails(@PathVariable Long id) {
-        TransactionDTO transactionDto = mapper.map(transactionService.findTransactionById(id), TransactionDTO.class);
-        return new ResponseEntity<>(transactionDto, HttpStatus.OK);
+    public TransactionDTO getTransactionDetails(@PathVariable Long id) {
+        return mapper.map(transactionService.findTransactionById(id), TransactionDTO.class);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Page and filter transactions.", response = TransactionDTO.class,
-            notes = "Required one role of: ADMIN, USER \n" +
+    @ApiOperation(value = "Page and filter transactions", notes = "Required one role of: ADMIN, USER \n" +
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered transactions."))
