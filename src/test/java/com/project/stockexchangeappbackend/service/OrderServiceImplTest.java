@@ -377,7 +377,7 @@ class OrderServiceImplTest {
         when(orderRepository.findById(id)).thenReturn(Optional.of(order));
         when(userRepository.findByEmailIgnoreCase(user2.getEmail())).thenReturn(Optional.of(user2));
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn("test2@test.pl");
+        when(authentication.getPrincipal()).thenReturn(user2.getEmail());
         assertThrows(AccessDeniedException.class, () -> orderService.deactivateOrder(id));
     }
 
