@@ -23,12 +23,7 @@ import javax.validation.Valid;
 @CrossOrigin("*")
 @AllArgsConstructor
 @Api(value = "Orders", description = "REST API for orders' management", tags = "Orders")
-@ApiResponses({
-        @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
-                response = ErrorResponse.class),
-        @ApiResponse(code = 401, message = "Unauthorized."),
-        @ApiResponse(code = 403, message = "Access Denied.")
-})
+@ApiResponses({@ApiResponse(code = 401, message = "Unauthorized.")})
 public class OrderController {
 
     private final OrderService orderService;
@@ -40,15 +35,17 @@ public class OrderController {
     @ApiOperation(value = "Retrieve order by id", response = OrderDTO.class)
     @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given order not found.", response = ErrorResponse.class)})
-    public OrderDTO getOrderDetails(@ApiParam(value = "Id of a order.", required = true)
-                                    @PathVariable("id") Long id) {
+    public OrderDTO getOrderDetails(@ApiParam(value = "The order's id.", required = true) @PathVariable("id") Long id) {
         return mapper.map(orderService.findOrderById(id), OrderDTO.class);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Create new order")
-    @ApiResponses(@ApiResponse(code = 200, message = "Order was successfully created."))
+    @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully created."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     public void createOrder(@ApiParam(value = "Order object to create.", required = true)
                             @RequestBody @Valid OrderDTO orderDTO) {
         orderService.createOrder(orderDTO);
@@ -56,8 +53,7 @@ public class OrderController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @ApiOperation(value = "Page and filter orders.", response = OrderDTO.class,
-            notes = "Required one role of: ADMIN, USER \n" +
+    @ApiOperation(value = "Page and filter orders", notes = "Required one role of: ADMIN, USER \n" +
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered orders."))
@@ -111,8 +107,7 @@ public class OrderController {
 
     @GetMapping("/{id}/transactions")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
-    @ApiOperation(value = "Page and filter order's transactions.", response = TransactionDTO.class,
-            notes = "Required one role of: ADMIN, USER \n" +
+    @ApiOperation(value = "Page and filter given order's transactions", notes = "Required one role of: ADMIN, USER \n" +
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered order's transactions."))
@@ -145,8 +140,8 @@ public class OrderController {
             @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
     })
-    public Page<TransactionDTO> getTransactionsByOrder(@PathVariable(name = "id") long orderId, @ApiIgnore Pageable pageable,
-                                                       TransactionSpecification transactionSpecification) {
+    public Page<TransactionDTO> getTransactionsByOrder(@PathVariable(name = "id") long orderId,
+                                   @ApiIgnore Pageable pageable, TransactionSpecification transactionSpecification) {
         return transactionService.getTransactionsByOrder(pageable, transactionSpecification, orderId)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
@@ -155,6 +150,7 @@ public class OrderController {
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Deactivate order")
     @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully deactivated."),
+            @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Order not found.", response = ErrorResponse.class)})
     public void deactivateOrder(@ApiParam(value = "The order's id to deactivation.", required = true)
                                 @PathVariable("id") Long id) {

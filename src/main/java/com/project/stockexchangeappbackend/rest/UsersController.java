@@ -23,12 +23,7 @@ import springfox.documentation.annotations.ApiIgnore;
 @CrossOrigin("*")
 @AllArgsConstructor
 @Api(value = "Users", description = "REST API for users' management", tags = "Users")
-@ApiResponses({
-        @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
-                response = ErrorResponse.class),
-        @ApiResponse(code = 401, message = "Unauthorized."),
-        @ApiResponse(code = 403, message = "Access Denied.")
-})
+@ApiResponses({@ApiResponse(code = 401, message = "Unauthorized.")})
 public class UsersController {
 
     private final UserService userService;
@@ -41,6 +36,7 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Retrieve user by id", response = UserDTO.class, notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
+            @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
     public UserDTO getUser(@ApiParam(value = "Id of desired user.", required = true) @PathVariable Long id) {
         return mapper.map(userService.findUserById(id), UserDTO.class);
@@ -48,8 +44,9 @@ public class UsersController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation(value = "Page and filter users", response = UserDTO.class, notes = "Required role: ADMIN")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered users."))
+    @ApiOperation(value = "Page and filter users", notes = "Required role: ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered users."),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -80,9 +77,9 @@ public class UsersController {
 
     @GetMapping("/stock/owned")
     @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "Page and filter logged user's stocks.", response = StockDTO.class,
-            notes = "Required role: USER")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's stocks."))
+    @ApiOperation(value = "Page and filter logged in user's stocks", notes = "Required role: USER")
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's stocks."),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -114,11 +111,11 @@ public class UsersController {
 
     @GetMapping("/order/owned")
     @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "Page and filter logged user's orders.", response = OrderDTO.class,
-            notes = "Required role of: USER \n" +
+    @ApiOperation(value = "Page and filter logged in user's orders", notes = "Required role of: USER \n" +
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's orders."))
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's orders."),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -169,11 +166,11 @@ public class UsersController {
 
     @GetMapping("/transaction/owned")
     @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "Page and filter user's owned transactions.", response = TransactionDTO.class,
-            notes = "Required role of: USER \n" +
+    @ApiOperation(value = "Page and filter logged in user's owned transactions", notes = "Required role of: USER \n" +
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered user's owned transactions."))
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's owned transactions."),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -218,11 +215,11 @@ public class UsersController {
 
     @GetMapping("/{id}/order")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation(value = "List user's orders", response = OrderDTO.class,
-            notes = "Required role of: ADMIN \n" +
+    @ApiOperation(value = "List given user's orders", notes = "Required role of: ADMIN \n" +
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered user's orders"))
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's orders"),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -267,7 +264,7 @@ public class UsersController {
                     value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
     })
     public Page<OrderDTO> getUserOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification,
-                                             @ApiParam(value = "The users's id.", required = true)
+                                             @ApiParam(value = "The user's id.", required = true)
                                              @PathVariable Long id) {
         return orderService.getOrdersByUser(pageable, specification, id)
                 .map(order -> mapper.map(order, OrderDTO.class));
@@ -275,9 +272,9 @@ public class UsersController {
 
     @GetMapping("/{id}/stock")
     @PreAuthorize("hasRole('ADMIN')")
-    @ApiOperation(value = "Page and filter user's stocks.", response = StockDTO.class,
-            notes = "Required role: ADMIN")
+    @ApiOperation(value = "Page and filter given user's stocks", notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's stocks."),
+            @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)
     })
     @ApiImplicitParams({

@@ -25,12 +25,7 @@ import java.util.List;
 @CrossOrigin("*")
 @AllArgsConstructor
 @Api(value = "Stocks", description = "REST API for stocks' management", tags = "Stocks")
-@ApiResponses({
-        @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
-                response = ErrorResponse.class),
-        @ApiResponse(code = 401, message = "Unauthorized."),
-        @ApiResponse(code = 403, message = "Access Denied.")
-})
+@ApiResponses({@ApiResponse(code = 401, message = "Unauthorized.")})
 public class StockController {
 
     private final StockService stockService;
@@ -39,8 +34,7 @@ public class StockController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Page and filter stocks.", response = StockDTO.class,
-            notes = "Required one role of: ADMIN, USER")
+    @ApiOperation(value = "Page and filter stocks", notes = "Required one role of: ADMIN, USER")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered stocks."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -89,7 +83,10 @@ public class StockController {
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Update stock")
-    @ApiResponses(@ApiResponse(code = 200, message = "Stock was successfully updated."))
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully updated."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied.")})
     public void updateStock(
             @ApiParam(value = "Stock object to update.", required = true) @Valid @RequestBody StockDTO stockDTO,
             @ApiParam(value = "Abbreviation or id of desired stock", required = true)
@@ -99,14 +96,13 @@ public class StockController {
 
     @GetMapping("/{id}/index")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Retrieve stock's indexes history by stock id", response = StockIndexValueDTO.class,
-            notes = "Required one role of: ADMIN, USER")
+    @ApiOperation(value = "Retrieve stock's indexes history by stock id", notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "datetime>", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `timestamp` (omitted if null)."),
-            @ApiImplicitParam(name = "dateime<", dataType = "integer", paramType = "query",
+            @ApiImplicitParam(name = "datetime<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `timestamp` (omitted if null).")
     })
     public List<StockIndexValueDTO> getIndexes(StockIndexValueSpecification specification,
@@ -120,6 +116,9 @@ public class StockController {
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Create new stock", notes = "Required role ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully created."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 409, message = "Given stock already exist.", response = ErrorResponse.class)})
     public void create(@RequestBody @Valid CreateStockDTO stockDTO) {
         stockService.createStock(stockDTO);
@@ -129,6 +128,7 @@ public class StockController {
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Delete existing stock", notes = "Required role ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully deleted."),
+            @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public void delete(@ApiParam("The id of stock to delete.") @PathVariable Long id) {
         stockService.deleteStock(id);
