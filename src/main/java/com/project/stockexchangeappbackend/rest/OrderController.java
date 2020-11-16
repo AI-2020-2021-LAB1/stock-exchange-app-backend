@@ -54,8 +54,8 @@ public class OrderController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @ApiOperation(value = "Page and filter orders", notes = "Required one role of: ADMIN, USER \n" +
-                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered orders."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -108,8 +108,8 @@ public class OrderController {
     @GetMapping("/{id}/transactions")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @ApiOperation(value = "Page and filter given order's transactions", notes = "Required one role of: ADMIN, USER \n" +
-                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered order's transactions."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -141,18 +141,19 @@ public class OrderController {
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
     })
     public Page<TransactionDTO> getTransactionsByOrder(@PathVariable(name = "id") long orderId,
-                                   @ApiIgnore Pageable pageable, TransactionSpecification transactionSpecification) {
+                                                       @ApiIgnore Pageable pageable,
+                                                       TransactionSpecification transactionSpecification) {
         return transactionService.getTransactionsByOrder(pageable, transactionSpecification, orderId)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
 
     @PostMapping("/{id}/deactivation")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @ApiOperation(value = "Deactivate order")
     @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully deactivated."),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Order not found.", response = ErrorResponse.class)})
-    public void deactivateOrder(@ApiParam(value = "The order's id to deactivation.", required = true)
+    public void deactivateOrder(@ApiParam(value = "The order's id to deactivate.", required = true)
                                 @PathVariable("id") Long id) {
         orderService.deactivateOrder(id);
     }
