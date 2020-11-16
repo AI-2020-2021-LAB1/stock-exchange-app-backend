@@ -13,7 +13,11 @@ public class DateIsAfterNowValidation implements ConstraintValidator<DateIsAfter
 
     @Override
     public boolean isValid(OffsetDateTime offsetDateTime, ConstraintValidatorContext constraintValidatorContext) {
-        return OffsetDateTime.now(ZoneId.systemDefault()).isBefore(offsetDateTime);
+        try {
+            return OffsetDateTime.now(ZoneId.systemDefault()).isBefore(offsetDateTime);
+        } catch (NullPointerException exception) {
+            return false;
+        }
     }
 
 }
