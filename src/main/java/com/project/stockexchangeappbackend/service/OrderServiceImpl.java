@@ -77,7 +77,7 @@ public class OrderServiceImpl implements OrderService {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
-        if (!order.getUser().getEmail().equals(username) && !user.getRole().toString().equals("ADMIN")) {
+        if (!order.getUser().getEmail().equals(username) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("Access Denied");
         }
         orderRepository.delete(order);
