@@ -76,7 +76,7 @@ public class StockController {
     @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public StockDTO getStock(@ApiParam(value = "Abbreviation or id of desired stock", required = true)
-                                           @PathVariable String id) {
+                             @PathVariable String id) {
         return mapper.map(stockService.getStockByIdOrAbbreviation(id), StockDTO.class);
     }
 
@@ -86,7 +86,8 @@ public class StockController {
     @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully updated."),
             @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
                     response = ErrorResponse.class),
-            @ApiResponse(code = 403, message = "Access Denied.")})
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public void updateStock(
             @ApiParam(value = "Stock object to update.", required = true) @Valid @RequestBody StockDTO stockDTO,
             @ApiParam(value = "Abbreviation or id of desired stock", required = true)
@@ -108,9 +109,9 @@ public class StockController {
                     value = "Filtering criteria for field `timestamp` (omitted if null).")
     })
     public List<StockIndexValueDTO> getIndexes(StockIndexValueSpecification specification,
-                               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
-                               @ApiParam(value = "Interval", defaultValue = "1")
-                               @RequestParam(value = "interval", defaultValue = "1") Integer interval) {
+                                               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
+                                               @ApiParam(value = "Interval", defaultValue = "1")
+                                               @RequestParam(value = "interval", defaultValue = "1") Integer interval) {
         return stockIndexValueService.getStockIndexValues(stockId, specification, interval);
     }
 
@@ -174,7 +175,7 @@ public class StockController {
                     value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)")
     })
     public Page<OwnerDTO> getStockOwners(@ApiParam(value = "The stock's id.", required = true)
-                                             @PathVariable Long id, @ApiIgnore Pageable pageable,
+                                         @PathVariable Long id, @ApiIgnore Pageable pageable,
                                          OwnerSpecification specification) {
         return resourceService.getStockOwners(pageable, specification, id);
     }
