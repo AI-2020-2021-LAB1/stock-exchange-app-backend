@@ -319,8 +319,8 @@ public class UsersController {
             "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's transactions."),
             @ApiResponse(code = 403, message = "Access Denied."),
-            @ApiResponse(code = 400, message = "Id is not a number"),
-            @ApiResponse(code = 404, message = "User doesn't exist")})
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.", response = ErrorResponse.class),
+            @ApiResponse(code = 404, message = "Given user not found", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
