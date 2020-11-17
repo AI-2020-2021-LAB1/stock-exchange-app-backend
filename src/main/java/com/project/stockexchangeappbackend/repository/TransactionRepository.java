@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.repository;
 
+import com.project.stockexchangeappbackend.entity.ArchivedOrder;
 import com.project.stockexchangeappbackend.entity.Transaction;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
 import org.springframework.data.domain.Page;
@@ -32,6 +33,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long>,
 
     @DBQueryMeasureTime
     @Query("SELECT t FROM Transaction t WHERE t.buyingOrder.stock.id = :stockId ORDER BY t.date desc")
-    List<Transaction> getTransactionsByStockId (@Param("stockId") Long stockId);
+    List<Transaction> getTransactionsByStockId(@Param("stockId") Long stockId);
 
 }
