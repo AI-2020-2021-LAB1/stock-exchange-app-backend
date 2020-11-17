@@ -98,6 +98,8 @@ public class StockController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @ApiOperation(value = "Retrieve stock's indexes history by stock id", notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully retrieved."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "datetime>", dataType = "integer", paramType = "query",
@@ -128,6 +130,8 @@ public class StockController {
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Delete existing stock", notes = "Required role ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully deleted."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public void delete(@ApiParam(value = "The id of stock to delete.", required = true) @PathVariable Long id) {
@@ -141,7 +145,7 @@ public class StockController {
             @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
-            @ApiResponse(code = 404, message = "Stock not found.")})
+            @ApiResponse(code = 404, message = "Stock not found.", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),

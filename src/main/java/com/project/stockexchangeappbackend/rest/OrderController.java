@@ -110,7 +110,11 @@ public class OrderController {
     @ApiOperation(value = "Page and filter given order's transactions", notes = "Required one role of: ADMIN, USER \n" +
             "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
             "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
-    @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered order's transactions."))
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered order's transactions."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 404, message = "Order not found.", response = ErrorResponse.class)
+    })
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -140,7 +144,8 @@ public class OrderController {
             @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
     })
-    public Page<TransactionDTO> getTransactionsByOrder(@PathVariable(name = "id") long orderId,
+    public Page<TransactionDTO> getTransactionsByOrder(@ApiParam(value = "The order's id.", required = true)
+                                                           @PathVariable(name = "id") long orderId,
                                                        @ApiIgnore Pageable pageable,
                                                        TransactionSpecification transactionSpecification) {
         return transactionService.getTransactionsByOrder(pageable, transactionSpecification, orderId)
@@ -151,6 +156,8 @@ public class OrderController {
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @ApiOperation(value = "Deactivate order")
     @ApiResponses({@ApiResponse(code = 200, message = "Order was successfully deactivated."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Order not found.", response = ErrorResponse.class)})
     public void deactivateOrder(@ApiParam(value = "The order's id to deactivate.", required = true)
