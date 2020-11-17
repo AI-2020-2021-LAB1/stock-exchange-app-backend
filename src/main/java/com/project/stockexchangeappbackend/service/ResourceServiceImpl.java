@@ -1,12 +1,12 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.ResourceDTO;
-import com.project.stockexchangeappbackend.entity.Order;
-import com.project.stockexchangeappbackend.entity.OrderType;
-import com.project.stockexchangeappbackend.entity.Resource;
-import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.dto.UserDTO;
+import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.repository.OrderRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
+import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.Join;
 import java.time.OffsetDateTime;
@@ -31,6 +30,7 @@ public class ResourceServiceImpl implements ResourceService {
     private final ResourceRepository resourceRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final StockRepository stockRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -48,6 +48,20 @@ public class ResourceServiceImpl implements ResourceService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         return findResources(pageable, specification, user.getEmail());
+    }
+
+    @Override
+    public Page<OwnerDTO> getStockOwners(Pageable pageable, Specification<Resource> specification, Long stockId) {
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(stockId)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found"));
+        Specification<Resource> byStock = (root, criteriaQuery, criteriaBuilder) -> {
+            Join<Resource, Stock> stockJoin = root.join("stock");
+            return criteriaBuilder.equal(stockJoin.get("id"), stock.getId());
+        };
+        return resourceRepository.findAll(Specification.where(byStock).and(specification), pageable)
+                .map(resource -> OwnerDTO.builder()
+                        .user(modelMapper.map(resource.getUser(), UserDTO.class))
+                        .amount(resource.getAmount()).build());
     }
 
     private Page<ResourceDTO> findResources(Pageable pageable, Specification<Resource> specification, String username) {
