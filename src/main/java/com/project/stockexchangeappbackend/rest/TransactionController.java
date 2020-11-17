@@ -32,7 +32,8 @@ public class TransactionController {
             notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Transaction was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given transaction not found.", response = ErrorResponse.class)})
-    public TransactionDTO getTransactionDetails(@PathVariable Long id) {
+    public TransactionDTO getTransactionDetails(@ApiParam(value = "The transaction's id.", required = true)
+                                                @PathVariable Long id) {
         return mapper.map(transactionService.findTransactionById(id), TransactionDTO.class);
     }
 

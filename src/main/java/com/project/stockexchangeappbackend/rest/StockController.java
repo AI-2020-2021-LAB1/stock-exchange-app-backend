@@ -1,11 +1,10 @@
 package com.project.stockexchangeappbackend.rest;
 
-import com.project.stockexchangeappbackend.dto.CreateStockDTO;
-import com.project.stockexchangeappbackend.dto.ErrorResponse;
-import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.dto.StockIndexValueDTO;
+import com.project.stockexchangeappbackend.dto.*;
+import com.project.stockexchangeappbackend.repository.specification.OwnerSpecification;
 import com.project.stockexchangeappbackend.repository.specification.StockIndexValueSpecification;
 import com.project.stockexchangeappbackend.repository.specification.StockSpecification;
+import com.project.stockexchangeappbackend.service.ResourceService;
 import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import io.swagger.annotations.*;
@@ -30,6 +29,7 @@ public class StockController {
 
     private final StockService stockService;
     private final StockIndexValueService stockIndexValueService;
+    private final ResourceService resourceService;
     private final ModelMapper mapper;
 
     @GetMapping
@@ -98,6 +98,8 @@ public class StockController {
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
     @ApiOperation(value = "Retrieve stock's indexes history by stock id", notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully retrieved."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "datetime>", dataType = "integer", paramType = "query",
@@ -128,10 +130,53 @@ public class StockController {
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Delete existing stock", notes = "Required role ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully deleted."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
-    public void delete(@ApiParam("The id of stock to delete.") @PathVariable Long id) {
+    public void delete(@ApiParam(value = "The id of stock to delete.", required = true) @PathVariable Long id) {
         stockService.deleteStock(id);
+    }
+
+    @GetMapping("/{id}/owner")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Page and filter given stock's owners", notes = "Required role ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered stocks' owners."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "Stock not found.", response = ErrorResponse.class)})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page.", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. Multiple sort criteria are supported."),
+            @ApiImplicitParam(name = "email", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `email` (omitted if null)"),
+            @ApiImplicitParam(name = "firstName", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `firstName`. (omitted if null)"),
+            @ApiImplicitParam(name = "lastName", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `lastName`. (omitted if null)"),
+            @ApiImplicitParam(name = "money>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `money`. (omitted if null)"),
+            @ApiImplicitParam(name = "money<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `money`. (omitted if null)"),
+            @ApiImplicitParam(name = "money", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `money`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "amount>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)")
+    })
+    public Page<OwnerDTO> getStockOwners(@ApiParam(value = "The stock's id.", required = true)
+                                             @PathVariable Long id, @ApiIgnore Pageable pageable,
+                                         OwnerSpecification specification) {
+        return resourceService.getStockOwners(pageable, specification, id);
     }
 
 }

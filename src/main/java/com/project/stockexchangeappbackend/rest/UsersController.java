@@ -219,7 +219,10 @@ public class UsersController {
                     "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
                     "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's orders"),
-            @ApiResponse(code = 403, message = "Access Denied.")})
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "User not found.", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -274,6 +277,8 @@ public class UsersController {
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Page and filter given user's stocks", notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's stocks."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)
     })

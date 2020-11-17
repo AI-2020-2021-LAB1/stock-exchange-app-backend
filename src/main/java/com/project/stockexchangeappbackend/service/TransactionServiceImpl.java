@@ -1,9 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.entity.ArchivedOrder;
-import com.project.stockexchangeappbackend.entity.Order;
-import com.project.stockexchangeappbackend.entity.Resource;
-import com.project.stockexchangeappbackend.entity.Transaction;
+import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +24,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final ArchivedOrderRepository archivedOrderRepository;
     private final OrderRepository orderRepository;
+    private final AllOrdersRepository allOrdersRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
@@ -102,14 +100,16 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
                                                     long orderId) {
+        AllOrders order = allOrdersRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         Specification<Transaction> withBuyingOrder = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("buyingOrder")
-                        .get("id"), orderId);
+                        .get("id"), order.getId());
         Specification<Transaction> withSellingOrder = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("sellingOrder")
-                        .get("id"), orderId);
+                        .get("id"), order.getId());
 
         Specification<Transaction> spec1 = Specification.where(withBuyingOrder).and(specification);
         Specification<Transaction> spec2 = Specification.where(withSellingOrder).and(specification);
