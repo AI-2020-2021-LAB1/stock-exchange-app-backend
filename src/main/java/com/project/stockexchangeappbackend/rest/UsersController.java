@@ -318,7 +318,9 @@ public class UsersController {
             "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
             "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's transactions."),
-            @ApiResponse(code = 403, message = "Access Denied.")})
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 400, message = "Id is not a number"),
+            @ApiResponse(code = 404, message = "User doesn't exist")})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
                     value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
@@ -349,10 +351,10 @@ public class UsersController {
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
             @ApiImplicitParam(name = "isSeller", dataType = "boolean", paramType = "query",
                     value = "Filtering criteria for field sellingOrder. " +
-                            "Include transactions where user is selling (not required, default true"),
+                            "Include transactions where specified user is selling (not required, default true"),
             @ApiImplicitParam(name = "isBuyer", dataType = "boolean", paramType = "query",
                     value = "Filtering criteria for field buyingOrder. " +
-                            "Include transactions where user is buying. (not required, default true)"),
+                            "Include transactions where specified user is buying. (not required, default true)"),
     })
     public Page<TransactionDTO> getUsersTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification,
                                                      @RequestParam(required = false, defaultValue = "true") boolean isSeller,
