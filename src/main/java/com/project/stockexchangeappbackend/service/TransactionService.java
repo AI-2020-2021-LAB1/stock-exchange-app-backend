@@ -21,8 +21,11 @@ public interface TransactionService {
                                            boolean isSeller, boolean isBuyer);
 
     Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
-                                             long orderId);
+                                             Long orderId);
 
     List<Transaction> getTransactionsByStockIdForPricing(Long stockId, Integer amount);
+
+    Page<Transaction> getUserTransactions(Pageable pageable, Specification<Transaction> specification, Long userId,
+                                          boolean isSeller, boolean isBuyer);
 
 }

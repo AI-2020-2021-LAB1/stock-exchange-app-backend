@@ -145,7 +145,7 @@ public class OrderController {
                     value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
     })
     public Page<TransactionDTO> getTransactionsByOrder(@ApiParam(value = "The order's id.", required = true)
-                                                           @PathVariable(name = "id") long orderId,
+                                                           @PathVariable(name = "id") Long orderId,
                                                        @ApiIgnore Pageable pageable,
                                                        TransactionSpecification transactionSpecification) {
         return transactionService.getTransactionsByOrder(pageable, transactionSpecification, orderId)

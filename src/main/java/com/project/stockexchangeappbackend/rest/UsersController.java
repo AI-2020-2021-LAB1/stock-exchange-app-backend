@@ -112,8 +112,8 @@ public class UsersController {
     @GetMapping("/order/owned")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter logged in user's orders", notes = "Required role of: USER \n" +
-                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered logged user's orders."),
             @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
@@ -167,8 +167,8 @@ public class UsersController {
     @GetMapping("/transaction/owned")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter logged in user's owned transactions", notes = "Required role of: USER \n" +
-                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's owned transactions."),
             @ApiResponse(code = 403, message = "Access Denied.")})
     @ApiImplicitParams({
@@ -216,8 +216,8 @@ public class UsersController {
     @GetMapping("/{id}/order")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "List given user's orders", notes = "Required role of: ADMIN \n" +
-                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's orders"),
             @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
                     response = ErrorResponse.class),
@@ -310,6 +310,56 @@ public class UsersController {
     public Page<ResourceDTO> getUsersStocks(@ApiIgnore Pageable pageable, ResourceSpecification specification,
                                             @ApiParam("The user's id") @PathVariable Long id) {
         return resourceService.getUsersResources(pageable, specification, id);
+    }
+
+    @GetMapping("/{id}/transaction")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Page and filter user's transactions", notes = "Required role of: ADMIN \n" +
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+    @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's transactions."),
+            @ApiResponse(code = 403, message = "Access Denied.")})
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
+                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
+            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
+                    value = "Number of records per page.", defaultValue = "20"),
+            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
+                    value = "Sorting criteria in the format: property(,asc|desc). " +
+                            "Default sort order is ascending. Multiple sort criteria are supported."),
+            @ApiImplicitParam(name = "date>", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `date`. (omitted if null)"),
+            @ApiImplicitParam(name = "date<", dataType = "date", paramType = "query",
+                    value = "Filtering criteria for field `date`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "unitPrice>", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `unitPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "unitPrice<", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `unitPrice`. (omitted if null)"),
+            @ApiImplicitParam(name = "unitPrice", dataType = "integer", paramType = "query",
+                    value = "Filtering criteria for field `unitPrice`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "name", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `name` (omitted if null)"),
+            @ApiImplicitParam(name = "abbreviation", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `abbreviation`. (omitted if null)"),
+            @ApiImplicitParam(name = "isSeller", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field sellingOrder. " +
+                            "Include transactions where user is selling (not required, default true"),
+            @ApiImplicitParam(name = "isBuyer", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field buyingOrder. " +
+                            "Include transactions where user is buying. (not required, default true)"),
+    })
+    public Page<TransactionDTO> getUsersTransactions(@ApiIgnore Pageable pageable, TransactionSpecification specification,
+                                                     @RequestParam(required = false, defaultValue = "true") boolean isSeller,
+                                                     @RequestParam(required = false, defaultValue = "true") boolean isBuyer,
+                                                     @ApiParam("The user's id") @PathVariable Long id) {
+        return transactionService.getUserTransactions(pageable, specification, id, isSeller, isBuyer)
+                .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
 
 }
