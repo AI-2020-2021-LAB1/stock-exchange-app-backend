@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -103,6 +104,8 @@ class UserServiceImplTest {
                 .id(id).email(email)
                 .firstName(firstName).lastName(lastName)
                 .money(money)
+                .orders(new ArrayList<>())
+                .userStocks(new ArrayList<>())
                 .build();
     }
 
