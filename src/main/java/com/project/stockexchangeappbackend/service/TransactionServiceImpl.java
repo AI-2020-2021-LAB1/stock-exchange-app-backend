@@ -166,7 +166,14 @@ public class TransactionServiceImpl implements TransactionService {
         buyerResource.setAmount(buyerResource.getAmount() + amount);
         buyerResource.getUser().setMoney(buyerResource.getUser().getMoney()
                 .subtract(pricePerUnit.multiply(BigDecimal.valueOf(amount))));
-        resourceRepository.save(sellerResource);
+        if (sellerResource.getAmount() == 0) {
+            resourceRepository.delete(sellerResource);
+            User seller = sellerResource.getUser();
+            seller.getUserStocks().remove(sellerResource);
+            userRepository.save(seller);
+        } else {
+            resourceRepository.save(sellerResource);
+        }
         resourceRepository.save(buyerResource);
     }
 
