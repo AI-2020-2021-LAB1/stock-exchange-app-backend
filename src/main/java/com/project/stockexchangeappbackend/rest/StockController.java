@@ -13,14 +13,17 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/stock")
+@Validated
 @CrossOrigin("*")
 @AllArgsConstructor
 @Api(value = "Stocks", description = "REST API for stocks' management", tags = "Stocks")
@@ -109,9 +112,10 @@ public class StockController {
                     value = "Filtering criteria for field `timestamp` (omitted if null).")
     })
     public List<StockIndexValueDTO> getIndexes(StockIndexValueSpecification specification,
-                                               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
-                                               @ApiParam(value = "Interval", defaultValue = "1")
-                                               @RequestParam(value = "interval", defaultValue = "1") Integer interval) {
+               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
+               @ApiParam(value = "Interval. Minimal value 1.", defaultValue = "1")
+                                                   @RequestParam(value = "interval", defaultValue = "1")
+               @Min(value = 1, message = "Interval must be greater or equal {value}.") Integer interval) {
         return stockIndexValueService.getStockIndexValues(stockId, specification, interval);
     }
 

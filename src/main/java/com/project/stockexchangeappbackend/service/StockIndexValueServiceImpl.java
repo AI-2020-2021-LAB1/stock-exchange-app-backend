@@ -63,16 +63,14 @@ public class StockIndexValueServiceImpl implements StockIndexValueService {
         }
 
         stockIndexValues.forEach(stockIndexValue -> {
-            if (results.get(results.size()-1).isEmpty()) {
-                results.get(results.size()-1).add(stockIndexValue);
-            } else if (stockIndexValue.getTimestamp().isAfter(
+            results.get(results.size()-1).add(stockIndexValue);
+            if (stockIndexValue.getTimestamp().isBefore(
                     results.get(results.size()-1).get(0).getTimestamp().minusMinutes(interval))) {
-                results.get(results.size()-1).add(stockIndexValue);
-            } else {
                 results.add(new ArrayList<>());
                 results.get(results.size()-1).add(stockIndexValue);
             }
         });
+
         Collections.reverse(results);
         return results.parallelStream()
                 .map(StockIndexValueDTO::new)
