@@ -140,6 +140,31 @@ public class StockServiceImpl implements StockService {
         stockRepository.save(stock);
     }
 
+    @Override
+    public void updateStockAmount(Long stockId, Long userId, Integer amount) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new EntityNotFoundException("Stock not found"));
+        Map<String, List<String>> errors = new HashMap<>();
+        Resource userResource = user
+                .getUserStocks()
+                .stream()
+                .filter(resource -> resource.getId().equals(stockId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    errors.put("user", List.of("User does not own any amount of this stock"));
+                    throw new InvalidInputDataException("Data validation", errors);
+                });
+        if (userResource.getAmount() + amount < 0) {
+            errors.put("amount", List.of("User cannot own negative number of stocks"));
+            throw new InvalidInputDataException("Data validation", errors);
+        }
+        stock.setAmount(stock.getAmount() + amount);
+        userResource.setAmount(userResource.getAmount() + amount);
+        stockRepository.save(stock);
+        resourceRepository.save(userResource);
+
+    }
+
     private Stock validateCreateStockDTO(CreateStockDTO stockDTO) {
         Map<String, List<String>> errors = new HashMap<>();
         Optional<Stock> stockInDBName = stockRepository.findByNameIgnoreCase(stockDTO.getName().trim());

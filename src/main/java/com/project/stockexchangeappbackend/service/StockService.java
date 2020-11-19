@@ -20,5 +20,6 @@ public interface StockService {
     Stock getStockByIdOrAbbreviation(String id);
     void createStock(CreateStockDTO stockDTO);
     void deleteStock(Long id);
+    void updateStockAmount(Long stockId, Long userId, Integer amount);
 
 }
