@@ -141,28 +141,42 @@ public class StockServiceImpl implements StockService {
     }
 
     @Override
-    public void updateStockAmount(Long stockId, Long userId, Integer amount) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new EntityNotFoundException("Stock not found"));
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void updateStockAmount(Long stockId, List<OwnerDTO> ownerDTOList) {
         Map<String, List<String>> errors = new HashMap<>();
-        Resource userResource = user
-                .getUserStocks()
-                .stream()
-                .filter(resource -> resource.getId().equals(stockId))
-                .findFirst()
-                .orElseThrow(() -> {
-                    errors.put("user", List.of("User does not own any amount of this stock"));
-                    throw new InvalidInputDataException("Data validation", errors);
-                });
-        if (userResource.getAmount() + amount < 0) {
-            errors.put("amount", List.of("User cannot own negative number of stocks"));
+        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new EntityNotFoundException("Stock not found"));
+        ownerDTOList.forEach(ownerDTO -> {
+            Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
+            if (user.isEmpty()) {
+                errors.put("owners[" + ownerDTOList.indexOf(ownerDTO) + ']', List.of("User not found"));
+            } else if (user.get().getRole().equals(Role.ADMIN)) {
+                errors.put("owners[" + ownerDTOList.indexOf(ownerDTO) + ']', List.of("User is an admin"));
+            }
+        });
+        if (!errors.isEmpty()) {
             throw new InvalidInputDataException("Data validation", errors);
         }
-        stock.setAmount(stock.getAmount() + amount);
-        userResource.setAmount(userResource.getAmount() + amount);
+        List<Resource> resources = ownerDTOList.stream().map(ownerDTO -> {
+            Optional<Resource> resource = resourceRepository.findByUserAndStock(
+                    userRepository.findById(ownerDTO.getUser().getId()).get(), stock);
+            if (resource.isEmpty()) {
+                errors.put("owners[" + ownerDTOList.indexOf(ownerDTO) + ']', List.of("User does not own any amount of the stock"));
+                return null;
+            }
+            return resource.get();
+        }).collect(Collectors.toList());
+        if (!errors.isEmpty()) {
+            throw new InvalidInputDataException("Data validation", errors);
+        }
+        int currentStockAmount = resources.stream().mapToInt(Resource::getAmount).sum();
+        int insertedStockAmount = ownerDTOList.stream().mapToInt(OwnerDTO::getAmount).sum();
+        for (int i = 0; i < ownerDTOList.size(); i++) {
+            resources.get(i).setAmount(ownerDTOList.get(i).getAmount());
+        }
+        stock.setResources(resources);
+        stock.setAmount(insertedStockAmount - currentStockAmount + stock.getAmount());
         stockRepository.save(stock);
-        resourceRepository.save(userResource);
-
     }
 
     private Stock validateCreateStockDTO(CreateStockDTO stockDTO) {
