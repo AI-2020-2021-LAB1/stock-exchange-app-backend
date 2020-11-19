@@ -190,7 +190,7 @@ public class StockController {
             @ApiResponse(code = 404, message = "Given stock not found", response = ErrorResponse.class)})
     public void updateStockAmount(@ApiParam(value = "The stock's id.", required = true) @PathVariable(name = "id") Long stockId,
                                   @ApiParam(value = "Owner object", required = true)
-                                  @RequestBody @Valid List<OwnerDTO> ownerDTOList) {
+                                  @RequestBody List<@Valid OwnerDTO> ownerDTOList) {
         stockService.updateStockAmount(stockId, ownerDTOList);
     }
 

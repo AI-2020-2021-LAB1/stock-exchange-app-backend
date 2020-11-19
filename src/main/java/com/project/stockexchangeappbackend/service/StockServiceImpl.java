@@ -158,23 +158,25 @@ public class StockServiceImpl implements StockService {
             throw new InvalidInputDataException("Data validation", errors);
         }
         List<Resource> resources = ownerDTOList.stream().map(ownerDTO -> {
-            Optional<Resource> resource = resourceRepository.findByUserAndStock(
-                    userRepository.findById(ownerDTO.getUser().getId()).get(), stock);
+            Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
+            Optional<Resource> resource = resourceRepository.findByUserAndStock(user.get(), stock);
             if (resource.isEmpty()) {
-                errors.put("owners[" + ownerDTOList.indexOf(ownerDTO) + ']', List.of("User does not own any amount of the stock"));
-                return null;
+                return Resource.builder()
+                        .stock(stock)
+                        .user(user.get())
+                        .amount(0)
+                        .build();
             }
             return resource.get();
         }).collect(Collectors.toList());
-        if (!errors.isEmpty()) {
-            throw new InvalidInputDataException("Data validation", errors);
-        }
         int currentStockAmount = resources.stream().mapToInt(Resource::getAmount).sum();
         int insertedStockAmount = ownerDTOList.stream().mapToInt(OwnerDTO::getAmount).sum();
         for (int i = 0; i < ownerDTOList.size(); i++) {
             resources.get(i).setAmount(ownerDTOList.get(i).getAmount());
         }
         stock.setAmount(insertedStockAmount - currentStockAmount + stock.getAmount());
+        resources.addAll(stock.getResources());
+        stock.setResources(resources);
         stockRepository.save(stock);
     }
 
