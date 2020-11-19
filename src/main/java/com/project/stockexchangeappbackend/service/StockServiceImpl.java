@@ -174,7 +174,6 @@ public class StockServiceImpl implements StockService {
         for (int i = 0; i < ownerDTOList.size(); i++) {
             resources.get(i).setAmount(ownerDTOList.get(i).getAmount());
         }
-        stock.setResources(resources);
         stock.setAmount(insertedStockAmount - currentStockAmount + stock.getAmount());
         stockRepository.save(stock);
     }

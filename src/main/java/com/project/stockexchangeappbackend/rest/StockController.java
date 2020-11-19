@@ -187,7 +187,7 @@ public class StockController {
             @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
-            @ApiResponse(code = 404, message = "Given stock not found | Given user not found", response = ErrorResponse.class)})
+            @ApiResponse(code = 404, message = "Given stock not found", response = ErrorResponse.class)})
     public void updateStockAmount(@ApiParam(value = "The stock's id.", required = true) @PathVariable(name = "id") Long stockId,
                                   @ApiParam(value = "Owner object", required = true)
                                   @RequestBody @Valid List<OwnerDTO> ownerDTOList) {
