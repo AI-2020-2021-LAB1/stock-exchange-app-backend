@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
+import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -40,28 +41,35 @@ class UserServiceImplTest {
     @Mock
     PasswordEncoder passwordEncoder;
 
+    @Mock
+    TagService tagService;
+
     @Test
     void shouldRegisterUser() {
         RegistrationUserDTO registrationUserDTO =
                 createRegistrationUserDTO("test@test.com", "secret" ,"Jan", "Kowalski");
+        Tag tag = new Tag(1L, "DEFAULT");
         when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail().trim())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registrationUserDTO.getPassword())).thenReturn("encodedPassword");
-        assertAll(() -> userService.registerUser(registrationUserDTO));
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        assertAll(() -> userService.registerUser(registrationUserDTO, tag.getName()));
     }
 
     @Test
     void shouldThrowEntityExistsExceptionWhenRegisterUser() {
         RegistrationUserDTO registrationUserDTO =
                 createRegistrationUserDTO("test@test.com", "secret" ,"Jan", "Kowalski");
+        Tag tag = new Tag(1L, "DEFAULT");
         when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail().trim()))
                 .thenReturn(Optional.of(User.builder().email(registrationUserDTO.getEmail()).build()));
-        assertThrows(EntityExistsException.class, () -> userService.registerUser(registrationUserDTO));
+        assertThrows(EntityExistsException.class, () -> userService.registerUser(registrationUserDTO, tag.getName()));
     }
 
     @Test
     void shouldReturnUserById() {
         Long id = 1L;
-        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO);
+        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO,
+                "DEFAULT");
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         assertUser(userService.findUserById(id), user);
     }
@@ -76,8 +84,8 @@ class UserServiceImplTest {
     @Test
     void shouldPageAndFilterUsers() {
         List<User> users = Arrays.asList(
-                createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO),
-                createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN)
+                createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, "DEFAULT"),
+                createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN, "DEFAULT")
         );
         Pageable pageable = PageRequest.of(0, 20);
         Specification<User> specification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) ->
@@ -96,7 +104,9 @@ class UserServiceImplTest {
                 () -> assertEquals(expected.getEmail(), output.getEmail()),
                 () -> assertEquals(expected.getFirstName(), output.getFirstName()),
                 () -> assertEquals(expected.getLastName(), output.getLastName()),
-                () -> assertEquals(expected.getMoney(), output.getMoney()));
+                () -> assertEquals(expected.getMoney(), output.getMoney()),
+                () -> assertEquals(expected.getRole(), output.getRole()),
+                () -> assertEquals(expected.getTag(), output.getTag()));
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money) {
@@ -106,6 +116,18 @@ class UserServiceImplTest {
                 .money(money)
                 .orders(new ArrayList<>())
                 .userStocks(new ArrayList<>())
+                .build();
+    }
+
+    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
+                                         String tag) {
+        return User.builder()
+                .id(id).email(email)
+                .firstName(firstName).lastName(lastName)
+                .money(money)
+                .orders(new ArrayList<>())
+                .userStocks(new ArrayList<>())
+                .tag(new Tag(1L, tag))
                 .build();
     }
 
