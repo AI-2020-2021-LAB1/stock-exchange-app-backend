@@ -40,4 +40,8 @@ public class Stock {
     @Column(name = "IS_DELETED", nullable = false)
     private Boolean isDeleted;
 
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "TAG_ID", nullable = false, updatable = false, referencedColumnName = "ID")
+    private Tag tag;
+
 }

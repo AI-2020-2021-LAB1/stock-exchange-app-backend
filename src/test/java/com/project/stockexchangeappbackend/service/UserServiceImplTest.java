@@ -141,6 +141,17 @@ class UserServiceImplTest {
                 .build();
     }
 
+    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
+                                         Role role, Tag tag) {
+        return User.builder()
+                .id(id).email(email)
+                .firstName(firstName).lastName(lastName)
+                .money(money)
+                .role(role)
+                .tag(tag)
+                .build();
+    }
+
     public static RegistrationUserDTO createRegistrationUserDTO (String email, String password,
                                                                   String firstName, String lastName) {
         return RegistrationUserDTO.builder()

@@ -39,4 +39,7 @@ public class StockDTO {
     @ApiModelProperty(notes = "The stock's price change ratio.")
     private Double priceChangeRatio;
 
+    @ApiModelProperty(notes = "The stock's tag.")
+    private String tag;
+
 }

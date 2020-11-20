@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.configuration;
 
 import com.project.stockexchangeappbackend.dto.ResourceDTO;
+import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.dto.UserDTO;
 import com.project.stockexchangeappbackend.entity.Resource;
 import com.project.stockexchangeappbackend.entity.Stock;
@@ -26,7 +27,7 @@ public class ModelMapperConfiguration {
                 ctx.getSource().getAbbreviation();
         Converter<Stock, BigDecimal> extractCurrentPrice = ctx -> ctx.getSource() == null ? null :
                 ctx.getSource().getCurrentPrice();
-        Converter<Tag, String> extractUserTag = ctx -> ctx.getSource() == null ? null :
+        Converter<Tag, String> extractTag = ctx -> ctx.getSource() == null ? null :
                 ctx.getSource().getName();
 
         modelMapper.createTypeMap(Resource.class, ResourceDTO.class)
@@ -38,7 +39,12 @@ public class ModelMapperConfiguration {
 
         modelMapper.createTypeMap(User.class, UserDTO.class)
                 .addMappings(mapper -> {
-                   mapper.using(extractUserTag).map(User::getTag, UserDTO::setTag);
+                   mapper.using(extractTag).map(User::getTag, UserDTO::setTag);
+                });
+
+        modelMapper.createTypeMap(Stock.class, StockDTO.class)
+                .addMappings(mapper -> {
+                    mapper.using(extractTag).map(Stock::getTag, StockDTO::setTag);
                 });
 
         return modelMapper;
