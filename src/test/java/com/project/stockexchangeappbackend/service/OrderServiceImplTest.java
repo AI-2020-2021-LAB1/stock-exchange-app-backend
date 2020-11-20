@@ -327,7 +327,7 @@ class OrderServiceImplTest {
     void shouldDeactivateOrder(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Long id = 1L;
         Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, Role.USER);
         Order order = createCustomOrder(id, 100, 90, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.TEN, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(2),
                 null, user, stock);
@@ -335,6 +335,7 @@ class OrderServiceImplTest {
         SecurityContextHolder.setContext(securityContext);
 
         when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(archivedOrderRepository.findById(id)).thenReturn(Optional.of(archivedOrder));
@@ -353,6 +354,7 @@ class OrderServiceImplTest {
         SecurityContextHolder.setContext(securityContext);
 
         when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(archivedOrderRepository.findById(id)).thenReturn(Optional.empty());
@@ -365,15 +367,17 @@ class OrderServiceImplTest {
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Long id = 1L;
         Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, Role.USER);
+        User user2 = createCustomUser(2L, "test2@test.pl", "Timmy", "Lawok", BigDecimal.ZERO, Role.USER);
         Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.TEN, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(2),
                 null, user, stock);
         SecurityContextHolder.setContext(securityContext);
 
         when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        when(userRepository.findByEmailIgnoreCase(user2.getEmail())).thenReturn(Optional.of(user2));
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn("user02");
+        when(authentication.getPrincipal()).thenReturn(user2.getEmail());
         assertThrows(AccessDeniedException.class, () -> orderService.deactivateOrder(id));
     }
 

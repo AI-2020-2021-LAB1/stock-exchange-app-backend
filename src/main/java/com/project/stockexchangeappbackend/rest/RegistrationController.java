@@ -23,10 +23,10 @@ public class RegistrationController {
     private final UserService userService;
 
     @PostMapping("/register")
-    @ApiOperation(value = "Register new user", response = RegistrationUserDTO.class)
+    @ApiOperation(value = "Register new user")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully registered."),
             @ApiResponse(code = 409, message = "User with given email already exists.", response = ErrorResponse.class)})
-    public void register(@ApiParam(value = "User object to registration in database", required = true)
+    public void register(@ApiParam(value = "User object to registration in database.", required = true)
                              @RequestBody @Valid RegistrationUserDTO registrationUserDTO) {
         userService.registerUser(registrationUserDTO);
     }

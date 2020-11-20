@@ -75,7 +75,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!order.getUser().getEmail().equals(username)) {
+        User user = userRepository.findByEmailIgnoreCase(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!order.getUser().getEmail().equals(username) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("Access Denied");
         }
         orderRepository.delete(order);
@@ -94,7 +96,7 @@ public class OrderServiceImpl implements OrderService {
             Join<Order, User> owner = root.join("user");
             return criteriaBuilder.equal(owner.get("email"), user.getEmail());
         };
-        return allOrdersRepository.findAll(Specification.where(specification).and(orderByUser),pageable);
+        return allOrdersRepository.findAll(Specification.where(specification).and(orderByUser), pageable);
     }
 
     @Override

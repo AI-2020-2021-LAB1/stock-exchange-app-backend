@@ -1,9 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.entity.ArchivedOrder;
-import com.project.stockexchangeappbackend.entity.Order;
-import com.project.stockexchangeappbackend.entity.Resource;
-import com.project.stockexchangeappbackend.entity.Transaction;
+import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +24,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final ArchivedOrderRepository archivedOrderRepository;
     private final OrderRepository orderRepository;
+    private final AllOrdersRepository allOrdersRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
@@ -84,33 +82,24 @@ public class TransactionServiceImpl implements TransactionService {
                         .join("sellingOrder")
                         .join("user")
                         .get("email"), principal);
-
-        Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
-        Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
-
-        if (isBuyer && isSeller) {
-            return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
-        } else if (isBuyer) {
-            return transactionRepository.findAll(Specification.where(spec1), pageable);
-        } else if (isSeller) {
-            return transactionRepository.findAll(Specification.where(spec2), pageable);
-        } else {
-            return Page.empty();
-        }
+        return getTransactions(pageable, specification, isSeller, isBuyer, userIsBuyer, userIsSeller);
     }
+
 
     @Override
     public Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
-                                                    long orderId) {
+                                                    Long orderId) {
+        AllOrders order = allOrdersRepository.findById(orderId)
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         Specification<Transaction> withBuyingOrder = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("buyingOrder")
-                        .get("id"), orderId);
+                        .get("id"), order.getId());
+
         Specification<Transaction> withSellingOrder = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root
                         .join("sellingOrder")
-                        .get("id"), orderId);
-
+                        .get("id"), order.getId());
         Specification<Transaction> spec1 = Specification.where(withBuyingOrder).and(specification);
         Specification<Transaction> spec2 = Specification.where(withSellingOrder).and(specification);
 
@@ -121,7 +110,7 @@ public class TransactionServiceImpl implements TransactionService {
     public List<Transaction> getTransactionsByStockIdForPricing(Long stockId, Integer amount) {
         List<Transaction> transactions = transactionRepository.getTransactionsByStockId(stockId);
         int sumOfAmount = amount;
-        for (int i=0; i<transactions.size(); i++) {
+        for (int i = 0; i < transactions.size(); i++) {
             if (sumOfAmount <= 0) {
                 transactions.remove(i);
                 i--;
@@ -130,6 +119,26 @@ public class TransactionServiceImpl implements TransactionService {
             }
         }
         return transactions;
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    public Page<Transaction> getUserTransactions(Pageable pageable, Specification<Transaction> specification,
+                                                 Long userId, boolean isSeller, boolean isBuyer) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        Specification<Transaction> withBuyingOrder = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("buyingOrder")
+                        .join("user")
+                        .get("id"), user.getId());
+
+        Specification<Transaction> withSellingOrder = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root
+                        .join("sellingOrder")
+                        .join("user")
+                        .get("id"), user.getId());
+
+        return getTransactions(pageable, specification, isSeller, isBuyer, withBuyingOrder, withSellingOrder);
     }
 
     private void updateOrder(Order order) {
@@ -157,8 +166,32 @@ public class TransactionServiceImpl implements TransactionService {
         buyerResource.setAmount(buyerResource.getAmount() + amount);
         buyerResource.getUser().setMoney(buyerResource.getUser().getMoney()
                 .subtract(pricePerUnit.multiply(BigDecimal.valueOf(amount))));
-        resourceRepository.save(sellerResource);
+        if (sellerResource.getAmount() == 0) {
+            resourceRepository.delete(sellerResource);
+            User seller = sellerResource.getUser();
+            seller.getUserStocks().remove(sellerResource);
+            userRepository.save(seller);
+        } else {
+            resourceRepository.save(sellerResource);
+        }
         resourceRepository.save(buyerResource);
+    }
+
+    private Page<Transaction> getTransactions(Pageable pageable, Specification<Transaction> specification,
+                                              boolean isSeller, boolean isBuyer, Specification<Transaction> userIsBuyer,
+                                              Specification<Transaction> userIsSeller) {
+        Specification<Transaction> spec1 = Specification.where(userIsBuyer).and(specification);
+        Specification<Transaction> spec2 = Specification.where(userIsSeller).and(specification);
+
+        if (isBuyer && isSeller) {
+            return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+        } else if (isBuyer) {
+            return transactionRepository.findAll(Specification.where(spec1), pageable);
+        } else if (isSeller) {
+            return transactionRepository.findAll(Specification.where(spec2), pageable);
+        } else {
+            return Page.empty();
+        }
     }
 
 }

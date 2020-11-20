@@ -51,7 +51,7 @@ public class StockServiceImpl implements StockService {
     @Transactional(readOnly = true)
     public Page<Stock> getStocks(Pageable pageable, Specification<Stock> specification) {
         Specification<Stock> stockNotDeleted = (root, criteriaQuery, criteriaBuilder) ->
-            criteriaBuilder.equal(root.get("isDeleted"), false);
+                criteriaBuilder.equal(root.get("isDeleted"), false);
         return stockRepository.findAll(Specification.where(stockNotDeleted).and(specification), pageable);
     }
 
@@ -80,11 +80,13 @@ public class StockServiceImpl implements StockService {
     @LogicBusinessMeasureTime
     public void updateStock(StockDTO stockDTO, String id) {
         Stock stock = getStockByIdOrAbbreviation(id);
-        Optional<Stock> stockOptional = stockRepository.findByNameIgnoreCaseOrAbbreviationIgnoreCase(
-                stockDTO.getName().trim(),
-                stockDTO.getAbbreviation().trim());
-        if (stockOptional.isPresent() && !stock.getId().equals(stockOptional.get().getId())) {
-            throw new EntityExistsException("Stock with given details already exists");
+        Optional<Stock> stockByAbbreviation = stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation().trim());
+        if (stockByAbbreviation.isPresent() && !stock.getId().equals(stockByAbbreviation.get().getId())) {
+            throw new EntityExistsException("Stock with given abbreviation already exists");
+        }
+        Optional<Stock> stockByName = stockRepository.findByNameIgnoreCase(stockDTO.getName().trim());
+        if (stockByName.isPresent() && !stock.getId().equals(stockByName.get().getId())) {
+            throw new EntityExistsException("Stock with given name already exists");
         }
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
         stock.setName(stockDTO.getName().trim());
@@ -151,7 +153,7 @@ public class StockServiceImpl implements StockService {
         Stock stock = stockInDBName.isPresent() && (stockInDBAbbreviation.isEmpty() ||
                 stockInDBName.get().getId().equals(stockInDBAbbreviation.get().getId())) ?
                 stockInDBName.get() : stockInDBAbbreviation
-                                    .orElseGet(() -> modelMapper.map(stockDTO, Stock.class));
+                .orElseGet(() -> modelMapper.map(stockDTO, Stock.class));
         stock.setName(stockDTO.getName().trim());
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
         stock.setIsDeleted(false);
@@ -162,9 +164,9 @@ public class StockServiceImpl implements StockService {
             int index = stockDTO.getOwners().indexOf(ownerDTO);
             Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
             if (user.isEmpty()) {
-                errors.put("owners[" + index +"]", List.of("User not found."));
+                errors.put("owners[" + index + "]", List.of("User not found."));
             } else if (user.get().getRole() == Role.ADMIN) {
-                errors.put("owners[" + index +"]", List.of("Given user is admin."));
+                errors.put("owners[" + index + "]", List.of("Given user is admin."));
             }
             return Resource.builder()
                     .stock(stock)
