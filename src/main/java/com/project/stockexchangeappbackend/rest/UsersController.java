@@ -80,8 +80,8 @@ public class UsersController {
     }
 
     @GetMapping("/config/user-data")
-    @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "Retrieve logged in user", response = UserDTO.class, notes = "Required role: USER")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiOperation(value = "Retrieve logged in user", response = UserDTO.class, notes = "Required one role of: USER, ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
     public UserDTO getUser(Principal principal) {

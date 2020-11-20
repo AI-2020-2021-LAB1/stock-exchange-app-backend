@@ -73,6 +73,21 @@ class UserServiceImplTest {
     }
 
     @Test
+    void shouldReturnUserByEmal() {
+        String email = "test@test.com";
+        User user = createCustomUser(1L, email, "John", "Nowak", BigDecimal.ZERO, Role.USER);
+        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(user));
+        assertUser(userService.findUserByEmail(email), user);
+    }
+
+    @Test
+    void shouldThrowEntityExistsExceptionWhenGettingUserByEmail() {
+        String email = "test@test.com";
+        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> userService.findUserByEmail(email));
+    }
+
+    @Test
     void shouldPageAndFilterUsers() {
         List<User> users = Arrays.asList(
                 createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO),
