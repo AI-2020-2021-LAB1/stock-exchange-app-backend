@@ -55,6 +55,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    @LogicBusinessMeasureTime
     public Page<User> getUsers(Pageable pageable, Specification<User> specification) {
         return userRepository.findAll(specification, pageable);
     }
