@@ -71,13 +71,12 @@ class StockIndexValueServiceImplTest {
         Integer interval = 1;
         Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN);
         List<StockIndexValue> results = List.of(
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now()),
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now()),
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now().minusMinutes(2)),
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now().minusMinutes(2)));
+                createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.TEN), OffsetDateTime.now()),
+                createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), OffsetDateTime.now()),
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now().minusMinutes(1)),
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now().minusMinutes(1)));
         List<StockIndexValueDTO> expected = List.of(
-                new StockIndexValueDTO(results.subList(2,3)),
-                new StockIndexValueDTO(results.subList(0,1)));
+                new StockIndexValueDTO(results));
 
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))

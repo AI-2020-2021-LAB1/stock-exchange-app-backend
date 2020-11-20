@@ -128,6 +128,30 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    void shouldMakeTransactionAndSellingOrderShouldBeClosed() {
+        User seller = createCustomUser(1L, "seller@test.com", "John", "Kowal", BigDecimal.ZERO);
+        User buyer = createCustomUser(2L, "buyer@test.com", "John", "Kowal", BigDecimal.ZERO);
+        Stock stock = createCustomStock(1L, "WiG20", "W20", 1024, BigDecimal.TEN);
+        Order sellingOrder = createCustomOrder(1L, 100, 100, OrderType.SELLING_ORDER,
+                PriceType.GREATER_OR_EQUAL, BigDecimal.TEN, OffsetDateTime.now().minusDays(1),
+                OffsetDateTime.now().plusHours(1), null, seller, stock);
+        Order buyingOrder = createCustomOrder(2L, 100, 100, OrderType.BUYING_ORDER,
+                PriceType.LESS_OR_EQUAL, BigDecimal.valueOf(12), OffsetDateTime.now().minusDays(1),
+                OffsetDateTime.now().plusHours(1), null, buyer, stock);
+        ArchivedOrder archivedBuyingOrder = createCustomArchivedOrder(buyingOrder);
+        Resource sellerResource = createCustomResource(1L, stock, seller, sellingOrder.getAmount());
+        Resource buyerResource = createCustomResource(2L, stock, buyer, buyingOrder.getAmount() - buyingOrder.getRemainingAmount());
+
+        when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(archivedBuyingOrder));
+        when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
+        when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.of(buyerResource));
+
+        assertAll(() -> transactionService.makeTransaction(buyingOrder, sellingOrder, buyingOrder.getRemainingAmount(), sellingOrder.getPrice()));
+    }
+
+    @Test
     void shouldMakeTransactionWhenBuyerNotOwnBuyingStock() {
         User seller = createCustomUser(1L, "seller@test.com", "John", "Kowal", BigDecimal.ZERO);
         User buyer = createCustomUser(2L, "buyer@test.com", "John", "Kowal", BigDecimal.ZERO);

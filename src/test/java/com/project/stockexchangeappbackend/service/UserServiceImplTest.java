@@ -20,6 +20,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -73,6 +74,21 @@ class UserServiceImplTest {
     }
 
     @Test
+    void shouldReturnUserByEmal() {
+        String email = "test@test.com";
+        User user = createCustomUser(1L, email, "John", "Nowak", BigDecimal.ZERO, Role.USER);
+        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(user));
+        assertUser(userService.findUserByEmail(email), user);
+    }
+
+    @Test
+    void shouldThrowEntityExistsExceptionWhenGettingUserByEmail() {
+        String email = "test@test.com";
+        when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> userService.findUserByEmail(email));
+    }
+
+    @Test
     void shouldPageAndFilterUsers() {
         List<User> users = Arrays.asList(
                 createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO),
@@ -103,6 +119,8 @@ class UserServiceImplTest {
                 .id(id).email(email)
                 .firstName(firstName).lastName(lastName)
                 .money(money)
+                .orders(new ArrayList<>())
+                .userStocks(new ArrayList<>())
                 .build();
     }
 
