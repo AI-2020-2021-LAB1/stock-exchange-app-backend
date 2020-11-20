@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public User findUserByEmail(String email) {
-        return userRepository.findByEmailIgnoreCase(email)
+        return userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
     }
 

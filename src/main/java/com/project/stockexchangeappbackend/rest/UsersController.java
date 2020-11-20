@@ -87,7 +87,7 @@ public class UsersController {
     }
 
     @PostMapping("/config/change-password")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @ApiOperation(value = "Change logged in user password", response = UserDTO.class, notes = "Required role: USER")
     @ApiResponses({@ApiResponse(code = 200, message = "User password was successfully changed."),
             @ApiResponse(code = 404, message = "Failed to change user password.", response = ErrorResponse.class)})
