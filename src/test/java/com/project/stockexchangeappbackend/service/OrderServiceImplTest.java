@@ -71,8 +71,9 @@ class OrderServiceImplTest {
 
     @Test
     void shouldPageAndFilterOrders() {
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order1 = createCustomOrder(1L, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
         Order order2 = createCustomOrder(2L, 250, 250, OrderType.SELLING_ORDER, PriceType.EQUAL,
@@ -96,8 +97,9 @@ class OrderServiceImplTest {
     @Test
     void shouldReturnOrder() {
         Long id = 1L;
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
         AllOrders allOrder = createCustomAllOrdersInstance(order);
@@ -307,8 +309,9 @@ class OrderServiceImplTest {
     @Test
     void shouldListActiveBuyingOrders() {
         Long id = 1L;
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         List<Order> orders = Arrays.asList(
                 createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                         BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock),
@@ -327,8 +330,9 @@ class OrderServiceImplTest {
     @Test
     void shouldListActiveSellingOrdersByStock() {
         Long id = 1L;
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         List<Order> orders = Arrays.asList(
                 createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                         BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock),
@@ -424,7 +428,6 @@ class OrderServiceImplTest {
     }
 
     public static void assertOrder(Order output, Order expected) {
-
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
@@ -439,7 +442,20 @@ class OrderServiceImplTest {
     }
 
     public static void assertAllOrder(AllOrders output, AllOrders expected) {
+        assertAll(() -> assertEquals(expected.getId(), output.getId()),
+                () -> assertEquals(expected.getAmount(), output.getAmount()),
+                () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
+                () -> assertEquals(expected.getDateCreation(), output.getDateCreation()),
+                () -> assertEquals(expected.getDateExpiration(), output.getDateExpiration()),
+                () -> assertEquals(expected.getDateClosing(), output.getDateClosing()),
+                () -> assertEquals(expected.getOrderType(), output.getOrderType()),
+                () -> assertEquals(expected.getPriceType(), output.getPriceType()),
+                () -> assertEquals(expected.getPrice(), output.getPrice()),
+                () -> assertStock(expected.getStock(), output.getStock()),
+                () -> assertUser(expected.getUser(), output.getUser()));
+    }
 
+    public static void assertArchivedOrder(ArchivedOrder output, ArchivedOrder expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
@@ -458,6 +474,18 @@ class OrderServiceImplTest {
                                           OffsetDateTime dateExpiration, OffsetDateTime dateClosing, User user,
                                           Stock stock) {
         return Order.builder()
+                .id(id).amount(amount).remainingAmount(remainingAmount)
+                .dateCreation(dateCreation).dateClosing(dateClosing).dateExpiration(dateExpiration)
+                .orderType(orderType).priceType(priceType).price(price)
+                .stock(stock).user(user)
+                .build();
+    }
+
+    public static ArchivedOrder createCustomArchivedOrder(Long id, Integer amount, Integer remainingAmount,
+                                                          OrderType orderType, PriceType priceType, BigDecimal price,
+                                                          OffsetDateTime dateCreation, OffsetDateTime dateExpiration,
+                                                          OffsetDateTime dateClosing, User user, Stock stock) {
+        return ArchivedOrder.builder()
                 .id(id).amount(amount).remainingAmount(remainingAmount)
                 .dateCreation(dateCreation).dateClosing(dateClosing).dateExpiration(dateExpiration)
                 .orderType(orderType).priceType(priceType).price(price)
