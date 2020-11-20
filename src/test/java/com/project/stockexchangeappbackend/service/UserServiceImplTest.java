@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
+import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -40,28 +42,35 @@ class UserServiceImplTest {
     @Mock
     PasswordEncoder passwordEncoder;
 
+    @Mock
+    TagService tagService;
+
     @Test
     void shouldRegisterUser() {
         RegistrationUserDTO registrationUserDTO =
                 createRegistrationUserDTO("test@test.com", "secret" ,"Jan", "Kowalski");
+        Tag tag = new Tag(1L, "DEFAULT");
         when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail().trim())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registrationUserDTO.getPassword())).thenReturn("encodedPassword");
-        assertAll(() -> userService.registerUser(registrationUserDTO));
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        assertAll(() -> userService.registerUser(registrationUserDTO, tag.getName()));
     }
 
     @Test
     void shouldThrowEntityExistsExceptionWhenRegisterUser() {
         RegistrationUserDTO registrationUserDTO =
                 createRegistrationUserDTO("test@test.com", "secret" ,"Jan", "Kowalski");
+        Tag tag = new Tag(1L, "DEFAULT");
         when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail().trim()))
                 .thenReturn(Optional.of(User.builder().email(registrationUserDTO.getEmail()).build()));
-        assertThrows(EntityExistsException.class, () -> userService.registerUser(registrationUserDTO));
+        assertThrows(EntityExistsException.class, () -> userService.registerUser(registrationUserDTO, tag.getName()));
     }
 
     @Test
     void shouldReturnUserById() {
         Long id = 1L;
-        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO, tag);
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         assertUser(userService.findUserById(id), user);
     }
@@ -90,9 +99,10 @@ class UserServiceImplTest {
 
     @Test
     void shouldPageAndFilterUsers() {
+        Tag tag = new Tag(1L, "DEFAULT");
         List<User> users = Arrays.asList(
-                createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO),
-                createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN)
+            createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, tag),
+            createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN, tag)
         );
         Pageable pageable = PageRequest.of(0, 20);
         Specification<User> specification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) ->
@@ -111,7 +121,9 @@ class UserServiceImplTest {
                 () -> assertEquals(expected.getEmail(), output.getEmail()),
                 () -> assertEquals(expected.getFirstName(), output.getFirstName()),
                 () -> assertEquals(expected.getLastName(), output.getLastName()),
-                () -> assertEquals(expected.getMoney(), output.getMoney()));
+                () -> assertEquals(expected.getMoney(), output.getMoney()),
+                () -> assertEquals(expected.getRole(), output.getRole()),
+                () -> assertTag(expected.getTag(), output.getTag()));
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money) {
@@ -125,12 +137,35 @@ class UserServiceImplTest {
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
+                                         Tag tag) {
+        return User.builder()
+                .id(id).email(email)
+                .firstName(firstName).lastName(lastName)
+                .money(money)
+                .orders(new ArrayList<>())
+                .userStocks(new ArrayList<>())
+                .tag(tag)
+                .build();
+    }
+
+    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
                                          Role role) {
         return User.builder()
                 .id(id).email(email)
                 .firstName(firstName).lastName(lastName)
                 .money(money)
                 .role(role)
+                .build();
+    }
+
+    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
+                                         Role role, Tag tag) {
+        return User.builder()
+                .id(id).email(email)
+                .firstName(firstName).lastName(lastName)
+                .money(money)
+                .role(role)
+                .tag(tag)
                 .build();
     }
 

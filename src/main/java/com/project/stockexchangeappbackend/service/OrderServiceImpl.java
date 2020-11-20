@@ -51,14 +51,7 @@ public class OrderServiceImpl implements OrderService {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied"));
-        validateOrder(orderDTO, stock, user);
-        Order order = modelMapper.map(orderDTO, Order.class);
-        order.setStock(stock);
-        order.setUser(user);
-        order.setRemainingAmount(orderDTO.getAmount());
-        order.setDateCreation(OffsetDateTime.now(ZoneId.systemDefault()));
-        order.setDateClosing(null);
-        orderRepository.save(order);
+        orderRepository.save(validateOrder(orderDTO, stock, user));
     }
 
     @Override
@@ -139,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
         return allOrdersRepository.findAll(Specification.where(userIsPrincipal).and(specification), pageable);
     }
 
-    private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {
+    private Order validateOrder(OrderDTO orderDTO, Stock stock, User user) {
         Map<String, List<String>> errors = new HashMap<>();
         if (orderDTO.getOrderType() == OrderType.BUYING_ORDER) {
             if (orderDTO.getPriceType() == PriceType.GREATER_OR_EQUAL) {
@@ -168,9 +161,20 @@ public class OrderServiceImpl implements OrderService {
                 errors.get("amount").add("The logged in user does not have enough available amount of stocks for sale.");
             }
         }
+        if (!stock.getTag().getName().equals(user.getTag().getName())) {
+            errors.putIfAbsent("stock", new ArrayList<>());
+            errors.get("stock").add("The logged in user in given stock are tagged using others tags.");
+        }
         if (!errors.isEmpty()) {
             throw new InvalidInputDataException("Data validation", errors);
         }
+        Order order = modelMapper.map(orderDTO, Order.class);
+        order.setStock(stock);
+        order.setUser(user);
+        order.setRemainingAmount(orderDTO.getAmount());
+        order.setDateCreation(OffsetDateTime.now(ZoneId.systemDefault()));
+        order.setDateClosing(null);
+        return order;
     }
 
 }

@@ -71,8 +71,9 @@ class OrderServiceImplTest {
 
     @Test
     void shouldPageAndFilterOrders() {
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order1 = createCustomOrder(1L, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
         Order order2 = createCustomOrder(2L, 250, 250, OrderType.SELLING_ORDER, PriceType.EQUAL,
@@ -96,8 +97,9 @@ class OrderServiceImplTest {
     @Test
     void shouldReturnOrder() {
         Long id = 1L;
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order = createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock);
         AllOrders allOrder = createCustomAllOrdersInstance(order);
@@ -118,8 +120,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order = createCustomOrder(null, orderDTO.getAmount(), null, orderDTO.getOrderType(),
                 orderDTO.getPriceType(), orderDTO.getPrice(), null, orderDTO.getDateExpiration(),
                 null, null, null);
@@ -144,8 +147,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount() - 1);
         SecurityContextHolder.setContext(securityContext);
 
@@ -166,8 +170,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order = createCustomOrder(1L, 100, 100, OrderType.SELLING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(1), null, user, stock);
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
@@ -190,8 +195,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.LESS_OR_EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
         SecurityContextHolder.setContext(securityContext);
 
@@ -212,8 +218,10 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", orderDTO.getAmount() - 1, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", orderDTO.getAmount() - 1,
+                BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
@@ -229,8 +237,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
@@ -241,13 +250,41 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockAndUserTaggedOthersTags(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
+        OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, stockDTO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Tag tag2 = new Tag(2L, "TEST");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag2);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
+        Order order = createCustomOrder(null, orderDTO.getAmount(), null, orderDTO.getOrderType(),
+                orderDTO.getPriceType(), orderDTO.getPrice(), null, orderDTO.getDateExpiration(),
+                null, null, null);
+        Resource resource = createCustomResource(1L, stock, user, stock.getAmount());
+        SecurityContextHolder.setContext(securityContext);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(user.getEmail());
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull
+                (Mockito.eq(stock), Mockito.eq(user), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
+        assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
+    }
+
+    @Test
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotFound(@Mock SecurityContext securityContext,
                                                                                  @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
@@ -272,8 +309,9 @@ class OrderServiceImplTest {
     @Test
     void shouldListActiveBuyingOrders() {
         Long id = 1L;
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         List<Order> orders = Arrays.asList(
                 createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                         BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock),
@@ -292,8 +330,9 @@ class OrderServiceImplTest {
     @Test
     void shouldListActiveSellingOrdersByStock() {
         Long id = 1L;
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         List<Order> orders = Arrays.asList(
                 createCustomOrder(id, 100, 100, OrderType.BUYING_ORDER, PriceType.EQUAL,
                         BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().plusHours(2), null, user, stock),
@@ -389,7 +428,6 @@ class OrderServiceImplTest {
     }
 
     public static void assertOrder(Order output, Order expected) {
-
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
@@ -404,7 +442,20 @@ class OrderServiceImplTest {
     }
 
     public static void assertAllOrder(AllOrders output, AllOrders expected) {
+        assertAll(() -> assertEquals(expected.getId(), output.getId()),
+                () -> assertEquals(expected.getAmount(), output.getAmount()),
+                () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
+                () -> assertEquals(expected.getDateCreation(), output.getDateCreation()),
+                () -> assertEquals(expected.getDateExpiration(), output.getDateExpiration()),
+                () -> assertEquals(expected.getDateClosing(), output.getDateClosing()),
+                () -> assertEquals(expected.getOrderType(), output.getOrderType()),
+                () -> assertEquals(expected.getPriceType(), output.getPriceType()),
+                () -> assertEquals(expected.getPrice(), output.getPrice()),
+                () -> assertStock(expected.getStock(), output.getStock()),
+                () -> assertUser(expected.getUser(), output.getUser()));
+    }
 
+    public static void assertArchivedOrder(ArchivedOrder output, ArchivedOrder expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getRemainingAmount(), output.getRemainingAmount()),
@@ -423,6 +474,18 @@ class OrderServiceImplTest {
                                           OffsetDateTime dateExpiration, OffsetDateTime dateClosing, User user,
                                           Stock stock) {
         return Order.builder()
+                .id(id).amount(amount).remainingAmount(remainingAmount)
+                .dateCreation(dateCreation).dateClosing(dateClosing).dateExpiration(dateExpiration)
+                .orderType(orderType).priceType(priceType).price(price)
+                .stock(stock).user(user)
+                .build();
+    }
+
+    public static ArchivedOrder createCustomArchivedOrder(Long id, Integer amount, Integer remainingAmount,
+                                                          OrderType orderType, PriceType priceType, BigDecimal price,
+                                                          OffsetDateTime dateCreation, OffsetDateTime dateExpiration,
+                                                          OffsetDateTime dateClosing, User user, Stock stock) {
+        return ArchivedOrder.builder()
                 .id(id).amount(amount).remainingAmount(remainingAmount)
                 .dateCreation(dateCreation).dateClosing(dateClosing).dateExpiration(dateExpiration)
                 .orderType(orderType).priceType(priceType).price(price)

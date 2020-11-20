@@ -44,4 +44,8 @@ public class User {
     @OneToMany(targetEntity = Resource.class, mappedBy = "user")
     private List<Resource> userStocks;
 
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "TAG_ID", nullable = false, updatable = false, referencedColumnName = "ID")
+    private Tag tag;
+
 }

@@ -19,8 +19,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.*;
 
-import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomArchivedOrder;
-import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
+import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.*;
 import static com.project.stockexchangeappbackend.service.ResourceServiceImplTest.createCustomResource;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.createCustomStock;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
@@ -57,8 +56,18 @@ class TransactionServiceImplTest {
     @Test
     void shouldReturnTransactionById() {
         long id = 1L;
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user1 = createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
+        User user2 = createCustomUser(2L, "test2@test.pl", "Bobby", "Lawok", BigDecimal.ZERO, tag);
+        ArchivedOrder order1 = createCustomArchivedOrder(1L, 100, 0, OrderType.BUYING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().minusHours(2),
+                null, user1, stock);
+        ArchivedOrder order2 = createCustomArchivedOrder(2L, 100, 0, OrderType.SELLING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, OffsetDateTime.now().minusHours(2), OffsetDateTime.now().minusHours(3),
+                null, user2, stock);
         Transaction transaction = createCustomTransaction(id, 100, OffsetDateTime.now(),
-                null, null, BigDecimal.ONE);
+                order1, order2, BigDecimal.ONE);
         when(transactionRepository.findById(id)).thenReturn(Optional.of(transaction));
         assertTransaction(transactionService.findTransactionById(id), transaction);
     }
@@ -260,8 +269,8 @@ class TransactionServiceImplTest {
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getDate(), output.getDate()),
                 () -> assertEquals(expected.getUnitPrice(), output.getUnitPrice()),
-                () -> assertEquals(expected.getBuyingOrder(), output.getBuyingOrder()),
-                () -> assertEquals(expected.getSellingOrder(), output.getSellingOrder()));
+                () -> assertArchivedOrder(expected.getBuyingOrder(), output.getBuyingOrder()),
+                () -> assertArchivedOrder(expected.getSellingOrder(), output.getSellingOrder()));
     }
 
 }
