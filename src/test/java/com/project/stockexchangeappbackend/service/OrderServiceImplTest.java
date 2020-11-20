@@ -118,8 +118,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order = createCustomOrder(null, orderDTO.getAmount(), null, orderDTO.getOrderType(),
                 orderDTO.getPriceType(), orderDTO.getPrice(), null, orderDTO.getDateExpiration(),
                 null, null, null);
@@ -144,8 +145,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount() - 1);
         SecurityContextHolder.setContext(securityContext);
 
@@ -166,8 +168,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Order order = createCustomOrder(1L, 100, 100, OrderType.SELLING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(1), null, user, stock);
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
@@ -190,8 +193,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
                 PriceType.LESS_OR_EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         Resource resource = createCustomResource(1L, stock, user, orderDTO.getAmount());
         SecurityContextHolder.setContext(securityContext);
 
@@ -212,8 +216,10 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", orderDTO.getAmount() - 1, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", orderDTO.getAmount() - 1,
+                BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
@@ -229,8 +235,9 @@ class OrderServiceImplTest {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
@@ -241,13 +248,41 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockAndUserTaggedOthersTags(
+            @Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
+        OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.SELLING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, stockDTO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Tag tag2 = new Tag(2L, "TEST");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag2);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
+        Order order = createCustomOrder(null, orderDTO.getAmount(), null, orderDTO.getOrderType(),
+                orderDTO.getPriceType(), orderDTO.getPrice(), null, orderDTO.getDateExpiration(),
+                null, null, null);
+        Resource resource = createCustomResource(1L, stock, user, stock.getAmount());
+        SecurityContextHolder.setContext(securityContext);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getPrincipal()).thenReturn(user.getEmail());
+        when(userRepository.findByEmailIgnoreCase(user.getEmail())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull
+                (Mockito.eq(stock), Mockito.eq(user), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
+        assertThrows(InvalidInputDataException.class, () -> orderService.createOrder(orderDTO));
+    }
+
+    @Test
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotFound(@Mock SecurityContext securityContext,
                                                                                  @Mock Authentication authentication) {
         StockDTO stockDTO = createCustomStockDTO(1L, null, null, null, null);
         OrderDTO orderDTO = createCustomOrderDTO(100, OffsetDateTime.now().plusHours(1), OrderType.BUYING_ORDER,
                 PriceType.GREATER_OR_EQUAL, BigDecimal.ONE, stockDTO);
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN);
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 1024, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
         SecurityContextHolder.setContext(securityContext);
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.of(stock));

@@ -41,7 +41,7 @@ class TagServiceImplTest {
         assertTag(tag, output);
     }
 
-    public void assertTag(Tag expected, Tag output) {
+    public static void assertTag(Tag expected, Tag output) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getName(), output.getName()));
     }

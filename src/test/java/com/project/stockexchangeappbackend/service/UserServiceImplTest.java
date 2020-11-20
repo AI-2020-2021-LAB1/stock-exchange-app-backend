@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -68,8 +69,8 @@ class UserServiceImplTest {
     @Test
     void shouldReturnUserById() {
         Long id = 1L;
-        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO,
-                "DEFAULT");
+        Tag tag = new Tag(1L, "DEFAULT");
+        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO, tag);
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         assertUser(userService.findUserById(id), user);
     }
@@ -83,9 +84,10 @@ class UserServiceImplTest {
 
     @Test
     void shouldPageAndFilterUsers() {
+        Tag tag = new Tag(1L, "DEFAULT");
         List<User> users = Arrays.asList(
-                createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, "DEFAULT"),
-                createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN, "DEFAULT")
+            createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, tag),
+            createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN, tag)
         );
         Pageable pageable = PageRequest.of(0, 20);
         Specification<User> specification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) ->
@@ -106,7 +108,7 @@ class UserServiceImplTest {
                 () -> assertEquals(expected.getLastName(), output.getLastName()),
                 () -> assertEquals(expected.getMoney(), output.getMoney()),
                 () -> assertEquals(expected.getRole(), output.getRole()),
-                () -> assertEquals(expected.getTag(), output.getTag()));
+                () -> assertTag(expected.getTag(), output.getTag()));
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money) {
@@ -120,14 +122,14 @@ class UserServiceImplTest {
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
-                                         String tag) {
+                                         Tag tag) {
         return User.builder()
                 .id(id).email(email)
                 .firstName(firstName).lastName(lastName)
                 .money(money)
                 .orders(new ArrayList<>())
                 .userStocks(new ArrayList<>())
-                .tag(new Tag(1L, tag))
+                .tag(tag)
                 .build();
     }
 

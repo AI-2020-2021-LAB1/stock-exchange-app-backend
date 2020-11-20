@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -65,7 +66,8 @@ class StockServiceImplTest {
     @Test
     void shouldReturnStockById() {
         Long id = 1L;
-        Stock stock = createCustomStock(id, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20));
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(id, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20), tag);
         when(stockRepository.findByIdAndIsDeletedFalse(id)).thenReturn(Optional.of(stock));
         assertStock(stockService.getStockById(id), stock);
     }
@@ -79,9 +81,10 @@ class StockServiceImplTest {
 
     @Test
     void shouldPageAndFilterStocks() {
+        Tag tag = new Tag(1L, "default");
         List<Stock> stocks = Arrays.asList(
-                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20)),
-                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20)));
+                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag),
+                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20), tag));
         Pageable pageable = PageRequest.of(0,20);
         Specification<Stock> stockSpecification =
                 (Specification<Stock>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
@@ -96,9 +99,10 @@ class StockServiceImplTest {
 
     @Test
     void shouldReturnAllStocks() {
+        Tag tag = new Tag(1L, "default");
         List<Stock> stocks = Arrays.asList(
-                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20)),
-                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20)));
+                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag),
+                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20), tag));
         when(stockRepository.findAll(Mockito.any(Specification.class))).thenReturn(stocks);
         List<Stock> output = stockService.getAllStocks();
         assertEquals(stocks.size(), output.size());
@@ -109,7 +113,8 @@ class StockServiceImplTest {
 
     @Test
     void shouldUpdateStock() {
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20));
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag);
         when(stockRepository.save(stock)).thenReturn(stock);
         assertStock(stockService.updateStock(stock), stock);
     }
@@ -303,7 +308,8 @@ class StockServiceImplTest {
                 () -> assertEquals(expected.getName(), output.getName()),
                 () -> assertEquals(expected.getAbbreviation(), output.getAbbreviation()),
                 () -> assertEquals(expected.getCurrentPrice(), output.getCurrentPrice()),
-                () -> assertEquals(expected.getAmount(), output.getAmount()));
+                () -> assertEquals(expected.getAmount(), output.getAmount()),
+                () -> assertTag(expected.getTag(), output.getTag()));
     }
 
     public static Stock createCustomStock(Long id, String name, String abbreviation,
