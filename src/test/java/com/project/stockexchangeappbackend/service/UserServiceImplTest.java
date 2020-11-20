@@ -83,9 +83,10 @@ class UserServiceImplTest {
     }
 
     @Test
-    void shouldReturnUserByEmal() {
+    void shouldReturnUserByEmail() {
         String email = "test@test.com";
-        User user = createCustomUser(1L, email, "John", "Nowak", BigDecimal.ZERO, Role.USER);
+        Tag tag = new Tag(1L, "DEFAULT");
+        User user = createCustomUser(1L, email, "John", "Nowak", BigDecimal.ZERO, Role.USER, tag);
         when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(user));
         assertUser(userService.findUserByEmail(email), user);
     }
