@@ -83,8 +83,8 @@ public class UserServiceImpl implements UserService {
     public User changeUserDetails(Long id, String firstName, String lastName) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
+        user.setFirstName(firstName.trim());
+        user.setLastName(lastName.trim());
         userRepository.save(user);
         return user;
     }
