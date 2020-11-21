@@ -79,6 +79,7 @@ public class ResourceServiceImpl implements ResourceService {
                                     .stream()
                                     .mapToInt(Order::getRemainingAmount)
                                     .sum();
+                    resourceDTO.setId(resource.getStock().getId());
                     resourceDTO.setAmountAvailableForSale(resourceDTO.getAmount() - sellingAmountOfStock);
                     return resourceDTO;
                 });
