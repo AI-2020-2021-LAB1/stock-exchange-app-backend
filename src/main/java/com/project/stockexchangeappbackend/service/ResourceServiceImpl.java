@@ -1,9 +1,11 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.MoveStockDTO;
 import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.ResourceDTO;
 import com.project.stockexchangeappbackend.dto.UserDTO;
 import com.project.stockexchangeappbackend.entity.*;
+import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.OrderRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.StockRepository;
@@ -22,6 +24,10 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.Join;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +57,8 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Page<OwnerDTO> getStockOwners(Pageable pageable, Specification<Resource> specification, Long stockId) {
         Stock stock = stockRepository.findByIdAndIsDeletedFalse(stockId)
                 .orElseThrow(() -> new EntityNotFoundException("Stock not found"));
@@ -62,6 +70,33 @@ public class ResourceServiceImpl implements ResourceService {
                 .map(resource -> OwnerDTO.builder()
                         .user(modelMapper.map(resource.getUser(), UserDTO.class))
                         .amount(resource.getAmount()).build());
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void moveStock(Long stockId, MoveStockDTO moveStock) {
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(stockId)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found"));
+        Optional<User> source = userRepository.findById(moveStock.getUserSource().getId());
+        Optional<User> destination = userRepository.findById(moveStock.getUserDestination().getId());
+        Optional<Resource> sourceResource = source.isPresent() ?
+                resourceRepository.findByUserAndStock(source.get(), stock) : Optional.empty();
+        validateMoveStock(moveStock, stock, source, destination, sourceResource);
+        int sourceNewAmount = sourceResource.get().getAmount() - moveStock.getAmount();
+        if (sourceNewAmount > 0) {
+            sourceResource.get().setAmount(sourceNewAmount);
+            resourceRepository.save(sourceResource.get());
+        } else {
+            resourceRepository.delete(sourceResource.get());
+        }
+        Resource destinationResource = resourceRepository.findByUserAndStock(destination.get(), stock)
+                .orElseGet(() -> Resource.builder()
+                        .user(destination.get())
+                        .stock(stock)
+                        .amount(0).build());
+        destinationResource.setAmount(destinationResource.getAmount() + moveStock.getAmount());
+        resourceRepository.save(destinationResource);
     }
 
     private Page<ResourceDTO> findResources(Pageable pageable, Specification<Resource> specification, String username) {
@@ -82,6 +117,37 @@ public class ResourceServiceImpl implements ResourceService {
                     resourceDTO.setAmountAvailableForSale(resourceDTO.getAmount() - sellingAmountOfStock);
                     return resourceDTO;
                 });
+    }
+
+    private void validateMoveStock(MoveStockDTO moveStock, Stock stock, Optional<User> source,
+                                   Optional<User> destination, Optional<Resource> resource) {
+        Map<String, List<String>> errors = new HashMap<>();
+        if (source.isEmpty()) {
+            errors.put("userSource", List.of("User not found."));
+        }
+        if (destination.isEmpty()) {
+            errors.put("destinationSource", List.of("User not found."));
+        }
+        if (source.isPresent() && destination.isPresent()) {
+            if (source.get().getId().equals(destination.get().getId())) {
+                errors.put("destinationSource", List.of("Source and destination users must be different users."));
+            }
+            if (!stock.getTag().equals(source.get().getTag()) || !stock.getTag().equals(destination.get().getTag())) {
+                errors.put("stock", List.of("Both users and stock must be tagged using the same tag."));
+            }
+            int sellingAmountOfStock =
+                    orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                            stock, source.get(), OrderType.SELLING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()))
+                            .stream()
+                            .mapToInt(Order::getRemainingAmount)
+                            .sum();
+            if (resource.isEmpty() || resource.get().getAmount() - sellingAmountOfStock < moveStock.getAmount()) {
+                errors.put("amount", List.of("Source user doesn't possess enough free amount of stock."));
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new InvalidInputDataException("Data validation", errors);
+        }
     }
 
 }
