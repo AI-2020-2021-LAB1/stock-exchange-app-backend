@@ -3,6 +3,7 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.dto.StockIndexValueDTO;
 import com.project.stockexchangeappbackend.entity.Stock;
 import com.project.stockexchangeappbackend.entity.StockIndexValue;
+import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.repository.StockIndexValueRepository;
 import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
@@ -44,7 +45,8 @@ class StockIndexValueServiceImplTest {
 
     @Test
     void shouldAppendValue() {
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
         StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
         when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(24);
         when(stockIndexTimeProperties.getFixingPriceCycle()).thenReturn(30000);
@@ -54,7 +56,8 @@ class StockIndexValueServiceImplTest {
 
     @Test
     void shouldAppendValueWhenMaxRecordsExceed() {
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
         StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
         StockIndexValue prevStockIndexValue = createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
         when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(1);
@@ -69,7 +72,8 @@ class StockIndexValueServiceImplTest {
     void shouldReturnStockIndexValues() {
         Long stockId = 1L;
         Integer interval = 1;
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
         List<StockIndexValue> results = List.of(
                 createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.TEN), OffsetDateTime.now()),
                 createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), OffsetDateTime.now()),
@@ -92,7 +96,8 @@ class StockIndexValueServiceImplTest {
     void shouldReturnStockIndexValuesEmptyList() {
         Long stockId = 1L;
         Integer interval = 1;
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
                 .thenReturn(Collections.emptyList());
@@ -112,7 +117,8 @@ class StockIndexValueServiceImplTest {
     void shouldReturnFirstHistoryValueBefore() {
         Long stockId = 1L;
         Integer minutes = 1;
-        Stock stock = createCustomStock(stockId, "WIG20", "W20", 100, BigDecimal.TEN);
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "WIG20", "W20", 100, BigDecimal.TEN, tag);
         StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, BigDecimal.TEN,
                 OffsetDateTime.now().minusMinutes(minutes));
         when(stockIndexValueRepository.findFirstByStockAndTimestampBeforeOrderByTimestampDesc(
@@ -144,7 +150,5 @@ class StockIndexValueServiceImplTest {
                 .timestamp(timestamp)
                 .build();
     }
-
-
 
 }

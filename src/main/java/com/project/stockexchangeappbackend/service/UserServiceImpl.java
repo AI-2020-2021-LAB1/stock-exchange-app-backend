@@ -5,6 +5,7 @@ import com.project.stockexchangeappbackend.entity.ArchivedOrder;
 import com.project.stockexchangeappbackend.entity.Order;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.repository.TagRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
@@ -31,11 +32,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TagService tagService;
 
     @Override
     @Transactional
     @LogicBusinessMeasureTime
-    public void registerUser(RegistrationUserDTO registrationUserDTO) {
+    public void registerUser(RegistrationUserDTO registrationUserDTO, String tag) {
         if (userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("User with given email already exists.");
         }
@@ -46,6 +48,7 @@ public class UserServiceImpl implements UserService {
                 .lastName(registrationUserDTO.getLastName().trim())
                 .role(Role.USER)
                 .money(BigDecimal.ZERO)
+                .tag(tagService.getTag(tag.trim()))
                 .build());
        log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
     }

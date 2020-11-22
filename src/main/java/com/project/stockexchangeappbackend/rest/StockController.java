@@ -66,7 +66,9 @@ public class StockController {
             @ApiImplicitParam(name = "priceChangeRatio>", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)"),
             @ApiImplicitParam(name = "priceChangeRatio<", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)")
+                    value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<StockDTO> getStocks(@ApiIgnore Pageable pageable, StockSpecification stockSpecification) {
         return stockService.getStocks(pageable, stockSpecification)
@@ -127,8 +129,10 @@ public class StockController {
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 409, message = "Given stock already exist.", response = ErrorResponse.class)})
-    public void create(@RequestBody @Valid CreateStockDTO stockDTO) {
-        stockService.createStock(stockDTO);
+    public void create(@ApiParam(value = "Stock object to create.", required = true)
+                           @RequestBody @Valid CreateStockDTO stockDTO,
+                       @ApiParam("The stock's tag.") @RequestParam(name = "tag", defaultValue = "default") String tag) {
+        stockService.createStock(stockDTO, tag);
     }
 
     @DeleteMapping("/{id}")

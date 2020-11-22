@@ -27,8 +27,9 @@ public class RegistrationController {
     @ApiResponses({@ApiResponse(code = 200, message = "User was successfully registered."),
             @ApiResponse(code = 409, message = "User with given email already exists.", response = ErrorResponse.class)})
     public void register(@ApiParam(value = "User object to registration in database.", required = true)
-                             @RequestBody @Valid RegistrationUserDTO registrationUserDTO) {
-        userService.registerUser(registrationUserDTO);
+                         @RequestBody @Valid RegistrationUserDTO registrationUserDTO,
+                         @ApiParam("User's tag.") @RequestParam(name = "tag", defaultValue = "DEFAULT") String tag) {
+        userService.registerUser(registrationUserDTO, tag);
     }
 
 }

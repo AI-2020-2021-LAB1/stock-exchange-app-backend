@@ -70,7 +70,9 @@ public class UsersController {
             @ApiImplicitParam(name = "money<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `money`. (omitted if null)"),
             @ApiImplicitParam(name = "money", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `money`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `money`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<UserDTO> getUsers(@ApiIgnore Pageable pageable, UserSpecification specification) {
         return userService.getUsers(pageable, specification)
@@ -344,7 +346,8 @@ public class UsersController {
             "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses({@ApiResponse(code = 200, message = "Successfully paged and filtered user's transactions."),
             @ApiResponse(code = 403, message = "Access Denied."),
-            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.", response = ErrorResponse.class),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
             @ApiResponse(code = 404, message = "Given user not found", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",

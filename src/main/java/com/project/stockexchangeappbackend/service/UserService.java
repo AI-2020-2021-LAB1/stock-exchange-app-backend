@@ -8,7 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 public interface UserService {
 
-    void registerUser(RegistrationUserDTO registrationUserDTO);
+    void registerUser(RegistrationUserDTO registrationUserDTO, String tag);
     User findUserById(Long id);
     User findUserByEmail(String email);
     User changeUserPassword(Long id, String password);
