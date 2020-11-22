@@ -1,11 +1,9 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.ChangePasswordDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
-import com.project.stockexchangeappbackend.entity.ArchivedOrder;
-import com.project.stockexchangeappbackend.entity.Order;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
-import com.project.stockexchangeappbackend.repository.TagRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
@@ -14,7 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 
 @Service
 @Slf4j
@@ -33,6 +28,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TagService tagService;
+
+    private boolean validPassword(String password) {
+        return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])" +
+                "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$");
+    }
 
     @Override
     @Transactional
@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
                 .money(BigDecimal.ZERO)
                 .tag(tagService.getTag(tag.trim()))
                 .build());
-       log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
+        log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
     }
 
     @Override
@@ -72,12 +72,19 @@ public class UserServiceImpl implements UserService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public User changeUserPassword(Long id, String password) {
+    public User changeUserPassword(Long id, ChangePasswordDTO changePasswordDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
-        user.setPassword(passwordEncoder.encode(password));
-        userRepository.save(user);
-        return user;
+        if (!validPassword(changePasswordDTO.getNewPassword())) {
+            throw new AccessDeniedException("New password is too weak.");
+        }
+        if (passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+            user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+            userRepository.save(user);
+            return user;
+        } else {
+            throw new AccessDeniedException("Passwords do not match.");
+        }
     }
 
     @Override

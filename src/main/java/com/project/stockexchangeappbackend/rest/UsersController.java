@@ -1,7 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.*;
-import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.repository.specification.AllOrdersSpecification;
 import com.project.stockexchangeappbackend.repository.specification.ResourceSpecification;
 import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
@@ -18,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.validation.Valid;
 import java.security.Principal;
 
 @RestController
@@ -97,9 +98,8 @@ public class UsersController {
             @ApiImplicitParam(name = "password", dataType = "string", paramType = "body",
                     value = "New password"),
     })
-    public UserDTO changePassword(@RequestParam String password, Principal principal) {
-         User user = userService.findUserByEmail(principal.getName());
-         return mapper.map(userService.changeUserPassword(user.getId(), password), UserDTO.class);
+    public void changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Principal principal) {
+        userService.changeUserPassword(userService.findUserByEmail(principal.getName()).getId(), changePasswordDTO);
     }
 
     @GetMapping("/stock/owned")
