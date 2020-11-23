@@ -180,7 +180,9 @@ public class StockController {
             @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `amount`. (omitted if null)"),
             @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field `active`. Param is exact value. (omitted if null)")
     })
     public Page<OwnerDTO> getStockOwners(@ApiParam(value = "The stock's id.", required = true)
                                          @PathVariable Long id, @ApiIgnore Pageable pageable,

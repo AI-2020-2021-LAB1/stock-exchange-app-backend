@@ -74,6 +74,8 @@ public class UsersController {
                     value = "Filtering criteria for field `money`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
+            @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field `active`. Param is exact value. (omitted if null)")
     })
     public Page<UserDTO> getUsers(@ApiIgnore Pageable pageable, UserSpecification specification) {
         return userService.getUsers(pageable, specification)
@@ -392,6 +394,20 @@ public class UsersController {
                                                      @ApiParam("The user's id") @PathVariable Long id) {
         return transactionService.getUserTransactions(pageable, specification, id, isSeller, isBuyer)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Update existing user as administrator", notes = "Required role of: ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "User's details were successfully updated."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "User not found.", response = ErrorResponse.class)})
+    public void updateUser(@ApiParam(value = "User's details object to edit.", required = true)
+                           @RequestBody @Valid EditUserDetailsDTO editUserDetailsDTO,
+                           @ApiParam("The user's id") @PathVariable Long id) {
+        userService.updateUser(id, editUserDetailsDTO);
     }
 
 }

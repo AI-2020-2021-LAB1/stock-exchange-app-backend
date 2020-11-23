@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.ChangePasswordDTO;
+import com.project.stockexchangeappbackend.dto.EditUserDetailsDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.User;
 import org.springframework.data.domain.Page;
@@ -16,5 +17,6 @@ public interface UserService {
     User findUserByEmail(String email);
     void changeUserPassword(ChangePasswordDTO changePasswordDTO, Principal principal);
     Page<User> getUsers(Pageable pageable, Specification<User>  specification);
+    void updateUser(Long id, EditUserDetailsDTO editUserDetailsDTO);
 
 }
