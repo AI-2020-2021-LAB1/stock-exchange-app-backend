@@ -45,20 +45,13 @@ public class OrderServiceImpl implements OrderService {
     @LogicBusinessMeasureTime
     @Transactional
     public void createOrder(OrderDTO orderDTO) {
-        Stock stock = stockRepository.findById(orderDTO.getStock().getId())
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())
                 .orElseThrow(() -> new InvalidInputDataException("Validation error",
                         Map.of("stock", "Stock company not found.")));
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied"));
-        validateOrder(orderDTO, stock, user);
-        Order order = modelMapper.map(orderDTO, Order.class);
-        order.setStock(stock);
-        order.setUser(user);
-        order.setRemainingAmount(orderDTO.getAmount());
-        order.setDateCreation(OffsetDateTime.now(ZoneId.systemDefault()));
-        order.setDateClosing(null);
-        orderRepository.save(order);
+        orderRepository.save(validateOrder(orderDTO, stock, user));
     }
 
     @Override
@@ -75,7 +68,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!order.getUser().getEmail().equals(username)) {
+        User user = userRepository.findByEmailIgnoreCase(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        if (!order.getUser().getEmail().equals(username) && !user.getRole().equals(Role.ADMIN)) {
             throw new AccessDeniedException("Access Denied");
         }
         orderRepository.delete(order);
@@ -83,6 +78,18 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
         archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
         archivedOrderRepository.save(archivedOrder);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
+    public Page<AllOrders> getOrdersByUser(Pageable pageable, Specification<AllOrders> specification, Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User does not exist"));
+        Specification<AllOrders> orderByUser = (root, criteriaQuery, criteriaBuilder) -> {
+            Join<Order, User> owner = root.join("user");
+            return criteriaBuilder.equal(owner.get("email"), user.getEmail());
+        };
+        return allOrdersRepository.findAll(Specification.where(specification).and(orderByUser), pageable);
     }
 
     @Override
@@ -111,7 +118,6 @@ public class OrderServiceImpl implements OrderService {
             order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
             archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
         });
-
     }
 
     @Override
@@ -126,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
         return allOrdersRepository.findAll(Specification.where(userIsPrincipal).and(specification), pageable);
     }
 
-    private void validateOrder(OrderDTO orderDTO, Stock stock, User user) {
+    private Order validateOrder(OrderDTO orderDTO, Stock stock, User user) {
         Map<String, List<String>> errors = new HashMap<>();
         if (orderDTO.getOrderType() == OrderType.BUYING_ORDER) {
             if (orderDTO.getPriceType() == PriceType.GREATER_OR_EQUAL) {
@@ -155,9 +161,20 @@ public class OrderServiceImpl implements OrderService {
                 errors.get("amount").add("The logged in user does not have enough available amount of stocks for sale.");
             }
         }
+        if (!stock.getTag().getName().equals(user.getTag().getName())) {
+            errors.putIfAbsent("stock", new ArrayList<>());
+            errors.get("stock").add("The logged in user in given stock are tagged using others tags.");
+        }
         if (!errors.isEmpty()) {
             throw new InvalidInputDataException("Data validation", errors);
         }
+        Order order = modelMapper.map(orderDTO, Order.class);
+        order.setStock(stock);
+        order.setUser(user);
+        order.setRemainingAmount(orderDTO.getAmount());
+        order.setDateCreation(OffsetDateTime.now(ZoneId.systemDefault()));
+        order.setDateClosing(null);
+        return order;
     }
 
 }

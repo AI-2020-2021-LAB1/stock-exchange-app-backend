@@ -17,12 +17,9 @@ import org.springframework.data.jpa.domain.Specification;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomArchivedOrder;
-import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
+import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.*;
 import static com.project.stockexchangeappbackend.service.ResourceServiceImplTest.createCustomResource;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.createCustomStock;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
@@ -59,8 +56,18 @@ class TransactionServiceImplTest {
     @Test
     void shouldReturnTransactionById() {
         long id = 1L;
+        Tag tag = new Tag(1L, "DEFAULT");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN, tag);
+        User user1 = createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, tag);
+        User user2 = createCustomUser(2L, "test2@test.pl", "Bobby", "Lawok", BigDecimal.ZERO, tag);
+        ArchivedOrder order1 = createCustomArchivedOrder(1L, 100, 0, OrderType.BUYING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().minusHours(2),
+                null, user1, stock);
+        ArchivedOrder order2 = createCustomArchivedOrder(2L, 100, 0, OrderType.SELLING_ORDER,
+                PriceType.EQUAL, BigDecimal.ONE, OffsetDateTime.now().minusHours(2), OffsetDateTime.now().minusHours(3),
+                null, user2, stock);
         Transaction transaction = createCustomTransaction(id, 100, OffsetDateTime.now(),
-                null, null, BigDecimal.ONE);
+                order1, order2, BigDecimal.ONE);
         when(transactionRepository.findById(id)).thenReturn(Optional.of(transaction));
         assertTransaction(transactionService.findTransactionById(id), transaction);
     }
@@ -114,6 +121,30 @@ class TransactionServiceImplTest {
                 PriceType.GREATER_OR_EQUAL, BigDecimal.TEN, OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusHours(1), null, seller, stock);
         Order buyingOrder = createCustomOrder(2L, 100, 80, OrderType.BUYING_ORDER,
+                PriceType.LESS_OR_EQUAL, BigDecimal.valueOf(12), OffsetDateTime.now().minusDays(1),
+                OffsetDateTime.now().plusHours(1), null, buyer, stock);
+        ArchivedOrder archivedBuyingOrder = createCustomArchivedOrder(buyingOrder);
+        Resource sellerResource = createCustomResource(1L, stock, seller, sellingOrder.getAmount());
+        Resource buyerResource = createCustomResource(2L, stock, buyer, buyingOrder.getAmount() - buyingOrder.getRemainingAmount());
+
+        when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(archivedBuyingOrder));
+        when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
+        when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.of(buyerResource));
+
+        assertAll(() -> transactionService.makeTransaction(buyingOrder, sellingOrder, buyingOrder.getRemainingAmount(), sellingOrder.getPrice()));
+    }
+
+    @Test
+    void shouldMakeTransactionAndSellingOrderShouldBeClosed() {
+        User seller = createCustomUser(1L, "seller@test.com", "John", "Kowal", BigDecimal.ZERO);
+        User buyer = createCustomUser(2L, "buyer@test.com", "John", "Kowal", BigDecimal.ZERO);
+        Stock stock = createCustomStock(1L, "WiG20", "W20", 1024, BigDecimal.TEN);
+        Order sellingOrder = createCustomOrder(1L, 100, 100, OrderType.SELLING_ORDER,
+                PriceType.GREATER_OR_EQUAL, BigDecimal.TEN, OffsetDateTime.now().minusDays(1),
+                OffsetDateTime.now().plusHours(1), null, seller, stock);
+        Order buyingOrder = createCustomOrder(2L, 100, 100, OrderType.BUYING_ORDER,
                 PriceType.LESS_OR_EQUAL, BigDecimal.valueOf(12), OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusHours(1), null, buyer, stock);
         ArchivedOrder archivedBuyingOrder = createCustomArchivedOrder(buyingOrder);
@@ -199,6 +230,31 @@ class TransactionServiceImplTest {
                 () -> transactionService.makeTransaction(buyingOrder, sellingOrder, buyingOrder.getAmount(), sellingOrder.getPrice()));
     }
 
+    @Test
+    void shouldReturnTransactionByStockIdForPricing() {
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 1024, BigDecimal.TEN);
+        User user1 = createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO);
+        Order order1 = createCustomOrder(1L, stock.getAmount(), 0, OrderType.BUYING_ORDER, PriceType.EQUAL,
+                BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().minusHours(2), null, user1, stock);
+        ArchivedOrder buyingOrder = createCustomArchivedOrder(order1);
+        Transaction transaction1 = createCustomTransaction(1, stock.getAmount(), OffsetDateTime.now().plusDays(1),
+                buyingOrder, null, buyingOrder.getPrice());
+        Transaction transaction2 = createCustomTransaction(2, 50, OffsetDateTime.now(),
+                buyingOrder, null, buyingOrder.getPrice());
+        List<Transaction> transactions = new ArrayList<>();
+        transactions.add(transaction1);
+        transactions.add(transaction2);
+        List<Transaction> expected = Collections.singletonList(transaction1);
+        when(transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount()))
+                .thenReturn(transactions);
+        List<Transaction> output = transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount());
+        assertEquals(expected.size(), output.size());
+        for (int i = 0; i < transactions.size(); i++) {
+            assertEquals(expected.get(i), output.get(i));
+        }
+
+    }
+
     public static Transaction createCustomTransaction(long id, int amount, OffsetDateTime date, ArchivedOrder buyingOrder,
                                                       ArchivedOrder sellingOrder, BigDecimal price) {
         return Transaction.builder()
@@ -213,8 +269,8 @@ class TransactionServiceImplTest {
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertEquals(expected.getDate(), output.getDate()),
                 () -> assertEquals(expected.getUnitPrice(), output.getUnitPrice()),
-                () -> assertEquals(expected.getBuyingOrder(), output.getBuyingOrder()),
-                () -> assertEquals(expected.getSellingOrder(), output.getSellingOrder()));
+                () -> assertArchivedOrder(expected.getBuyingOrder(), output.getBuyingOrder()),
+                () -> assertArchivedOrder(expected.getSellingOrder(), output.getSellingOrder()));
     }
 
 }

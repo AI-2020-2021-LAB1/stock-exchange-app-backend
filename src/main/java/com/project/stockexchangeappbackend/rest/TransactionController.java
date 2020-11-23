@@ -1,7 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
-import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.dto.TransactionDTO;
 import com.project.stockexchangeappbackend.repository.specification.TransactionSpecification;
 import com.project.stockexchangeappbackend.service.TransactionService;
@@ -10,8 +9,6 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -22,8 +19,6 @@ import springfox.documentation.annotations.ApiIgnore;
 @AllArgsConstructor
 @Api(value = "Transaction", description = "REST API for transactions' management", tags = "Transaction")
 @ApiResponses({
-        @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
-                response = ErrorResponse.class),
         @ApiResponse(code = 401, message = "Unauthorized.")
 })
 public class TransactionController {
@@ -33,20 +28,20 @@ public class TransactionController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Retrieve transaction by id", response = StockDTO.class, notes = "Required one role of: ADMIN, USER")
+    @ApiOperation(value = "Retrieve transaction by id", response = TransactionDTO.class,
+            notes = "Required one role of: ADMIN, USER")
     @ApiResponses({@ApiResponse(code = 200, message = "Transaction was successfully retrieved."),
             @ApiResponse(code = 404, message = "Given transaction not found.", response = ErrorResponse.class)})
-    public ResponseEntity<TransactionDTO> getTransactionDetails(@PathVariable Long id) {
-        TransactionDTO transactionDto = mapper.map(transactionService.findTransactionById(id), TransactionDTO.class);
-        return new ResponseEntity<>(transactionDto, HttpStatus.OK);
+    public TransactionDTO getTransactionDetails(@ApiParam(value = "The transaction's id.", required = true)
+                                                @PathVariable Long id) {
+        return mapper.map(transactionService.findTransactionById(id), TransactionDTO.class);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
-    @ApiOperation(value = "Page and filter transactions.", response = TransactionDTO.class,
-            notes = "Required one role of: ADMIN, USER \n" +
-                    "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
-                    "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
+    @ApiOperation(value = "Page and filter transactions", notes = "Required one role of: ADMIN, USER \n" +
+            "Given date must be in one format of: \n - yyyy-MM-ddThh:mm:ss.SSSZ (Z means Greenwich zone), " +
+            "\n - yyyy-MM-ddThh:mm:ss.SSS-hh:mm \n - yyyy-MM-ddThh:mm:ss.SSS%2Bhh:mm (%2B means +)")
     @ApiResponses(@ApiResponse(code = 200, message = "Successfully paged and filtered transactions."))
     @ApiImplicitParams({
             @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
@@ -81,6 +76,5 @@ public class TransactionController {
         return transactionService.findAllTransactions(pageable, specification)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
     }
-
 
 }

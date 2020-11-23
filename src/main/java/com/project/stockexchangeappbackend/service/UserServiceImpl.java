@@ -3,10 +3,14 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.repository.TagRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,11 +26,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TagService tagService;
 
     @Override
     @Transactional
     @LogicBusinessMeasureTime
-    public void registerUser(RegistrationUserDTO registrationUserDTO) {
+    public void registerUser(RegistrationUserDTO registrationUserDTO, String tag) {
         if (userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("User with given email already exists.");
         }
@@ -37,6 +42,7 @@ public class UserServiceImpl implements UserService {
                 .lastName(registrationUserDTO.getLastName().trim())
                 .role(Role.USER)
                 .money(BigDecimal.ZERO)
+                .tag(tagService.getTag(tag.trim()))
                 .build());
        log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
     }
@@ -47,6 +53,22 @@ public class UserServiceImpl implements UserService {
     public User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @LogicBusinessMeasureTime
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    @LogicBusinessMeasureTime
+    public Page<User> getUsers(Pageable pageable, Specification<User> specification) {
+        return userRepository.findAll(specification, pageable);
     }
 
 }

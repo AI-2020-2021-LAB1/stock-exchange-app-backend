@@ -29,6 +29,7 @@ public class OrderDTO {
     private Long id;
 
     @ApiModelProperty(notes = "Amount of stock desired by order's maker.")
+    @NotNull(message = "This field is required.")
     @Min(value = 1, message = "Amount must be greater or equal {value}.")
     private int amount;
 

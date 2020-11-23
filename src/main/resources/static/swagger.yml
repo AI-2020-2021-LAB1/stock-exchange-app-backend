@@ -33,7 +33,7 @@ paths:
           description: "User's login (required if password grant type selected)"
           required: false
           type: "string"
-        - name: "passwprd"
+        - name: "password"
           in: "formData"
           description: "Password's login (required if password grant type selected)"
           required: false
@@ -54,9 +54,7 @@ paths:
           schema:
             $ref: "#/definitions/Token"
         "400":
-          description: "The request could not be understood or was missing required parameters."
-        "401":
-          description: "Authentication failed (invalid user credentials)"
+          description: "The request could not be understood or was missing required parameters or bad user's credentials."
 definitions:
   Token:
     type: "object"

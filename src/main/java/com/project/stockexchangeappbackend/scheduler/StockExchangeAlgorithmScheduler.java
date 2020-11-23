@@ -28,7 +28,7 @@ public class StockExchangeAlgorithmScheduler {
     private final OrderService orderService;
     private final TransactionService transactionService;
 
-    @Scheduled(fixedDelayString = "${application.stock-algorithm.delay-time}")
+    @Scheduled(fixedDelayString = "${application.stock.algorithm-cycle}")
     public void run() {
         removeInactiveOrders();
         executeStockAlgorithm();

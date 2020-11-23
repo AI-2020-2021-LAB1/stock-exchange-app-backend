@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface TransactionService {
 
@@ -18,4 +19,13 @@ public interface TransactionService {
 
     Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification,
                                            boolean isSeller, boolean isBuyer);
+
+    Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
+                                             Long orderId);
+
+    List<Transaction> getTransactionsByStockIdForPricing(Long stockId, Integer amount);
+
+    Page<Transaction> getUserTransactions(Pageable pageable, Specification<Transaction> specification, Long userId,
+                                          boolean isSeller, boolean isBuyer);
+
 }
