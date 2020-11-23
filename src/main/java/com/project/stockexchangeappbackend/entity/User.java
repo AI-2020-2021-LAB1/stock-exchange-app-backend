@@ -19,29 +19,32 @@ public class User {
     @GeneratedValue(generator = "USER_SEQUENCE")
     private Long id;
 
-    @Column(nullable = false, name = "first_name")
+    @Column(name = "FIRST_NAME", nullable = false)
     private String firstName;
 
-    @Column(nullable = false, name = "last_name")
+    @Column(name = "LAST_NAME", nullable = false)
     private String lastName;
 
-    @Column(nullable = false, name = "email", unique = true, updatable = false)
+    @Column(name = "EMAIL", nullable = false, unique = true, updatable = false)
     private String email;
 
-    @Column(nullable = false, name = "password")
+    @Column(name = "PASSWORD", nullable = false)
     private String password;
 
-    @Column(nullable = false, name = "role")
+    @Column(name = "ROLE", nullable = false)
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @Column(nullable = false, name = "money", precision = 14, scale = 2)
+    @Column(name = "MONEY", nullable = false, precision = 14, scale = 2)
     private BigDecimal money;
 
-    @OneToMany(targetEntity = Order.class, mappedBy = "user")
+    @Column(name = "IS_ACTIVE", nullable = false)
+    private Boolean isActive;
+
+    @OneToMany(mappedBy = "user")
     private List<Order> orders;
 
-    @OneToMany(targetEntity = Resource.class, mappedBy = "user")
+    @OneToMany(mappedBy = "user")
     private List<Resource> userStocks;
 
     @ManyToOne(cascade = CascadeType.MERGE)

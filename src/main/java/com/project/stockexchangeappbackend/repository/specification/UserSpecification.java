@@ -16,7 +16,8 @@ import org.springframework.data.jpa.domain.Specification;
         @Spec(path = "money", spec = GreaterThanOrEqual.class, params={"money>"}),
         @Spec(path = "money", spec = LessThanOrEqual.class, params={"money<"}),
         @Spec(path = "money", spec = Equal.class, params={"money"}),
-        @Spec(path = "t.name", spec = EqualIgnoreCase.class, params = {"tag"})
+        @Spec(path = "t.name", spec = EqualIgnoreCase.class, params = {"tag"}),
+        @Spec(path = "isActive", spec = Equal.class, params = {"active"})
 })
 public interface UserSpecification extends Specification<User> {
 }

@@ -39,4 +39,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long>, JpaSp
     @DBQueryMeasureTime
     void deleteById(Long id);
 
+    @DBQueryMeasureTime
+    Long countByUser(User user);
+
 }
