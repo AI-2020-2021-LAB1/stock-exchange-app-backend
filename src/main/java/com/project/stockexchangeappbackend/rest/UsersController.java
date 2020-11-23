@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.validation.Valid;
 import java.security.Principal;
 
 @RestController
@@ -85,6 +87,17 @@ public class UsersController {
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
     public UserDTO getUser(Principal principal) {
         return mapper.map(userService.findUserByEmail(principal.getName()), UserDTO.class);
+    }
+
+    @PostMapping("/config/change-password")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiOperation(value = "Change user's password", notes = "Required one role of: USER, ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "User password was successfully changed."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class)})
+    public void changePassword(@ApiParam(value = "Change password object", required = true)
+                               @RequestBody @Valid ChangePasswordDTO changePasswordDTO, Principal principal) {
+        userService.changeUserPassword(changePasswordDTO, principal);
     }
 
     @GetMapping("/stock/owned")

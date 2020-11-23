@@ -1,9 +1,9 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.ChangePasswordDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
-import com.project.stockexchangeappbackend.repository.TagRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.security.Principal;
 
 @Service
 @Slf4j
@@ -44,7 +46,7 @@ public class UserServiceImpl implements UserService {
                 .money(BigDecimal.ZERO)
                 .tag(tagService.getTag(tag.trim()))
                 .build());
-       log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
+        log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");
     }
 
     @Override
@@ -59,10 +61,21 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public User findUserByEmail(String email) {
-        return userRepository.findByEmailIgnoreCase(email)
+        return userRepository.findByEmailIgnoreCase(email.trim())
                 .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
     }
 
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void changeUserPassword(ChangePasswordDTO changePasswordDTO, Principal principal) {
+        User user = findUserByEmail(principal.getName());
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+            throw new AccessDeniedException("User credential's are incorrect.");
+        }
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        userRepository.save(user);
+    }
 
     @Override
     @Transactional(readOnly = true)
