@@ -182,7 +182,9 @@ public class UsersController {
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<OrderDTO> getOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification) {
         return orderService.getOwnedOrders(pageable, specification)
@@ -289,7 +291,9 @@ public class UsersController {
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<OrderDTO> getUserOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification,
                                              @ApiParam(value = "The user's id.", required = true)
