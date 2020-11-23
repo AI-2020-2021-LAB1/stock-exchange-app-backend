@@ -19,6 +19,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @DBQueryMeasureTime
     Optional<User> findByEmailIgnoreCase(String email);
 
+    @DBQueryMeasureTime
+    Optional<User> findByEmailIgnoreCaseAndIsActiveTrue(String email);
+
     @Override
     @DBQueryMeasureTime
     <S extends User> S save(S s);
