@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
     public void changeUserPassword(ChangePasswordDTO changePasswordDTO, Principal principal) {
         User user = findUserByEmail(principal.getName());
         if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
-            throw new AccessDeniedException("User credential's are incorrect");
+            throw new AccessDeniedException("User credential's are incorrect.");
         }
         user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
         userRepository.save(user);

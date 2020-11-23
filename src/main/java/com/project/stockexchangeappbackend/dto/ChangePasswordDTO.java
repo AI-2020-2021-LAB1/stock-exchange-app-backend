@@ -26,13 +26,12 @@ public class ChangePasswordDTO {
                     "one lowercase letter, one number and one special character.")
     @ApiModelProperty(notes = "The user's new password. This field must contain: minimum eight characters, " +
             "at least one uppercase letter, one lowercase letter, one number and one special character.",
-            required = true, allowableValues="range[6, infinity]")
+            required = true, allowableValues="range[8, infinity]")
     private String newPassword;
 
     @NotBlank(message = "This field is required.")
     @Length(min = 8, message = "This field must contain at least {min} characters.")
-    @ApiModelProperty(notes = "The user's old password. This field must contain: minimum eight characters, " +
-            "at least one uppercase letter, one lowercase letter, one number and one special character.",
-            required = true, allowableValues="range[6, infinity]")
+    @ApiModelProperty(notes = "The current user's password.")
     private String oldPassword;
+
 }

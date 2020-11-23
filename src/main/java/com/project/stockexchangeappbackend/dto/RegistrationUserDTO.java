@@ -39,7 +39,7 @@ public class RegistrationUserDTO {
                     "one lowercase letter, one number and one special character.")
     @ApiModelProperty(notes = "The user's password. This field must contain: minimum eight characters, " +
             "at least one uppercase letter, one lowercase letter, one number and one special character.",
-            required = true, allowableValues="range[6, infinity]")
+            required = true, allowableValues="range[8, infinity]")
     private String password;
 
 }

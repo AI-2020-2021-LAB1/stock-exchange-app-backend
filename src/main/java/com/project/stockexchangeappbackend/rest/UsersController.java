@@ -91,10 +91,12 @@ public class UsersController {
 
     @PostMapping("/config/change-password")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @ApiOperation(value = "Change user's password", response = UserDTO.class, notes = "Required one role of: USER, ADMIN")
+    @ApiOperation(value = "Change user's password", notes = "Required one role of: USER, ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User password was successfully changed."),
-            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.", response = ErrorResponse.class)})
-    public void changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Principal principal) {
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class)})
+    public void changePassword(@ApiParam(value = "Change password object", required = true)
+                               @RequestBody @Valid ChangePasswordDTO changePasswordDTO, Principal principal) {
         userService.changeUserPassword(changePasswordDTO, principal);
     }
 
