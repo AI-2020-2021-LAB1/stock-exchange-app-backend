@@ -31,10 +31,6 @@ public class ChangePasswordDTO {
 
     @NotBlank(message = "This field is required.")
     @Length(min = 8, message = "This field must contain at least {min} characters.")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])" +
-            "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$",
-            message = "This field must contain: minimum eight characters, at least one uppercase letter, " +
-                    "one lowercase letter, one number and one special character.")
     @ApiModelProperty(notes = "The user's old password. This field must contain: minimum eight characters, " +
             "at least one uppercase letter, one lowercase letter, one number and one special character.",
             required = true, allowableValues="range[6, infinity]")

@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.security.Principal;
 
 @Service
 @Slf4j
@@ -67,7 +68,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public void changeUserPassword(User user, ChangePasswordDTO changePasswordDTO) {
+    public void changeUserPassword(ChangePasswordDTO changePasswordDTO, Principal principal) {
+        User user = findUserByEmail(principal.getName());
         if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
             throw new AccessDeniedException("User credential's are incorrect");
         }
