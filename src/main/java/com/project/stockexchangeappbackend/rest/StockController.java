@@ -138,7 +138,7 @@ public class StockController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Delete existing stock", notes = "Required role ADMIN")
-    @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully deleted."),
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully deleted."),
             @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
@@ -186,6 +186,20 @@ public class StockController {
                                          @PathVariable Long id, @ApiIgnore Pageable pageable,
                                          OwnerSpecification specification) {
         return resourceService.getStockOwners(pageable, specification, id);
+    }
+
+    @PostMapping("/{id}/move")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Move defined amount of stocks from one user to another", notes = "Required role ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "The given stock's amount was successfully moved."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
+    public void moveStock(@ApiParam(value = "The id of stock to move.", required = true) @PathVariable Long id,
+                          @ApiParam(value = "The stock's movement object.", required = true)
+                          @RequestBody @Valid MoveStockDTO moveStock) {
+        resourceService.moveStock(id, moveStock);
     }
 
 }
