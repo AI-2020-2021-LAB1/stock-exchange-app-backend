@@ -29,11 +29,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final TagService tagService;
 
-    private boolean validPassword(String password) {
-        return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])" +
-                "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$");
-    }
-
     @Override
     @Transactional
     @LogicBusinessMeasureTime
@@ -72,19 +67,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public User changeUserPassword(Long id, ChangePasswordDTO changePasswordDTO) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
-        if (!validPassword(changePasswordDTO.getNewPassword())) {
-            throw new AccessDeniedException("New password is too weak.");
+    public void changeUserPassword(User user, ChangePasswordDTO changePasswordDTO) {
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
+            throw new AccessDeniedException("User credential's are incorrect");
         }
-        if (passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())) {
-            user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
-            userRepository.save(user);
-            return user;
-        } else {
-            throw new AccessDeniedException("Passwords do not match.");
-        }
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
+        userRepository.save(user);
     }
 
     @Override

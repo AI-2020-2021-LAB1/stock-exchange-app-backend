@@ -90,16 +90,17 @@ public class UsersController {
     }
 
     @PostMapping("/config/change-password")
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     @ApiOperation(value = "Change logged in user password", response = UserDTO.class, notes = "Required role: USER")
     @ApiResponses({@ApiResponse(code = 200, message = "User password was successfully changed."),
-            @ApiResponse(code = 404, message = "Failed to change user password.", response = ErrorResponse.class)})
+            @ApiResponse(code = 400, message = "Failed to change user password.", response = ErrorResponse.class),
+            @ApiResponse(code = 401, message = "Unauthorized.", response = ErrorResponse.class)})
     @ApiImplicitParams({
             @ApiImplicitParam(name = "password", dataType = "string", paramType = "body",
                     value = "New password"),
     })
     public void changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Principal principal) {
-        userService.changeUserPassword(userService.findUserByEmail(principal.getName()).getId(), changePasswordDTO);
+        userService.changeUserPassword(userService.findUserByEmail(principal.getName()), changePasswordDTO);
     }
 
     @GetMapping("/stock/owned")

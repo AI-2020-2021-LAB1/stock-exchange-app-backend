@@ -12,7 +12,7 @@ public interface UserService {
     void registerUser(RegistrationUserDTO registrationUserDTO, String tag);
     User findUserById(Long id);
     User findUserByEmail(String email);
-    User changeUserPassword(Long id, ChangePasswordDTO changePasswordDTO);
+    void changeUserPassword(User user, ChangePasswordDTO changePasswordDTO);
     Page<User> getUsers(Pageable pageable, Specification<User>  specification);
 
 }

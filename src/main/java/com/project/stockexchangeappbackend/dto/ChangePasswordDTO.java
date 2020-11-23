@@ -6,21 +6,37 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
 @Data
-@ApiModel(description = "User object stored in database.")
+@ApiModel(description = "Change password object.")
 public class ChangePasswordDTO {
 
-    @ApiModelProperty(notes = "The new password.")
     @NotBlank(message = "This field is required.")
+    @Length(min = 8, message = "This field must contain at least {min} characters.")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])" +
+            "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$",
+            message = "This field must contain: minimum eight characters, at least one uppercase letter, " +
+                    "one lowercase letter, one number and one special character.")
+    @ApiModelProperty(notes = "The user's new password. This field must contain: minimum eight characters, " +
+            "at least one uppercase letter, one lowercase letter, one number and one special character.",
+            required = true, allowableValues="range[6, infinity]")
     private String newPassword;
 
-    @ApiModelProperty(notes = "The old password.")
     @NotBlank(message = "This field is required.")
+    @Length(min = 8, message = "This field must contain at least {min} characters.")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?])" +
+            "[A-Za-z\\d!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,}$",
+            message = "This field must contain: minimum eight characters, at least one uppercase letter, " +
+                    "one lowercase letter, one number and one special character.")
+    @ApiModelProperty(notes = "The user's old password. This field must contain: minimum eight characters, " +
+            "at least one uppercase letter, one lowercase letter, one number and one special character.",
+            required = true, allowableValues="range[6, infinity]")
     private String oldPassword;
 }
