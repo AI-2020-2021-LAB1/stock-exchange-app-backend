@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.EditUserDetailsDTO;
+import com.project.stockexchangeappbackend.dto.EditUserNameDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.Tag;
@@ -25,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +34,7 @@ import java.util.Optional;
 
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -213,6 +216,24 @@ class UserServiceImplTest {
                 Role.ADMIN, true);
         when(userRepository.findById(id)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> userService.updateUser(id, editUserDetailsDTO));
+    }
+
+    @Test
+    void shouldUpdateUsersNames() {
+        EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
+        Principal principal = () -> "test@test";
+        Tag tag = new Tag(1L, "default");
+        User user = createCustomUser(1L, principal.getName(), "Jan", "jan", BigDecimal.ZERO, Role.USER, tag);
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.of(user));
+        assertAll(() -> userService.changeUserDetails(editUserNameDTO, principal));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingUsersNames() {
+        EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
+        Principal principal = () -> "test@test";
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> userService.changeUserDetails(editUserNameDTO, principal));
     }
 
     public static void assertUser(User output, User expected) {

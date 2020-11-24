@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.ChangePasswordDTO;
 import com.project.stockexchangeappbackend.dto.EditUserDetailsDTO;
+import com.project.stockexchangeappbackend.dto.EditUserNameDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
@@ -91,13 +92,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public User changeUserDetails(Long id, String firstName, String lastName) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("User Not Found"));
-        user.setFirstName(firstName.trim());
-        user.setLastName(lastName.trim());
+    public void changeUserDetails(EditUserNameDTO editUserNameDTO, Principal principal) {
+        User user = userRepository.findByEmailIgnoreCase(principal.getName())
+                .orElseThrow(() -> new InvalidInputDataException("User Not Found", null));
+        user.setFirstName(editUserNameDTO.getFirstName().trim());
+        user.setLastName(editUserNameDTO.getLastName().trim());
         userRepository.save(user);
-        return user;
     }
 
     @Override

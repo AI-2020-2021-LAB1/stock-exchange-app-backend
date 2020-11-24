@@ -102,20 +102,16 @@ public class UsersController {
         userService.changeUserPassword(changePasswordDTO, principal);
     }
 
-    @PostMapping("/config/user-data")
-    @PreAuthorize("hasRole('USER')")
-    @ApiOperation(value = "Change logged in user first and last name", response = UserDTO.class, notes = "Required role: USER")
+    @PutMapping("/config/user-data")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiOperation(value = "Change logged in user first and last name", notes = "Required one role of: USER, ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "User first and last name was successfully changed."),
-            @ApiResponse(code = 404, message = "Failed to change user first and last name.", response = ErrorResponse.class)})
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "firstName", dataType = "string", paramType = "body",
-                    value = "First Name"),
-            @ApiImplicitParam(name = "lastName", dataType = "string", paramType = "body",
-                    value = "Last Name"),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class)
     })
-    public UserDTO changeDetails(@RequestParam String firstName, @RequestParam String lastName, Principal principal) {
-        User user = userService.findUserByEmail(principal.getName());
-        return mapper.map(userService.changeUserDetails(user.getId(), firstName, lastName), UserDTO.class);
+    public void changeDetails(@ApiParam(value = "User's details object to edit.", required = true)
+                                  @RequestBody @Valid EditUserNameDTO userName, Principal principal) {
+        userService.changeUserDetails(userName, principal);
     }
 
     @GetMapping("/stock/owned")
