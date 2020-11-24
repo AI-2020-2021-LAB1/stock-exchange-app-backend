@@ -1,7 +1,6 @@
 package com.project.stockexchangeappbackend.repository;
 
-import com.project.stockexchangeappbackend.entity.Role;
-import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,27 +13,21 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+public interface TagRepository extends JpaRepository<Tag, Long>, JpaSpecificationExecutor<Tag> {
 
     @DBQueryMeasureTime
-    Optional<User> findByEmailIgnoreCase(String email);
-
-    @DBQueryMeasureTime
-    Optional<User> findByEmailIgnoreCaseAndIsActiveTrue(String email);
+    Optional<Tag> findByNameIgnoreCase(String name);
 
     @Override
     @DBQueryMeasureTime
-    <S extends User> S save(S s);
+    <S extends Tag> S save(S s);
 
     @Override
     @DBQueryMeasureTime
-    Optional<User> findById(Long id);
+    Page<Tag> findAll(@Nullable Specification<Tag> specification, Pageable pageable);
 
     @Override
     @DBQueryMeasureTime
-    Page<User> findAll(@Nullable Specification<User> specification, Pageable pageable);
-
-    @DBQueryMeasureTime
-    Long countByRole(Role role);
+    void delete(Tag tag);
 
 }

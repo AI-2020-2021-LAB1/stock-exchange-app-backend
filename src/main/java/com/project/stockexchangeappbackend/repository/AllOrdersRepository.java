@@ -1,7 +1,7 @@
 package com.project.stockexchangeappbackend.repository;
 
 import com.project.stockexchangeappbackend.entity.AllOrders;
-import com.project.stockexchangeappbackend.entity.Order;
+import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,5 +24,7 @@ public interface AllOrdersRepository extends JpaRepository<AllOrders, Long>, Jpa
     @DBQueryMeasureTime
     Optional<AllOrders> findById(Long id);
 
+    @DBQueryMeasureTime
+    Long countByUser(User user);
 
 }

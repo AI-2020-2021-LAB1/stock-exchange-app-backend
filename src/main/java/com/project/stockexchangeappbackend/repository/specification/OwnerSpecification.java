@@ -20,7 +20,8 @@ import org.springframework.data.jpa.domain.Specification;
         @Spec(path = "u.money", spec = Equal.class, params={"money"}),
         @Spec(path = "amount", spec = GreaterThanOrEqual.class, params={"amount>"}),
         @Spec(path = "amount", spec = LessThanOrEqual.class, params={"amount<"}),
-        @Spec(path = "amount", spec = Equal.class, params={"amount"})
+        @Spec(path = "amount", spec = Equal.class, params={"amount"}),
+        @Spec(path = "u.isActive", spec = Equal.class, params = {"active"})
 })
 public interface OwnerSpecification extends Specification<Resource> {
 
