@@ -102,6 +102,18 @@ public class UsersController {
         userService.changeUserPassword(changePasswordDTO, principal);
     }
 
+    @PutMapping("/config/user-data")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiOperation(value = "Change logged in user first and last name", notes = "Required one role of: USER, ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "User first and last name was successfully changed."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class)
+    })
+    public void changeDetails(@ApiParam(value = "User's details object to edit.", required = true)
+                                  @RequestBody @Valid EditUserNameDTO userName, Principal principal) {
+        userService.changeUserDetails(userName, principal);
+    }
+
     @GetMapping("/stock/owned")
     @PreAuthorize("hasRole('USER')")
     @ApiOperation(value = "Page and filter logged in user's stocks", notes = "Required role: USER")
