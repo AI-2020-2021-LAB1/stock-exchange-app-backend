@@ -24,10 +24,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.Join;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -131,7 +128,12 @@ public class ResourceServiceImpl implements ResourceService {
         }
         if (source.isPresent() && destination.isPresent()) {
             if (source.get().getId().equals(destination.get().getId())) {
-                errors.put("destinationSource", List.of("Source and destination users must be different users."));
+                errors.putIfAbsent("destinationSource", new ArrayList<>());
+                errors.get("destinationSource").add("Source and destination users must be different users.");
+            }
+            if (destination.get().getRole().equals(Role.ADMIN)) {
+                errors.putIfAbsent("destinationSource", new ArrayList<>());
+                errors.get("destinationSource").add("Destination user cannot be admin.");
             }
             if (!stock.getTag().equals(source.get().getTag()) || !stock.getTag().equals(destination.get().getTag())) {
                 errors.put("stock", List.of("Both users and stock must be tagged using the same tag."));
