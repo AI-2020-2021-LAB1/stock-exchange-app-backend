@@ -212,6 +212,32 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserIsAdmin() {
+        MoveStockDTO moveStock = MoveStockDTO.builder()
+                .amount(100)
+                .userDestination(UserDTO.builder().id(1L).build())
+                .userSource(UserDTO.builder().id(2L).build())
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "Wig20", "W20", 100, BigDecimal.TEN, tag);
+        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, Role.ADMIN, tag);
+        User user2 = createCustomUser(2L, "test2@test", "test", "test", BigDecimal.ZERO, tag);
+        Resource resource = createCustomResource(1L, stock, user2, 100);
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
+        when(resourceRepository.findByUserAndStock(user2, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                Mockito.eq(stock), Mockito.eq(user2), Mockito.eq(OrderType.SELLING_ORDER), Mockito.any(OffsetDateTime.class)
+        )).thenReturn(Collections.singletonList(
+                createCustomOrder(1L, 10, 10, OrderType.SELLING_ORDER, PriceType.EQUAL,
+                        BigDecimal.ONE, OffsetDateTime.now().minusDays(1), OffsetDateTime.now().plusHours(1),
+                        null, user2, stock)));
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+    }
+
+    @Test
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndOthersTags() {
         MoveStockDTO moveStock = MoveStockDTO.builder()
                 .amount(100)
