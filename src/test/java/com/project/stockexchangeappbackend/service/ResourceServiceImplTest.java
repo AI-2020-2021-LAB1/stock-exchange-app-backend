@@ -171,7 +171,7 @@ class ResourceServiceImplTest {
         Long stockId = 1L;
         Tag tag = new Tag(1L, "default");
         Stock stock = createCustomStock(1L, "Wig20", "W20", 100, BigDecimal.TEN, tag);
-        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, tag);
+        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, Role.USER, tag);
         User user2 = createCustomUser(2L, "test2@test", "test", "test", BigDecimal.ZERO, tag);
         Resource resource = createCustomResource(1L, stock, user2, 100);
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
@@ -195,7 +195,7 @@ class ResourceServiceImplTest {
         Long stockId = 1L;
         Tag tag = new Tag(1L, "default");
         Stock stock = createCustomStock(1L, "Wig20", "W20", 100, BigDecimal.TEN, tag);
-        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, tag);
+        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, Role.ADMIN, tag);
         User user2 = createCustomUser(2L, "test2@test", "test", "test", BigDecimal.ZERO, tag);
         Resource resource = createCustomResource(1L, stock, user2, 100);
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
@@ -248,7 +248,7 @@ class ResourceServiceImplTest {
         Tag tag = new Tag(1L, "default");
         Tag tag2 = new Tag(2L, "default");
         Stock stock = createCustomStock(1L, "Wig20", "W20", 100, BigDecimal.TEN, tag);
-        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, tag);
+        User user = createCustomUser(1L, "test@test", "test", "test", BigDecimal.ZERO, Role.ADMIN, tag);
         User user2 = createCustomUser(2L, "test2@test", "test", "test", BigDecimal.ZERO, tag2);
         Resource resource = createCustomResource(1L, stock, user2, 100);
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
@@ -271,7 +271,7 @@ class ResourceServiceImplTest {
         Long stockId = 1L;
         Tag tag = new Tag(1L, "default");
         Stock stock = createCustomStock(1L, "Wig20", "W20", 100, BigDecimal.TEN, tag);
-        User user2 = createCustomUser(2L, "test2@test", "test", "test", BigDecimal.ZERO, tag);
+        User user2 = createCustomUser(2L, "test2@test", "test", "test", BigDecimal.ZERO, Role.ADMIN, tag);
         Resource resource = createCustomResource(1L, stock, user2, 100);
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(userRepository.findById(user2.getId())).thenReturn(Optional.of(user2));
