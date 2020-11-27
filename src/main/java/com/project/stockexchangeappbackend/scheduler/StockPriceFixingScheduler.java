@@ -33,7 +33,7 @@ public class StockPriceFixingScheduler {
                     BigDecimal newPrice = BigDecimal.valueOf(
                             transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount())
                             .stream()
-                            .mapToInt(Transaction::getAmount)
+                            .mapToDouble(transaction -> transaction.getUnitPrice().doubleValue())
                             .average()
                             .orElseGet(() -> stock.getCurrentPrice().doubleValue()));
                     stock.setCurrentPrice(newPrice);
