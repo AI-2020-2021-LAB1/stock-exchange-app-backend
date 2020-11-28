@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.dto.CreateStockDTO;
 import com.project.stockexchangeappbackend.dto.StockDTO;
+import com.project.stockexchangeappbackend.dto.UpdateStockAmountDTO;
 import com.project.stockexchangeappbackend.entity.Stock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,5 +21,6 @@ public interface StockService {
     Stock getStockByIdOrAbbreviation(String id);
     void createStock(CreateStockDTO stockDTO, String tag);
     void deleteStock(Long id);
+    void updateStockAmount(Long stockId, UpdateStockAmountDTO updateStockAmount);
 
 }

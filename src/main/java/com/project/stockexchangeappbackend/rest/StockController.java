@@ -190,6 +190,21 @@ public class StockController {
         return resourceService.getStockOwners(pageable, specification, id);
     }
 
+
+    @PatchMapping("/{id}/amount")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Update amount of given stock", notes = "Required role ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock's amount was successfully updated."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "Given stock not found", response = ErrorResponse.class)})
+    public void updateStockAmount(@ApiParam(value = "The stock's id.", required = true) @PathVariable(name = "id") Long stockId,
+                                  @ApiParam(value = "The stock's amount change object", required = true)
+                                  @RequestBody @Valid UpdateStockAmountDTO updateStockAmount) {
+        stockService.updateStockAmount(stockId, updateStockAmount);
+    }
+
     @PostMapping("/{id}/move")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Move defined amount of stocks from one user to another", notes = "Required role ADMIN")

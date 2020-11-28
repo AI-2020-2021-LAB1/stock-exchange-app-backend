@@ -18,7 +18,7 @@ import javax.validation.constraints.NotNull;
 @ApiModel(description = "Stock ownership object.")
 public class OwnerDTO {
 
-    @ApiModelProperty(notes = "The stock's amount of units.")
+    @ApiModelProperty(notes = "The stock's amount of units or change in case update stock's amount")
     @NotNull(message = "This field is required.")
     @Min(value = 1, message = "Amount must be greater or equal {value}.")
     private Integer amount;
