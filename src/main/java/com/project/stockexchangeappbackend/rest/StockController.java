@@ -200,9 +200,9 @@ public class StockController {
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given stock not found", response = ErrorResponse.class)})
     public void updateStockAmount(@ApiParam(value = "The stock's id.", required = true) @PathVariable(name = "id") Long stockId,
-                                  @ApiParam(value = "Owner object", required = true)
-                                  @RequestBody List<@Valid OwnerDTO> ownerDTOList) {
-        stockService.updateStockAmount(stockId, ownerDTOList);
+                                  @ApiParam(value = "The stock's amount change object", required = true)
+                                  @RequestBody @Valid UpdateStockAmountDTO updateStockAmount) {
+        stockService.updateStockAmount(stockId, updateStockAmount);
     }
 
     @PostMapping("/{id}/move")

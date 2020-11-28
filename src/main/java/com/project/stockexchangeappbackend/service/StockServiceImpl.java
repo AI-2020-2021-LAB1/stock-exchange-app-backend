@@ -3,6 +3,7 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.dto.CreateStockDTO;
 import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.StockDTO;
+import com.project.stockexchangeappbackend.dto.UpdateStockAmountDTO;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
@@ -20,10 +21,7 @@ import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -145,40 +143,30 @@ public class StockServiceImpl implements StockService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public void updateStockAmount(Long stockId, List<OwnerDTO> ownerDTOList) {
-        Map<String, List<String>> errors = new HashMap<>();
-        Stock stock = stockRepository.findById(stockId).orElseThrow(() -> new EntityNotFoundException("Stock not found"));
-        ownerDTOList.forEach(ownerDTO -> {
-            Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
-            if (user.isEmpty()) {
-                errors.put("owners[" + ownerDTOList.indexOf(ownerDTO) + ']', List.of("User not found"));
-            } else if (user.get().getRole().equals(Role.ADMIN)) {
-                errors.put("owners[" + ownerDTOList.indexOf(ownerDTO) + ']', List.of("User is an admin"));
+    public void updateStockAmount(Long stockId, UpdateStockAmountDTO updateStockAmount) {
+        Stock stock = stockRepository.findByIdAndIsDeletedFalse(stockId)
+                .orElseThrow(() -> new EntityNotFoundException("Stock not found."));
+        List<Resource> changes = validateUpdateStockAmount(updateStockAmount, stock);
+        changes.forEach(change -> {
+            if (change.getId() == null) {
+                stock.getResources().add(change);
+            } else {
+                for (int i = 0; i < stock.getResources().size(); i++) {
+                    if (stock.getResources().get(i).getId().equals(change.getId())) {
+                        stock.getResources().get(i).setAmount(change.getAmount());
+                        break;
+                    }
+                }
             }
         });
-        if (!errors.isEmpty()) {
-            throw new InvalidInputDataException("Data validation", errors);
-        }
-        List<Resource> resources = ownerDTOList.stream().map(ownerDTO -> {
-            Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
-            Optional<Resource> resource = resourceRepository.findByUserAndStock(user.get(), stock);
-            if (resource.isEmpty()) {
-                return Resource.builder()
-                        .stock(stock)
-                        .user(user.get())
-                        .amount(0)
-                        .build();
-            }
-            return resource.get();
-        }).collect(Collectors.toList());
-        int currentStockAmount = resources.stream().mapToInt(Resource::getAmount).sum();
-        int insertedStockAmount = ownerDTOList.stream().mapToInt(OwnerDTO::getAmount).sum();
-        for (int i = 0; i < ownerDTOList.size(); i++) {
-            resources.get(i).setAmount(ownerDTOList.get(i).getAmount());
-        }
-        stock.setAmount(insertedStockAmount - currentStockAmount + stock.getAmount());
-        resources.addAll(stock.getResources());
-        stock.setResources(resources);
+        stock.setAmount(stock.getAmount() + updateStockAmount.getAmount());
+        stock.getResources().stream()
+                .filter(resource -> resource.getAmount().equals(0))
+                .collect(Collectors.toList())
+                .forEach(resource -> {
+                    resourceRepository.deleteById(resource.getId());
+                    stock.getResources().remove(resource);
+                });
         stockRepository.save(stock);
     }
 
@@ -240,6 +228,68 @@ public class StockServiceImpl implements StockService {
             throw new InvalidInputDataException("Data validation", errors);
         }
         return stock;
+    }
+
+    private List<Resource> validateUpdateStockAmount(UpdateStockAmountDTO updateStockAmount, Stock stock) {
+        Map<String, List<String>> errors = new HashMap<>();
+        if (updateStockAmount.getAmount().equals(0)) {
+            errors.putIfAbsent("amount", new ArrayList<>());
+            errors.get("amount").add("Stock's amount change cannot be zero.");
+        }
+
+        if (Math.abs(updateStockAmount.getAmount()) !=
+                updateStockAmount.getOwners().stream().mapToInt(OwnerDTO::getAmount).sum()) {
+            errors.putIfAbsent("amount", new ArrayList<>());
+            errors.get("amount").add("Stock's amount change must be equal of sum of owners' changes.");
+        }
+
+        if (updateStockAmount.getAmount() + stock.getAmount() <= 0) {
+            errors.putIfAbsent("amount", new ArrayList<>());
+            errors.get("amount").add("Amount of stock's must be positive after update.");
+        }
+
+        List<Optional<User>> changers = updateStockAmount.getOwners().stream()
+                .map(ownerDTO -> userRepository.findById(ownerDTO.getUser().getId()))
+                .collect(Collectors.toList());
+
+        changers.forEach(user -> {
+            int index = changers.indexOf(user);
+            if (user.isEmpty()) {
+                errors.put("owners[" + index + "].user", List.of("User not found."));
+            } else {
+                if (user.get().getRole().equals(Role.ADMIN)) {
+                    errors.putIfAbsent("owners[" + index + "].user", new ArrayList<>());
+                    errors.get("owners[" + index + "].user").add("User is an admin.");
+                }
+                if (!user.get().getTag().getName().equals(stock.getTag().getName())) {
+                    errors.putIfAbsent("owners[" + index + "].user", new ArrayList<>());
+                    errors.get("owners[" + index + "].user").add("User is tagged using another tag than stock.");
+                }
+            }
+        });
+        List<Resource> resources = new ArrayList<>();
+        if (errors.isEmpty()) {
+            resources.addAll(changers.stream().map(user -> {
+                Optional<Resource> resource = resourceRepository.findByUserAndStock(user.get(), stock);
+                int index = changers.indexOf(user);
+                if (updateStockAmount.getAmount() < 0 && (resource.isEmpty()
+                        || resource.get().getAmount() < updateStockAmount.getOwners().get(index).getAmount())) {
+                    errors.putIfAbsent("owners[" + index + "].user", new ArrayList<>());
+                    errors.get("owners[" + index + "].user").add("User doesn't possess enough stock.");
+                }
+                return resource.orElseGet(() -> Resource.builder()
+                                .amount(0).stock(stock).user(user.get())
+                                .build());
+            }).collect(Collectors.toList()));
+            for (int i=0; i<resources.size(); i++) {
+                resources.get(i).setAmount(resources.get(i).getAmount() + updateStockAmount.getOwners().get(i).getAmount()
+                        *(int)Math.signum(updateStockAmount.getAmount()));
+            }
+        }
+        if (!errors.isEmpty()) {
+            throw new InvalidInputDataException("Data validation", errors);
+        }
+        return resources;
     }
 
 }

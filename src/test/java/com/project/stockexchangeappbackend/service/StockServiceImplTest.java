@@ -1,9 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.CreateStockDTO;
-import com.project.stockexchangeappbackend.dto.OwnerDTO;
-import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.dto.UserDTO;
+import com.project.stockexchangeappbackend.dto.*;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
@@ -301,6 +298,145 @@ class StockServiceImplTest {
         Long stockId = 1L;
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> stockService.deleteStock(stockId));
+    }
+
+    @Test
+    void shouldUpdateStockAmount() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 50,
+                BigDecimal.TEN, false, tag);
+        User user = createCustomUser(1L, "test@test", "John", "Kowal",
+                BigDecimal.ZERO, Role.USER, true, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.empty());
+        assertAll(() -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserNotOwnStock() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(-100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 1000,
+                BigDecimal.TEN, false, tag);
+        User user = createCustomUser(1L, "test@test", "John", "Kowal",
+                BigDecimal.ZERO, Role.USER, true, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserTaggedUsingAnotherTag() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Tag tag2 = new Tag(2L, "default2");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 1000,
+                BigDecimal.TEN, false, tag);
+        User user = createCustomUser(1L, "test@test", "John", "Kowal",
+                BigDecimal.ZERO, Role.USER, true, tag2);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserIsAdmin() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 1000,
+                BigDecimal.TEN, false, tag);
+        User user = createCustomUser(1L, "test@test", "John", "Kowal",
+                BigDecimal.ZERO, Role.ADMIN, true, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserNotFound() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 1000,
+                BigDecimal.TEN, false, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndNonPositiveValueAfterChange() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(-100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 100,
+                BigDecimal.TEN, false, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndAmountValuesMismatch() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(100).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 50,
+                BigDecimal.TEN, false, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndAmountIsZero() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(0).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(stockId, "Wig20", "W20", 50,
+                BigDecimal.TEN, false, tag);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    void shouldThrowEntityNotFoundExceptionWhenUpdatingStockAmountAndStockNotFound() {
+        UpdateStockAmountDTO updateStockAmount = UpdateStockAmountDTO.builder()
+                .amount(0).owners(List.of(createCustomOwnerDTO(100, 1L)))
+                .build();
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
     }
 
     public static void assertStock(Stock output, Stock expected) {
