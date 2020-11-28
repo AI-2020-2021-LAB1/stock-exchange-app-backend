@@ -42,9 +42,6 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
     Optional<Stock> findByAbbreviationIgnoreCaseAndIsDeletedFalse(String abbreviation);
 
     @DBQueryMeasureTime
-    Optional<Stock> findByNameIgnoreCaseOrAbbreviationIgnoreCase(String name, String abbreviation);
-  
-    @DBQueryMeasureTime
     Optional<Stock> findByNameIgnoreCase(String name);
 
 }

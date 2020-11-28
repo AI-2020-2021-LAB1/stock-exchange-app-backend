@@ -36,6 +36,7 @@ public class StockServiceImpl implements StockService {
     private final ArchivedOrderRepository archivedOrderRepository;
     private final ResourceRepository resourceRepository;
     private final StockIndexValueRepository stockIndexValueRepository;
+    private final TagService tagService;
     private final ModelMapper modelMapper;
 
     @Override
@@ -106,8 +107,8 @@ public class StockServiceImpl implements StockService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public void createStock(CreateStockDTO stockDTO) {
-        Stock stock = validateCreateStockDTO(stockDTO);
+    public void createStock(CreateStockDTO stockDTO, String tag) {
+        Stock stock = validateCreateStockDTO(stockDTO, tag);
         stock.setResources(stock.getResources().stream()
                 .collect(Collectors.groupingBy(Resource::getUser))
                 .values().stream()
@@ -139,6 +140,7 @@ public class StockServiceImpl implements StockService {
         stock.getResources().clear();
         stockRepository.save(stock);
     }
+
 
     @Override
     @LogicBusinessMeasureTime
@@ -180,7 +182,7 @@ public class StockServiceImpl implements StockService {
         stockRepository.save(stock);
     }
 
-    private Stock validateCreateStockDTO(CreateStockDTO stockDTO) {
+    private Stock validateCreateStockDTO(CreateStockDTO stockDTO, String tag) {
         Map<String, List<String>> errors = new HashMap<>();
         Optional<Stock> stockInDBName = stockRepository.findByNameIgnoreCase(stockDTO.getName().trim());
         if (stockInDBName.isPresent() && !stockInDBName.get().getIsDeleted()) {
@@ -200,20 +202,36 @@ public class StockServiceImpl implements StockService {
         stock.setAmount(stockDTO.getAmount());
         stock.setCurrentPrice(stockDTO.getCurrentPrice());
         stock.setPriceChangeRatio(.0);
-        stock.setResources(stockDTO.getOwners().stream().map(ownerDTO -> {
-            int index = stockDTO.getOwners().indexOf(ownerDTO);
-            Optional<User> user = userRepository.findById(ownerDTO.getUser().getId());
-            if (user.isEmpty()) {
-                errors.put("owners[" + index + "]", List.of("User not found."));
-            } else if (user.get().getRole() == Role.ADMIN) {
-                errors.put("owners[" + index + "]", List.of("Given user is admin."));
-            }
-            return Resource.builder()
-                    .stock(stock)
-                    .amount(ownerDTO.getAmount())
-                    .user(user.orElse(null))
-                    .build();
-        }).collect(Collectors.toList()));
+        stock.setTag(tagService.getTag(tag));
+        List<Optional<User>> potentialUsers = stockDTO.getOwners().stream()
+                .map(ownerDTO -> userRepository.findById(ownerDTO.getUser().getId()))
+                .collect(Collectors.toList());
+        List<OwnerDTO> filteredOwner = stockDTO.getOwners().stream()
+                .filter(ownerDTO -> {
+                    int index = stockDTO.getOwners().indexOf(ownerDTO);
+                    Optional<User> user = potentialUsers.get(index);
+                    if (user.isEmpty()) {
+                        errors.put("owners[" + index + "]", List.of("User not found."));
+                        return false;
+                    } else if (user.get().getRole() == Role.ADMIN) {
+                        errors.put("owners[" + index + "]", List.of("Given user is admin."));
+                        return false;
+                    } else if (!user.get().getTag().getName().toUpperCase().equals(tag.toUpperCase())) {
+                        errors.put("owners[" + index + "]", List.of("Owner is tagged using another tag than creating stock."));
+                        return false;
+                    }
+                    return true;
+                }).collect(Collectors.toList());
+        if (potentialUsers.size() == filteredOwner.size()) {
+                stock.setResources(filteredOwner.stream().map(ownerDTO -> {
+                    int index = stockDTO.getOwners().indexOf(ownerDTO);
+                    return Resource.builder()
+                            .stock(stock)
+                            .amount(ownerDTO.getAmount())
+                            .user(potentialUsers.get(index).get())
+                            .build();
+                }).collect(Collectors.toList()));
+        }
         if (stockDTO.getAmount() != stockDTO.getOwners().stream().mapToInt(OwnerDTO::getAmount).sum()) {
             errors.put("amount",
                     List.of("Given amount of stocks must be equal sum of amounts specified in owners' list."));

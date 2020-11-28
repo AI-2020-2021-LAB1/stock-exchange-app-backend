@@ -34,10 +34,14 @@ public class Stock {
     @Column(name = "PRICE_CHANGE_RATIO", nullable = false)
     private Double priceChangeRatio;
 
-    @OneToMany(mappedBy = "stock", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "stock", cascade = CascadeType.PERSIST)
     private List<Resource> resources;
 
     @Column(name = "IS_DELETED", nullable = false)
     private Boolean isDeleted;
+
+    @ManyToOne(cascade = CascadeType.MERGE)
+    @JoinColumn(name = "TAG_ID", nullable = false, updatable = false, referencedColumnName = "ID")
+    private Tag tag;
 
 }

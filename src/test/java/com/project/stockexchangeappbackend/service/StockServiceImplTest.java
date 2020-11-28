@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -57,12 +58,16 @@ class StockServiceImplTest {
     StockIndexValueRepository stockIndexValueRepository;
 
     @Mock
+    TagService tagService;
+
+    @Mock
     ModelMapper modelMapper;
 
     @Test
     void shouldReturnStockById() {
         Long id = 1L;
-        Stock stock = createCustomStock(id, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20));
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(id, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20), tag);
         when(stockRepository.findByIdAndIsDeletedFalse(id)).thenReturn(Optional.of(stock));
         assertStock(stockService.getStockById(id), stock);
     }
@@ -76,9 +81,10 @@ class StockServiceImplTest {
 
     @Test
     void shouldPageAndFilterStocks() {
+        Tag tag = new Tag(1L, "default");
         List<Stock> stocks = Arrays.asList(
-                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20)),
-                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20)));
+                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag),
+                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20), tag));
         Pageable pageable = PageRequest.of(0,20);
         Specification<Stock> stockSpecification =
                 (Specification<Stock>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
@@ -93,9 +99,10 @@ class StockServiceImplTest {
 
     @Test
     void shouldReturnAllStocks() {
+        Tag tag = new Tag(1L, "default");
         List<Stock> stocks = Arrays.asList(
-                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20)),
-                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20)));
+                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag),
+                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20), tag));
         when(stockRepository.findAll(Mockito.any(Specification.class))).thenReturn(stocks);
         List<Stock> output = stockService.getAllStocks();
         assertEquals(stocks.size(), output.size());
@@ -106,134 +113,169 @@ class StockServiceImplTest {
 
     @Test
     void shouldUpdateStock() {
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20));
+        Tag tag = new Tag(1L, "default");
+        Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag);
         when(stockRepository.save(stock)).thenReturn(stock);
         assertStock(stockService.updateStock(stock), stock);
     }
 
     @Test
     void shouldCreateStock() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice());
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
         User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER);
+                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(user));
-        assertAll(() -> stockService.createStock(createStockDTO));
+        assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
     void shouldCreateStockWhenDeletedStockExistFoundByName() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), true);
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), true, tag);
         User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER);
+                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(user));
-        assertAll(() -> stockService.createStock(createStockDTO));
+        assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
     void shouldCreateStockWhenDeletedStockExistFoundByAbbreviation() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), true);
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), true, tag);
         User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER);
+                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
                 .thenReturn(Optional.of(stock));
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(user));
-        assertAll(() -> stockService.createStock(createStockDTO));
+        assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenCreatingStockAndAmountMismatch() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice());
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
         User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER);
+                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(user));
-        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO));
+        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersNotFound() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice());
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.empty());
-        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO));
+        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersIsAdmin() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice());
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
         User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.ADMIN);
+                "John", "Kowal", BigDecimal.ZERO, Role.ADMIN, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(user));
-        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO));
+        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenOneOfUsersIsTaggedUsingAnotherTagThanStock() {
+        Tag tag = new Tag(1L, "default");
+        Tag tag2 = new Tag(2L, "test");
+        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
+        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
+                ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
+        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
+        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
+                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
+        when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
+        when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
+        when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
+        when(tagService.getTag(tag2.getName())).thenReturn(tag2);
+        when(userRepository.findById(Mockito.anyLong()))
+                .thenReturn(Optional.of(user));
+        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag2.getName()));
     }
 
     @Test
     void shouldThrowEntityAlreadyExistsExceptionWhenGivenAbbreviationFound() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(1L, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), false);
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), false, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
                 .thenReturn(Optional.of(stock));
 
-        assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO));
+        assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
     void shouldThrowEntityAlreadyExistsExceptionWhenGivenNameFound() {
+        Tag tag = new Tag(1L, "default");
         OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
         CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
                 ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
         Stock stock = createCustomStock(1L, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), false);
+                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), false, tag);
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
 
-        assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO));
+        assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
@@ -266,7 +308,8 @@ class StockServiceImplTest {
                 () -> assertEquals(expected.getName(), output.getName()),
                 () -> assertEquals(expected.getAbbreviation(), output.getAbbreviation()),
                 () -> assertEquals(expected.getCurrentPrice(), output.getCurrentPrice()),
-                () -> assertEquals(expected.getAmount(), output.getAmount()));
+                () -> assertEquals(expected.getAmount(), output.getAmount()),
+                () -> assertTag(expected.getTag(), output.getTag()));
     }
 
     public static Stock createCustomStock(Long id, String name, String abbreviation,
@@ -279,12 +322,33 @@ class StockServiceImplTest {
     }
 
     public static Stock createCustomStock(Long id, String name, String abbreviation,
+                                          Integer amount, BigDecimal currentPrice, Tag tag) {
+        return Stock.builder()
+                .id(id).name(name).abbreviation(abbreviation)
+                .amount(amount).currentPrice(currentPrice)
+                .resources(new ArrayList<>())
+                .tag(tag)
+                .build();
+    }
+
+    public static Stock createCustomStock(Long id, String name, String abbreviation,
                                           Integer amount, BigDecimal currentPrice, Boolean isDeleted) {
         return Stock.builder()
                 .id(id).name(name).abbreviation(abbreviation)
                 .amount(amount).currentPrice(currentPrice)
                 .resources(new ArrayList<>())
                 .isDeleted(isDeleted)
+                .build();
+    }
+
+    public static Stock createCustomStock(Long id, String name, String abbreviation,
+                                          Integer amount, BigDecimal currentPrice, Boolean isDeleted, Tag tag) {
+        return Stock.builder()
+                .id(id).name(name).abbreviation(abbreviation)
+                .amount(amount).currentPrice(currentPrice)
+                .resources(new ArrayList<>())
+                .isDeleted(isDeleted)
+                .tag(tag)
                 .build();
     }
 

@@ -21,7 +21,7 @@ public class CustomDetailsService implements UserDetailsService {
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
-        com.project.stockexchangeappbackend.entity.User user = userRepository.findByEmailIgnoreCase(username)
+        com.project.stockexchangeappbackend.entity.User user = userRepository.findByEmailIgnoreCaseAndIsActiveTrue(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
         return new User(user.getEmail(), user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));

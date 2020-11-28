@@ -15,6 +15,7 @@ import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolv
 
 import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
+import javax.validation.ConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -87,9 +88,18 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
                 .build();
     }
 
-    @ExceptionHandler(PropertyReferenceException.class)
+    @ExceptionHandler({PropertyReferenceException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse httpPropertyReferenceException(PropertyReferenceException exc) {
+        return ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message(exc.getMessage())
+                .build();
+    }
+
+    @ExceptionHandler({ConstraintViolationException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse httpConstraintViolationException(ConstraintViolationException exc) {
         return ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message(exc.getMessage())

@@ -19,7 +19,7 @@ public interface StockService {
     Stock updateStock(Stock stock);
     void updateStock(StockDTO stockDTO, String id);
     Stock getStockByIdOrAbbreviation(String id);
-    void createStock(CreateStockDTO stockDTO);
+    void createStock(CreateStockDTO stockDTO, String tag);
     void deleteStock(Long id);
     void updateStockAmount(Long stockId, List<OwnerDTO> ownerDTOList);
 

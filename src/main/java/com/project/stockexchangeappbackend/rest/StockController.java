@@ -13,14 +13,17 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/stock")
+@Validated
 @CrossOrigin("*")
 @AllArgsConstructor
 @Api(value = "Stocks", description = "REST API for stocks' management", tags = "Stocks")
@@ -63,7 +66,9 @@ public class StockController {
             @ApiImplicitParam(name = "priceChangeRatio>", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)"),
             @ApiImplicitParam(name = "priceChangeRatio<", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)")
+                    value = "Filtering criteria for field `priceChangeRatio`. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<StockDTO> getStocks(@ApiIgnore Pageable pageable, StockSpecification stockSpecification) {
         return stockService.getStocks(pageable, stockSpecification)
@@ -109,9 +114,10 @@ public class StockController {
                     value = "Filtering criteria for field `timestamp` (omitted if null).")
     })
     public List<StockIndexValueDTO> getIndexes(StockIndexValueSpecification specification,
-                                               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
-                                               @ApiParam(value = "Interval", defaultValue = "1")
-                                               @RequestParam(value = "interval", defaultValue = "1") Integer interval) {
+               @ApiParam(value = "The stock's id.", required = true) @PathVariable("id") Long stockId,
+               @ApiParam(value = "Interval. Minimal value 1.", defaultValue = "1")
+                                                   @RequestParam(value = "interval", defaultValue = "1")
+               @Min(value = 1, message = "Interval must be greater or equal {value}.") Integer interval) {
         return stockIndexValueService.getStockIndexValues(stockId, specification, interval);
     }
 
@@ -123,14 +129,16 @@ public class StockController {
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 409, message = "Given stock already exist.", response = ErrorResponse.class)})
-    public void create(@RequestBody @Valid CreateStockDTO stockDTO) {
-        stockService.createStock(stockDTO);
+    public void create(@ApiParam(value = "Stock object to create.", required = true)
+                           @RequestBody @Valid CreateStockDTO stockDTO,
+                       @ApiParam("The stock's tag.") @RequestParam(name = "tag", defaultValue = "default") String tag) {
+        stockService.createStock(stockDTO, tag);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Delete existing stock", notes = "Required role ADMIN")
-    @ApiResponses({@ApiResponse(code = 200, message = "Stock's indexes was successfully deleted."),
+    @ApiResponses({@ApiResponse(code = 200, message = "Stock was successfully deleted."),
             @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied."),
@@ -172,13 +180,16 @@ public class StockController {
             @ApiImplicitParam(name = "amount<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `amount`. (omitted if null)"),
             @ApiImplicitParam(name = "amount", dataType = "integer", paramType = "query",
-                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `amount`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "amount", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field `active`. Param is exact value. (omitted if null)")
     })
     public Page<OwnerDTO> getStockOwners(@ApiParam(value = "The stock's id.", required = true)
                                          @PathVariable Long id, @ApiIgnore Pageable pageable,
                                          OwnerSpecification specification) {
         return resourceService.getStockOwners(pageable, specification, id);
     }
+
 
     @PatchMapping("/{id}/amount")
     @PreAuthorize("hasRole('ADMIN')")
@@ -192,6 +203,20 @@ public class StockController {
                                   @ApiParam(value = "Owner object", required = true)
                                   @RequestBody List<@Valid OwnerDTO> ownerDTOList) {
         stockService.updateStockAmount(stockId, ownerDTOList);
+    }
+
+    @PostMapping("/{id}/move")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Move defined amount of stocks from one user to another", notes = "Required role ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "The given stock's amount was successfully moved."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
+    public void moveStock(@ApiParam(value = "The id of stock to move.", required = true) @PathVariable Long id,
+                          @ApiParam(value = "The stock's movement object.", required = true)
+                          @RequestBody @Valid MoveStockDTO moveStock) {
+        resourceService.moveStock(id, moveStock);
     }
 
 }
