@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.EntityNotFoundException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,15 +34,16 @@ class TagServiceImplTest {
 
     @Test
     void shouldReturnExistingTag() {
-        Tag tag = new Tag(1L, "DEFAULT");
-        when(tagRepository.findByNameIgnoreCase(tag.getName())).thenReturn(Optional.of(tag));
-        assertTag(tag, tagService.getTag(tag.getName()));
+        Tag tag = getTagsList().get(0);
+        String tagName = tag.getName();
+        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.of(tag));
+        assertTag(tag, tagService.getTag(tagName));
     }
 
     @Test
     void shouldReturnNonExistingTag() {
-        String tagName = "TEST";
-        Tag tag = new Tag(2L, tagName);
+        Tag tag = getTagsList().get(1);
+        String tagName = tag.getName();
         when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.empty());
         when(tagRepository.save(Mockito.any(Tag.class))).thenReturn(tag);
         assertTag(tag, tagService.getTag(tagName));
@@ -49,9 +51,10 @@ class TagServiceImplTest {
 
     @Test
     void shouldFindExistingTag() {
-        Tag tag = new Tag(1L, "DEFAULT");
-        when(tagRepository.findByNameIgnoreCase(tag.getName())).thenReturn(Optional.of(tag));
-        assertTag(tag, tagService.findTag(tag.getName()));
+        Tag tag = getTagsList().get(0);
+        String tagName = tag.getName();
+        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.of(tag));
+        assertTag(tag, tagService.findTag(tagName));
     }
 
     @Test
@@ -63,11 +66,10 @@ class TagServiceImplTest {
 
     @Test
     void shouldPageAndFilterTags() {
-        List<Tag> tags = List.of(new Tag(1L, "default"),
-                new Tag(2L, "de"));
+        List<Tag> tags = getTagsList();
         Pageable pageable = PageRequest.of(0,20);
-        Specification<Tag> specification = (Specification<Tag>) (root, criteriaQuery, criteriaBuilder) ->
-                        criteriaBuilder.equal(root.get("name"), "de");
+        Specification<Tag> specification = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("name"), "t");
         when(tagRepository.findAll(Mockito.any(Specification.class), Mockito.eq(pageable)))
                 .thenReturn(new PageImpl<>(tags, pageable, tags.size()));
         Page<Tag> output = tagService.getTags(pageable, specification);
@@ -79,28 +81,43 @@ class TagServiceImplTest {
 
     @Test
     void shouldRemoveTag() {
-        Tag tag = new Tag(2L, "test");
-        when(tagRepository.findByNameIgnoreCase(tag.getName())).thenReturn(Optional.of(tag));
-        assertAll(() -> tagService.removeTag(tag.getName()));
+        Tag tag = getTagsList().get(1);
+        String tagName = tag.getName();
+        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.of(tag));
+        assertAll(() -> tagService.removeTag(tagName));
     }
 
     @Test
-    void shouldThrowInvalidInputDataExceptionWhenRemovingDedaultTag() {
-        Tag tag = new Tag(1L, "DEFAULT");
-        when(tagRepository.findByNameIgnoreCase(tag.getName())).thenReturn(Optional.of(tag));
-        assertThrows(InvalidInputDataException.class, () -> tagService.removeTag(tag.getName()));
+    void shouldThrowInvalidInputDataExceptionWhenRemovingDefaultTag() {
+        Tag tag = getTagsList().get(0);
+        String tagName = tag.getName();
+        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.of(tag));
+        assertThrows(InvalidInputDataException.class, () -> tagService.removeTag(tagName));
     }
 
     @Test
     void shouldThrowEntityNotFoundExceptionWhenRemovingTag() {
-        String tag = "default";
-        when(tagRepository.findByNameIgnoreCase(tag)).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> tagService.removeTag(tag));
+        Tag tag = getTagsList().get(1);
+        String tagName = tag.getName();
+        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> tagService.removeTag(tagName));
     }
+
+    private static List<Tag> tags;
 
     public static void assertTag(Tag expected, Tag output) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getName(), output.getName()));
+    }
+
+    public static List<Tag> getTagsList() {
+        if (tags == null) {
+            tags = Arrays.asList(
+                    new Tag(1L, "DEFAULT"),
+                    new Tag(2L, "TEST")
+            );
+        }
+        return tags;
     }
 
 }
