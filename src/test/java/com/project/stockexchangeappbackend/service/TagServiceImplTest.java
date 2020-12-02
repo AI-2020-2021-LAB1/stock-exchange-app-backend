@@ -3,6 +3,7 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.TagRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +32,11 @@ class TagServiceImplTest {
 
     @Mock
     TagRepository tagRepository;
+
+    @BeforeEach
+    void setup() {
+        setTagsList();
+    }
 
     @Test
     void shouldReturnExistingTag() {
@@ -112,12 +118,16 @@ class TagServiceImplTest {
 
     public static List<Tag> getTagsList() {
         if (tags == null) {
-            tags = Arrays.asList(
-                    new Tag(1L, "DEFAULT"),
-                    new Tag(2L, "TEST")
-            );
+            setTagsList();
         }
         return tags;
+    }
+
+    private static void setTagsList() {
+        tags = Arrays.asList(
+                new Tag(1L, "DEFAULT"),
+                new Tag(2L, "TEST")
+        );
     }
 
 }

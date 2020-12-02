@@ -11,6 +11,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.AllOrdersRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -60,6 +61,11 @@ class UserServiceImplTest {
 
     @Mock
     TagService tagService;
+
+    @BeforeEach
+    void setup() {
+        setUsersList();
+    }
 
     @Test
     void shouldRegisterUser() {
@@ -280,18 +286,22 @@ class UserServiceImplTest {
 
     public static List<User> getUsersList() {
         if (users == null) {
-            var tags = getTagsList();
-            users = Arrays.asList(
-                    User.builder()
-                            .id(1L).email("user@test").firstName("John").lastName("Kowal").password("password")
-                            .money(BigDecimal.TEN).role(Role.USER).isActive(true).tag(tags.get(0))
-                            .build(),
-                    User.builder()
-                            .id(2L).email("user2@test").firstName("Jane").lastName("Kowal").password("password")
-                            .money(BigDecimal.ZERO).role(Role.ADMIN).isActive(true).tag(tags.get(0))
-                            .build());
+            setUsersList();
         }
         return users;
+    }
+
+    private static void setUsersList() {
+        var tags = getTagsList();
+        users = Arrays.asList(
+                User.builder()
+                        .id(1L).email("user@test").firstName("John").lastName("Kowal").password("password")
+                        .money(BigDecimal.TEN).role(Role.USER).isActive(true).tag(tags.get(0))
+                        .build(),
+                User.builder()
+                        .id(2L).email("user2@test").firstName("Jane").lastName("Kowal").password("password")
+                        .money(BigDecimal.ZERO).role(Role.ADMIN).isActive(true).tag(tags.get(0))
+                        .build());
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money) {
