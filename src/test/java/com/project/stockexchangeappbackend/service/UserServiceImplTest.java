@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.ChangePasswordDTO;
 import com.project.stockexchangeappbackend.dto.EditUserDetailsDTO;
 import com.project.stockexchangeappbackend.dto.EditUserNameDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.persistence.EntityExistsException;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.getTagsList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -60,10 +63,12 @@ class UserServiceImplTest {
 
     @Test
     void shouldRegisterUser() {
+        User user = getUsersList().get(0);
         RegistrationUserDTO registrationUserDTO =
-                createRegistrationUserDTO("test@test.com", "secret" ,"Jan", "Kowalski");
-        Tag tag = new Tag(1L, "DEFAULT");
-        when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail().trim())).thenReturn(Optional.empty());
+                new RegistrationUserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), user.getPassword());
+        Tag tag = getTagsList().get(0);
+
+        when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registrationUserDTO.getPassword())).thenReturn("encodedPassword");
         when(tagService.getTag(tag.getName())).thenReturn(tag);
         assertAll(() -> userService.registerUser(registrationUserDTO, tag.getName()));
@@ -71,19 +76,19 @@ class UserServiceImplTest {
 
     @Test
     void shouldThrowEntityExistsExceptionWhenRegisterUser() {
+        User user = getUsersList().get(0);
         RegistrationUserDTO registrationUserDTO =
-                createRegistrationUserDTO("test@test.com", "secret" ,"Jan", "Kowalski");
-        Tag tag = new Tag(1L, "DEFAULT");
-        when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail().trim()))
-                .thenReturn(Optional.of(User.builder().email(registrationUserDTO.getEmail()).build()));
+                new RegistrationUserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), user.getPassword());
+
+        Tag tag = getTagsList().get(0);
+        when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail())).thenReturn(Optional.of(user));
         assertThrows(EntityExistsException.class, () -> userService.registerUser(registrationUserDTO, tag.getName()));
     }
 
     @Test
     void shouldReturnUserById() {
-        Long id = 1L;
-        Tag tag = new Tag(1L, "DEFAULT");
-        User user = createCustomUser(id, "test@test.com", "John", "Nowak", BigDecimal.ZERO, tag);
+        User user = getUsersList().get(0);
+        Long id = user.getId();
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         assertUser(userService.findUserById(id), user);
     }
@@ -97,9 +102,8 @@ class UserServiceImplTest {
 
     @Test
     void shouldReturnUserByEmail() {
-        String email = "test@test.com";
-        Tag tag = new Tag(1L, "DEFAULT");
-        User user = createCustomUser(1L, email, "John", "Nowak", BigDecimal.ZERO, Role.USER, tag);
+        User user = getUsersList().get(0);
+        String email = user.getEmail();
         when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.of(user));
         assertUser(userService.findUserByEmail(email), user);
     }
@@ -112,15 +116,62 @@ class UserServiceImplTest {
     }
 
     @Test
+    void shouldChangePassword() {
+        User user = getUsersList().get(0);
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldPassword", "newPassword");
+        Principal principal = user::getEmail;
+
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())).thenReturn(Boolean.TRUE);
+        assertAll(() -> userService.changeUserPassword(changePasswordDTO, principal));
+    }
+
+    @Test
+    void shouldThrowAccessDeniedExceptionWhenChangingPassword() {
+        User user = getUsersList().get(0);
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldPassword", "newPassword");
+        Principal principal = user::getEmail;
+
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPassword())).thenReturn(Boolean.FALSE);
+        assertThrows(AccessDeniedException.class, () -> userService.changeUserPassword(changePasswordDTO, principal));
+    }
+
+    @Test
+    void shouldThrowEntityNotFoundExceptionWhenChangingPassword() {
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldPassword", "newPassword");
+        Principal principal = () -> "username";
+
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> userService.changeUserPassword(changePasswordDTO, principal));
+    }
+
+    @Test
+    void shouldUpdateUsersNames() {
+        EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
+        User user = getUsersList().get(0);
+        Principal principal = user::getEmail;
+
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.of(user));
+        assertAll(() -> userService.changeUserDetails(editUserNameDTO, principal));
+    }
+
+    @Test
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingUsersNames() {
+        EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
+        Principal principal = () -> "test@test";
+
+        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> userService.changeUserDetails(editUserNameDTO, principal));
+    }
+
+    @Test
     void shouldPageAndFilterUsers() {
-        Tag tag = new Tag(1L, "DEFAULT");
-        List<User> users = Arrays.asList(
-            createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO, tag),
-            createCustomUser(2L, "test@test.pl", "Jane", "Kowal", BigDecimal.TEN, tag)
-        );
+        List<User> users = getUsersList();
         Pageable pageable = PageRequest.of(0, 20);
-        Specification<User> specification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("lastName"), "Kowal");
+        Specification<User> specification = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("lastName"), users.get(0).getLastName());
+
         when(userRepository.findAll(Mockito.any(Specification.class), Mockito.eq(pageable)))
                 .thenReturn(new PageImpl<>(users, pageable, users.size()));
         Page<User> output = userService.getUsers(pageable, specification);
@@ -132,24 +183,22 @@ class UserServiceImplTest {
 
     @Test
     void shouldUpdateUser() {
-        Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
-                Role.ADMIN, true);
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(id, "test@test", "John", "Kowal", BigDecimal.ZERO,
-                Role.ADMIN, true, tag);
+        User user = getUsersList().get(1);
+        Long id = user.getId();
+        EditUserDetailsDTO editUserDetailsDTO =
+                new EditUserDetailsDTO("John", "Kowal", Role.ADMIN, true);
+
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         assertAll(() -> userService.updateUser(id, editUserDetailsDTO));
     }
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndRemovingLastAdmin() {
-        Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
-                Role.USER, true);
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(id, "test@test", "John", "Kowal", BigDecimal.ZERO,
-                Role.ADMIN, true, tag);
+        User user = getUsersList().get(1);
+        Long id = user.getId();
+        EditUserDetailsDTO editUserDetailsDTO =
+                new EditUserDetailsDTO("John", "Kowal", Role.USER, true);
+
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(userRepository.countByRole(Role.ADMIN)).thenReturn(1L);
         assertThrows(InvalidInputDataException.class, () -> userService.updateUser(id, editUserDetailsDTO));
@@ -157,24 +206,22 @@ class UserServiceImplTest {
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndBlockingAdmin() {
-        Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
-                Role.ADMIN, false);
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(id, "test@test", "John", "Kowal", BigDecimal.ZERO,
-                Role.ADMIN, true, tag);
+        User user = getUsersList().get(1);
+        Long id = user.getId();
+        EditUserDetailsDTO editUserDetailsDTO =
+                new EditUserDetailsDTO("John", "Kowal", Role.ADMIN, false);
+
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> userService.updateUser(id, editUserDetailsDTO));
     }
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndBlockingAdmin2() {
-        Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
-                Role.ADMIN, false);
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(id, "test@test", "John", "Kowal", BigDecimal.ZERO,
-                Role.USER, true, tag);
+        User user = getUsersList().get(0);
+        Long id = user.getId();
+        EditUserDetailsDTO editUserDetailsDTO =
+                new EditUserDetailsDTO("John", "Kowal", Role.ADMIN, false);
+
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(allOrdersRepository.countByUser(user)).thenReturn(0L);
         when(resourceRepository.countByUser(user)).thenReturn(0L);
@@ -183,12 +230,11 @@ class UserServiceImplTest {
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndChangingUserToAdminPossessingOrder() {
-        Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
-                Role.ADMIN, true);
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(id, "test@test", "John", "Kowal", BigDecimal.ZERO,
-                Role.USER, true, tag);
+        User user = getUsersList().get(0);
+        Long id = user.getId();
+        EditUserDetailsDTO editUserDetailsDTO =
+                new EditUserDetailsDTO("John", "Kowal", Role.ADMIN, true);
+
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(allOrdersRepository.countByUser(user)).thenReturn(1L);
         when(resourceRepository.countByUser(user)).thenReturn(0L);
@@ -197,12 +243,11 @@ class UserServiceImplTest {
 
     @Test
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndChangingUserToAdminPossessingStocks() {
-        Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
+        User user = getUsersList().get(0);
+        Long id = user.getId();
+        EditUserDetailsDTO editUserDetailsDTO = new EditUserDetailsDTO("John", "Kowal",
                 Role.ADMIN, true);
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(id, "test@test", "John", "Kowal", BigDecimal.ZERO,
-                Role.USER, true, tag);
+
         when(userRepository.findById(id)).thenReturn(Optional.of(user));
         when(allOrdersRepository.countByUser(user)).thenReturn(0L);
         when(resourceRepository.countByUser(user)).thenReturn(1L);
@@ -212,28 +257,11 @@ class UserServiceImplTest {
     @Test
     void shouldThrowEntityNotFoundWhenUpdatingNonExistingUser() {
         Long id = 1L;
-        EditUserDetailsDTO editUserDetailsDTO = createEditUserDetailsDTO("John", "Kowal",
-                Role.ADMIN, true);
+        EditUserDetailsDTO editUserDetailsDTO =
+                new EditUserDetailsDTO("John", "Kowal", Role.ADMIN, true);
+
         when(userRepository.findById(id)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> userService.updateUser(id, editUserDetailsDTO));
-    }
-
-    @Test
-    void shouldUpdateUsersNames() {
-        EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
-        Principal principal = () -> "test@test";
-        Tag tag = new Tag(1L, "default");
-        User user = createCustomUser(1L, principal.getName(), "Jan", "jan", BigDecimal.ZERO, Role.USER, tag);
-        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.of(user));
-        assertAll(() -> userService.changeUserDetails(editUserNameDTO, principal));
-    }
-
-    @Test
-    void shouldThrowInvalidInputDataExceptionWhenUpdatingUsersNames() {
-        EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
-        Principal principal = () -> "test@test";
-        when(userRepository.findByEmailIgnoreCase(principal.getName())).thenReturn(Optional.empty());
-        assertThrows(InvalidInputDataException.class, () -> userService.changeUserDetails(editUserNameDTO, principal));
     }
 
     public static void assertUser(User output, User expected) {
@@ -245,6 +273,25 @@ class UserServiceImplTest {
                 () -> assertEquals(expected.getRole(), output.getRole()),
                 () -> assertTag(expected.getTag(), output.getTag()),
                 () -> assertEquals(expected.getIsActive(), output.getIsActive()));
+    }
+
+
+    private static List<User> users;
+
+    public static List<User> getUsersList() {
+        if (users == null) {
+            var tags = getTagsList();
+            users = Arrays.asList(
+                    User.builder()
+                            .id(1L).email("user@test").firstName("John").lastName("Kowal").password("password")
+                            .money(BigDecimal.TEN).role(Role.USER).isActive(true).tag(tags.get(0))
+                            .build(),
+                    User.builder()
+                            .id(2L).email("user2@test").firstName("Jane").lastName("Kowal").password("password")
+                            .money(BigDecimal.ZERO).role(Role.ADMIN).isActive(true).tag(tags.get(0))
+                            .build());
+        }
+        return users;
     }
 
     public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money) {
@@ -301,22 +348,6 @@ class UserServiceImplTest {
                 .role(role)
                 .tag(tag)
                 .isActive(isActive)
-                .build();
-    }
-
-    public static RegistrationUserDTO createRegistrationUserDTO (String email, String password,
-                                                                  String firstName, String lastName) {
-        return RegistrationUserDTO.builder()
-                .email(email).password(password)
-                .firstName(firstName).lastName(lastName).build();
-    }
-
-    public static EditUserDetailsDTO createEditUserDetailsDTO(String firstName, String lastName, Role role, Boolean active) {
-        return EditUserDetailsDTO.builder()
-                .firstName(firstName)
-                .lastName(lastName)
-                .role(role)
-                .isActive(active)
                 .build();
     }
 
