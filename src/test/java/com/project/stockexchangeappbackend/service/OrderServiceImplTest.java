@@ -481,6 +481,16 @@ class OrderServiceImplTest {
                 .build();
     }
 
+    public static Order createCustomSellingOrder(Long id, Integer amount, BigDecimal price, OffsetDateTime dateExpiration,
+                                          User user, Stock stock) {
+        return Order.builder()
+                .id(id).amount(amount).remainingAmount(amount)
+                .dateCreation(OffsetDateTime.now()).dateExpiration(dateExpiration)
+                .orderType(OrderType.SELLING_ORDER).priceType(PriceType.EQUAL).price(price)
+                .stock(stock).user(user)
+                .build();
+    }
+
     public static ArchivedOrder createCustomArchivedOrder(Long id, Integer amount, Integer remainingAmount,
                                                           OrderType orderType, PriceType priceType, BigDecimal price,
                                                           OffsetDateTime dateCreation, OffsetDateTime dateExpiration,
@@ -517,6 +527,7 @@ class OrderServiceImplTest {
                 .stock(stockDTO)
                 .build();
     }
+
 
     public static AllOrders createCustomAllOrdersInstance(Order order) {
         return AllOrders.builder()
