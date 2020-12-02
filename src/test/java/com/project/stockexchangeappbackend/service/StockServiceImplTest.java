@@ -347,7 +347,7 @@ class StockServiceImplTest {
                 OrderType.SELLING_ORDER, PriceType.EQUAL, BigDecimal.TEN, OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusHours(1), null, user, stock));
         List<ArchivedOrder> archivedOrders = stocksOrders.stream()
-                .map(OrderServiceImplTest::createCustomArchivedOrder)
+                .map(OrderServiceImplTest::convertOrder)
                 .collect(Collectors.toList());
 
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
@@ -572,14 +572,6 @@ class StockServiceImplTest {
                 .resources(new ArrayList<>())
                 .isDeleted(isDeleted)
                 .tag(tag)
-                .build();
-    }
-
-    public static StockDTO createCustomStockDTO(Long id, String name, String abbreviation,
-                                                 Integer amount, BigDecimal currentPrice) {
-        return StockDTO.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
                 .build();
     }
 

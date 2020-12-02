@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomSellingOrder;
+import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createSellingOrder;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.getStocksList;
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.getTagsList;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.getUsersList;
@@ -228,7 +228,7 @@ class ResourceServiceImplTest {
         MoveStockDTO moveStock =
                 createRequestMoveStockDTO(users.get(0).getId(), users.get(1).getId(), stock.getAmount()/2);
         Resource resource = createCustomResource(1L, stock, users.get(0), stock.getAmount()/2);
-        Order order = createCustomSellingOrder(1L, stock.getAmount()/4, BigDecimal.ONE,
+        Order order = createSellingOrder(1L, stock.getAmount()/4, BigDecimal.ONE,
                 OffsetDateTime.now().plusHours(1), users.get(0), stock);
         Long stockId = 1L;
 

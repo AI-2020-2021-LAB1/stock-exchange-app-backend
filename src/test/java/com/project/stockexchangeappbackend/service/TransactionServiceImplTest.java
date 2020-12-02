@@ -82,8 +82,8 @@ class TransactionServiceImplTest {
         Order order2 = createCustomOrder(2L, 100, 0, OrderType.SELLING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now().minusHours(2), OffsetDateTime.now().minusHours(3), null, user2, stock);
 
-        ArchivedOrder buyingOrder = createCustomArchivedOrder(order1);
-        ArchivedOrder sellingOrder = createCustomArchivedOrder(order2);
+        ArchivedOrder buyingOrder = convertOrder(order1);
+        ArchivedOrder sellingOrder = convertOrder(order2);
 
         Transaction transaction1 = createCustomTransaction(1, 50, OffsetDateTime.now(),
                 buyingOrder, sellingOrder, buyingOrder.getPrice());
@@ -123,13 +123,13 @@ class TransactionServiceImplTest {
         Order buyingOrder = createCustomOrder(2L, 100, 80, OrderType.BUYING_ORDER,
                 PriceType.LESS_OR_EQUAL, BigDecimal.valueOf(12), OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusHours(1), null, buyer, stock);
-        ArchivedOrder archivedBuyingOrder = createCustomArchivedOrder(buyingOrder);
+        ArchivedOrder archivedBuyingOrder = convertOrder(buyingOrder);
         Resource sellerResource = createCustomResource(1L, stock, seller, sellingOrder.getAmount());
         Resource buyerResource = createCustomResource(2L, stock, buyer, buyingOrder.getAmount() - buyingOrder.getRemainingAmount());
 
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(archivedBuyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.of(buyerResource));
 
@@ -147,13 +147,13 @@ class TransactionServiceImplTest {
         Order buyingOrder = createCustomOrder(2L, 100, 100, OrderType.BUYING_ORDER,
                 PriceType.LESS_OR_EQUAL, BigDecimal.valueOf(12), OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusHours(1), null, buyer, stock);
-        ArchivedOrder archivedBuyingOrder = createCustomArchivedOrder(buyingOrder);
+        ArchivedOrder archivedBuyingOrder = convertOrder(buyingOrder);
         Resource sellerResource = createCustomResource(1L, stock, seller, sellingOrder.getAmount());
         Resource buyerResource = createCustomResource(2L, stock, buyer, buyingOrder.getAmount() - buyingOrder.getRemainingAmount());
 
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(archivedBuyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.of(buyerResource));
 
@@ -174,9 +174,9 @@ class TransactionServiceImplTest {
         Resource sellerResource = createCustomResource(1L, stock, seller, sellingOrder.getAmount());
 
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(buyingOrder));
+        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.empty());
         when(userRepository.findById(buyer.getId())).thenReturn(Optional.of(buyer));
@@ -197,9 +197,9 @@ class TransactionServiceImplTest {
         Resource sellerResource = createCustomResource(1L, stock, seller, sellingOrder.getAmount());
 
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(buyingOrder));
+        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.empty());
         when(userRepository.findById(buyer.getId())).thenReturn(Optional.empty());
@@ -221,9 +221,9 @@ class TransactionServiceImplTest {
                 OffsetDateTime.now().plusHours(1), null, buyer, stock);
 
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(buyingOrder));
+        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(createCustomArchivedOrder(sellingOrder));
+        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.empty());
 
         assertThrows(EntityNotFoundException.class,
@@ -236,7 +236,7 @@ class TransactionServiceImplTest {
         User user1 = createCustomUser(1L, "test1@test.pl", "John", "Kowal", BigDecimal.ZERO);
         Order order1 = createCustomOrder(1L, stock.getAmount(), 0, OrderType.BUYING_ORDER, PriceType.EQUAL,
                 BigDecimal.ONE, OffsetDateTime.now(), OffsetDateTime.now().minusHours(2), null, user1, stock);
-        ArchivedOrder buyingOrder = createCustomArchivedOrder(order1);
+        ArchivedOrder buyingOrder = convertOrder(order1);
         Transaction transaction1 = createCustomTransaction(1, stock.getAmount(), OffsetDateTime.now().plusDays(1),
                 buyingOrder, null, buyingOrder.getPrice());
         Transaction transaction2 = createCustomTransaction(2, 50, OffsetDateTime.now(),
