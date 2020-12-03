@@ -38,7 +38,6 @@ import java.util.Optional;
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.getTagsList;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -297,68 +296,18 @@ class UserServiceImplTest {
                 User.builder()
                         .id(1L).email("user@test").firstName("John").lastName("Kowal").password("password")
                         .money(BigDecimal.TEN).role(Role.USER).isActive(true).tag(tags.get(0))
+                        .userStocks(new ArrayList<>())
                         .build(),
                 User.builder()
                         .id(2L).email("user2@test").firstName("Jane").lastName("Kowal").password("password")
                         .money(BigDecimal.ZERO).role(Role.ADMIN).isActive(true).tag(tags.get(0))
+                        .userStocks(new ArrayList<>())
+                        .build(),
+                User.builder()
+                        .id(3L).email("user3@test").firstName("John").lastName("Kowal").password("password")
+                        .money(BigDecimal.TEN).role(Role.USER).isActive(true).tag(tags.get(0))
+                        .userStocks(new ArrayList<>())
                         .build());
-    }
-
-    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money) {
-        return User.builder()
-                .id(id).email(email)
-                .firstName(firstName).lastName(lastName)
-                .money(money)
-                .orders(new ArrayList<>())
-                .userStocks(new ArrayList<>())
-                .isActive(true)
-                .build();
-    }
-
-    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
-                                         Tag tag) {
-        return User.builder()
-                .id(id).email(email)
-                .firstName(firstName).lastName(lastName)
-                .money(money)
-                .orders(new ArrayList<>())
-                .userStocks(new ArrayList<>())
-                .tag(tag)
-                .isActive(true)
-                .build();
-    }
-
-    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
-                                         Role role) {
-        return User.builder()
-                .id(id).email(email)
-                .firstName(firstName).lastName(lastName)
-                .money(money)
-                .role(role)
-                .build();
-    }
-
-    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
-                                         Role role, Tag tag) {
-        return User.builder()
-                .id(id).email(email)
-                .firstName(firstName).lastName(lastName)
-                .money(money)
-                .role(role)
-                .tag(tag)
-                .build();
-    }
-
-    public static User createCustomUser (Long id, String email, String firstName, String lastName, BigDecimal money,
-                                         Role role, Boolean isActive, Tag tag) {
-        return User.builder()
-                .id(id).email(email)
-                .firstName(firstName).lastName(lastName)
-                .money(money)
-                .role(role)
-                .tag(tag)
-                .isActive(isActive)
-                .build();
     }
 
 }

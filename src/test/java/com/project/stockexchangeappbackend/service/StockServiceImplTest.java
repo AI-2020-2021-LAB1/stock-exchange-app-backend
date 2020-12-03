@@ -28,7 +28,6 @@ import java.util.stream.Collectors;
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.getTagsList;
-import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
 import static com.project.stockexchangeappbackend.service.UserServiceImplTest.getUsersList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -533,46 +532,6 @@ class StockServiceImplTest {
                 () -> assertEquals(expected.getCurrentPrice(), output.getCurrentPrice()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
                 () -> assertTag(expected.getTag(), output.getTag()));
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                            Integer amount, BigDecimal currentPrice) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .build();
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                          Integer amount, BigDecimal currentPrice, Tag tag) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .tag(tag)
-                .build();
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                          Integer amount, BigDecimal currentPrice, Boolean isDeleted) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .isDeleted(isDeleted)
-                .build();
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                          Integer amount, BigDecimal currentPrice, Boolean isDeleted, Tag tag) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .isDeleted(isDeleted)
-                .tag(tag)
-                .build();
     }
 
     public static CreateStockDTO createRequestCreateStockDTO(Stock stock, User user) {

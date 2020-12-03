@@ -140,7 +140,8 @@ class ResourceServiceImplTest {
         Stock stock = getStocksList().get(0);
         Long stockId = stock.getId();
         List<Resource> resources = getUsersList().stream()
-                .map(user -> (createCustomResource(1L, stock, user, stock.getAmount()/getUsersList().size())))
+                .map(user -> createCustomResource(user.getId(), stock, user,
+                        stock.getAmount()/getUsersList().size()))
                 .collect(Collectors.toList());
         List<OwnerDTO> ownersDTO = resources.stream()
                 .map(res -> createCustomOwnerDTO(res.getUser(), res.getAmount()))
@@ -155,7 +156,8 @@ class ResourceServiceImplTest {
                 .thenReturn(new PageImpl<>(resources, pageable, resources.size()));
         when(modelMapper.map(any(User.class), eq(UserDTO.class)))
                 .thenReturn(ownersDTO.get(0).getUser())
-                .thenReturn(ownersDTO.get(1).getUser());
+                .thenReturn(ownersDTO.get(1).getUser())
+                .thenReturn(ownersDTO.get(2).getUser());
         Page<OwnerDTO> output = resourceService.getStockOwners(pageable, resourceSpecification, stockId);
         assertEquals(ownersDTO.size(), output.getNumberOfElements());
         for (int i=0; i<ownersDTO.size(); i++) {

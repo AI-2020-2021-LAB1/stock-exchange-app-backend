@@ -554,14 +554,22 @@ class OrderServiceImplTest {
                 .build();
     }
 
-    public static ArchivedOrder createCustomArchivedOrder(Long id, Integer amount, Integer remainingAmount,
-                                                          OrderType orderType, PriceType priceType, BigDecimal price,
-                                                          OffsetDateTime dateCreation, OffsetDateTime dateExpiration,
-                                                          OffsetDateTime dateClosing, User user, Stock stock) {
+    public static ArchivedOrder createSellingArchivedOrder(Long id, Integer amount, BigDecimal price,
+                                                           OffsetDateTime dateExpiration, User user, Stock stock) {
         return ArchivedOrder.builder()
-                .id(id).amount(amount).remainingAmount(remainingAmount)
-                .dateCreation(dateCreation).dateClosing(dateClosing).dateExpiration(dateExpiration)
-                .orderType(orderType).priceType(priceType).price(price)
+                .id(id).amount(amount).remainingAmount(0)
+                .dateCreation(OffsetDateTime.now()).dateExpiration(dateExpiration)
+                .orderType(OrderType.SELLING_ORDER).priceType(PriceType.EQUAL).price(price)
+                .stock(stock).user(user)
+                .build();
+    }
+
+    public static ArchivedOrder createBuyingArchivedOrder(Long id, Integer amount, BigDecimal price,
+                                                          OffsetDateTime dateExpiration, User user, Stock stock) {
+        return ArchivedOrder.builder()
+                .id(id).amount(amount).remainingAmount(0)
+                .dateCreation(OffsetDateTime.now()).dateExpiration(dateExpiration)
+                .orderType(OrderType.BUYING_ORDER).priceType(PriceType.EQUAL).price(price)
                 .stock(stock).user(user)
                 .build();
     }
