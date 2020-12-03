@@ -5,6 +5,7 @@ import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,7 +42,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class OrderServiceImplTest {
+public class OrderServiceImplTest {
 
     @InjectMocks
     OrderServiceImpl orderService;
@@ -68,6 +69,7 @@ class OrderServiceImplTest {
     ResourceRepository resourceRepository;
 
     @Test
+    @DisplayName("Getting order by id")
     void shouldReturnOrder() {
         Long id = 1L;
         Stock stock = getStocksList().get(0);
@@ -80,6 +82,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting order by id when order not found")
     void shouldThrowEntityNotFoundExceptionWhenGettingOrderById() {
         Long id = 1L;
         when(allOrdersRepository.findById(id)).thenReturn(Optional.empty());
@@ -87,6 +90,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new order")
     void shouldCreateNewOrder(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -110,6 +114,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new order when user not having enough stock")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotHavingStock(
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -131,6 +136,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new order when user not having enough available stock")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotHavingAvailableStock(
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -155,6 +161,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new selling order when order is incompatible")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndSellingOrderIncompatible(
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -177,6 +184,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new buying order when desired amount of stock grater than registered amount of stock")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndNotEnoughStock(@Mock SecurityContext securityContext,
                                                                                    @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -193,6 +201,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new buying order when order is incompatible")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndBuyingOrderIncompatible(
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -210,6 +219,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new order when using different tags")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockAndUserTaggedOthersTags(
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -233,6 +243,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new order when user not found")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndUserNotFound(@Mock SecurityContext securityContext,
                                                                                  @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -249,6 +260,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new order when stock not found")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockNotFound() {
         Stock stock = getStocksList().get(0);
         OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
@@ -280,6 +292,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deactivation of order")
     void shouldDeactivateOrder(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -300,6 +313,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deactivation of order when order not already archived")
     void shouldDeactivateOrderAndNotArchived(@Mock SecurityContext securityContext,
                                              @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -322,6 +336,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deactivation of not owned order")
     void shouldThrowAccessDeniedExceptionWhenDeactivatingOrder(
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
@@ -344,6 +359,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deactivation of non-active order")
     void shouldThrowEntityNotFoundExceptionWhenDeactivatingOrder() {
         Long id = 1L;
         when(orderRepository.findById(id)).thenReturn(Optional.empty());
@@ -351,6 +367,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's orders")
     void shouldPageAndFilterOrdersByUser() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -374,6 +391,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's orders when user not found")
     void shouldThrowEntityNotFoundExceptionWhenPagingAndFilteringOrdersByUser() {
         Pageable pageable = PageRequest.of(0, 20);
         Specification<AllOrders> allOrdersSpecification =
@@ -386,6 +404,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Listing active buying orders")
     void shouldListActiveBuyingOrders() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -404,6 +423,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Listing active selling orders")
     void shouldListActiveSellingOrdersByStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -422,6 +442,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Archiving non-active orders")
     void shouldMoveInactiveOrders() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -437,6 +458,7 @@ class OrderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering logged in user's orders")
     void shouldPageAndFilterOwnedOrders(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);

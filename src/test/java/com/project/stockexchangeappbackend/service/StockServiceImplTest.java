@@ -5,6 +5,7 @@ import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StockServiceImplTest {
+public class StockServiceImplTest {
 
     @InjectMocks
     StockServiceImpl stockService;
@@ -68,6 +69,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by id")
     void shouldReturnStockById() {
         Stock stock = getStocksList().get(0);
         Long id = stock.getId();
@@ -76,6 +78,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by id when stock not found")
     void shouldThrowEntityNotFoundWhenGettingStockById() {
         Long id = 1L;
         when(stockRepository.findByIdAndIsDeletedFalse(id)).thenReturn(Optional.empty());
@@ -83,6 +86,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering stocks")
     void shouldPageAndFilterStocks() {
         List<Stock> stocks = getStocksList();
         Pageable pageable = PageRequest.of(0,20);
@@ -99,6 +103,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by abbreviation")
     void shouldReturnStockByAbbreviation() {
         Stock stock = getStocksList().get(0);
         String abbreviation = stock.getAbbreviation();
@@ -107,6 +112,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by abbreviation when stock not found")
     void shouldThrowEntityNotFoundWhenGettingStockByAbbreviation() {
         String abbreviation = "non";
         when(stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(abbreviation)).thenReturn(Optional.empty());
@@ -114,6 +120,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Listing all stocks")
     void shouldReturnAllStocks() {
         List<Stock> stocks = getStocksList();
 
@@ -126,6 +133,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock object")
     void shouldUpdateStockObject() {
         Stock stock = getStocksList().get(0);
         when(stockRepository.save(stock)).thenReturn(stock);
@@ -133,6 +141,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock details")
     void shouldUpdateStockDetails() {
         Stock stock = getStocksList().get(0);
         StockDTO stockDTO = StockDTO.builder().name("new Name").abbreviation("nam").build();
@@ -145,6 +154,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock details when given abbreviation already in use")
     void shouldThrowEntityExistsExceptionWhenUpdatingStockDetailsAndAbbreviationExist() {
         Stock stock = getStocksList().get(0);
         Stock stock2 = getStocksList().get(1);
@@ -157,6 +167,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock details when given name already in use")
     void shouldThrowEntityExistsExceptionWhenUpdatingStockDetailsAndNameExist() {
         Stock stock = getStocksList().get(0);
         Stock stock2 = getStocksList().get(1);
@@ -170,6 +181,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by id")
     void shouldReturnStockByIdOrAbbreviation() {
         Stock stock = getStocksList().get(0);
         String id = stock.getId().toString();
@@ -178,6 +190,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by abbreviation")
     void shouldReturnStockByIdOrAbbreviation2() {
         Stock stock = getStocksList().get(0);
         String id = stock.getName();
@@ -186,6 +199,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by id when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenGettingStockByIdOrAbbreviation() {
         Stock stock = getStocksList().get(0);
         String id = stock.getId().toString();
@@ -194,6 +208,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by abbreviation when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenGettingStockByIdOrAbbreviation2() {
         Stock stock = getStocksList().get(0);
         String id = stock.getName();
@@ -202,6 +217,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating new stock")
     void shouldCreateStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -217,6 +233,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Reactivation of stock - used name")
     void shouldCreateStockWhenDeletedStockExistFoundByName() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -233,6 +250,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Reactivation of stock - used abbreviation")
     void shouldCreateStockWhenDeletedStockExistFoundByAbbreviation() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -249,6 +267,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating stock when given amounts of stock mismatch")
     void shouldThrowInvalidInputDataExceptionWhenCreatingStockAndAmountMismatch() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -266,6 +285,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating stock when user not found")
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersNotFound() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -281,6 +301,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating stock when given user is admin")
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersIsAdmin() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(1);
@@ -296,6 +317,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating stock when user tagged using different tag")
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersIsTaggedUsingAnotherTagThanStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -311,6 +333,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating stock when stock already exists - found abbreviation")
     void shouldThrowEntityAlreadyExistsExceptionWhenGivenAbbreviationFound() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -324,6 +347,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Creating stock when stock already exists - found name")
     void shouldThrowEntityAlreadyExistsExceptionWhenGivenNameFound() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -334,6 +358,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deleting stock")
     void shouldDeleteStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -358,6 +383,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deleting stock when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenDeletingStock() {
         Long stockId = 1L;
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
@@ -365,6 +391,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount")
     void shouldUpdateStockAmount() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -378,6 +405,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when at least one of specified user possess updating stock - increasing amount")
     void shouldUpdateStockAmountWhenUserAlreadyPossessUpdatingStockAddingStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -393,6 +421,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when at least one of specified user possess updating stock - decreasing amount")
     void shouldUpdateStockAmountWhenUserAlreadyPossessUpdatingStockDeletingStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -410,6 +439,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when at least one of specified user not possessing updating stock")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserNotOwnStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -424,6 +454,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when at least one of specified user tagged using different tag")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserTaggedUsingAnotherTag() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -437,6 +468,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when at least one of specified user is admin")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserIsAdmin() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(1);
@@ -450,6 +482,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when at least one of specified user not found")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserNotFound() {
         Stock stock = getStocksList().get(0);
         UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
@@ -461,6 +494,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when amount after update is non-positive")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndNonPositiveValueAfterChange() {
         Stock stock = getStocksList().get(0);
         UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount()*2);
@@ -472,6 +506,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when amounts mismatch")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndAmountValuesMismatch() {
         Stock stock = getStocksList().get(0);
         UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
@@ -483,6 +518,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when amount is zero")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndAmountIsZero() {
         Stock stock = getStocksList().get(0);
         UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(0);
@@ -493,6 +529,7 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stock's amount when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenUpdatingStockAmountAndStockNotFound() {
         Stock stock = getStocksList().get(0);
         UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());

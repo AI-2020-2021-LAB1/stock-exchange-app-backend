@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.entity.StockIndexValue;
 import com.project.stockexchangeappbackend.repository.StockIndexValueRepository;
 import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,6 +45,7 @@ class StockIndexValueServiceImplTest {
     StockIndexTimeProperties stockIndexTimeProperties;
 
     @Test
+    @DisplayName("Appending current stock price")
     void shouldAppendValue() {
         Stock stock = getStocksList().get(0);
         StockIndexValue stockIndexValue =
@@ -56,6 +58,7 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Appending current stock price when list of stock price is full")
     void shouldAppendValueWhenMaxRecordsExceed() {
         Stock stock = getStocksList().get(0);
         StockIndexValue stockIndexValue =
@@ -72,6 +75,7 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock price in OHLC format")
     void shouldReturnStockIndexValues() {
         Integer interval = 1;
         Stock stock = getStocksList().get(0);
@@ -101,6 +105,7 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock price in OHLC format when history data not found")
     void shouldReturnStockIndexValuesEmptyList() {
         Integer interval = 1;
         Stock stock = getStocksList().get(0);
@@ -113,6 +118,7 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock price in OHLC format when stock not found")
     void shouldThrowExceptionNotFoundWhenGettingStockIndexHistory() {
         Long stockId = 1L;
         Integer interval = 1;
@@ -122,6 +128,7 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting value before specified period of time")
     void shouldReturnFirstHistoryValueBefore() {
         int minutes = 1;
         Stock stock = getStocksList().get(0);

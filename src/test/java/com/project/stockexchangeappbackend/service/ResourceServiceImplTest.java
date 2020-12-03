@@ -10,6 +10,7 @@ import com.project.stockexchangeappbackend.repository.OrderRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -64,6 +65,7 @@ class ResourceServiceImplTest {
     ModelMapper modelMapper;
 
     @Test
+    @DisplayName("Paging and filtering logged in user's stocks")
     void shouldPageAndFilterOwnedResources(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         User user = getUsersList().get(0);
         List<Resource> resources = getStocksList().stream()
@@ -95,6 +97,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's stocks")
     void shouldPageAndFilterUsersResources() {
         User user = getUsersList().get(0);
         List<Resource> resources = getStocksList().stream()
@@ -125,6 +128,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's stocks when user not found")
     void shouldThrowEntityNotFoundExceptionWhenPagingAndFilteringUsersResources() {
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0,20);
@@ -136,6 +140,8 @@ class ResourceServiceImplTest {
     }
 
     @Test
+
+    @DisplayName("Paging and filtering stock's owners")
     void shouldPageAndFilterStockOwners() {
         Stock stock = getStocksList().get(0);
         Long stockId = stock.getId();
@@ -166,6 +172,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering stock's owners when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenPagingAndFilteringStockOwnersAndStockNotFound() {
         Long stockId = 1L;
         Pageable pageable = PageRequest.of(0,20);
@@ -179,6 +186,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another")
     void shouldMoveStocksFromOneToAnother() {
         Stock stock = getStocksList().get(0);
         List<User> users = getUsersList();
@@ -201,6 +209,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another - not all stocks")
     void shouldMoveStocksFromOneToAnotherNotAllUserSourceStocks() {
         Stock stock = getStocksList().get(0);
         List<User> users = getUsersList();
@@ -223,6 +232,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when source user not having enough stocks")
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserNotHaveEnoughStock() {
         Stock stock = getStocksList().get(0);
         List<User> users = getUsersList();
@@ -246,6 +256,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when destination user is admin")
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserIsAdmin() {
         Stock stock = getStocksList().get(0);
         List<User> users = getUsersList();
@@ -265,6 +276,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when users tagged using another tag")
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndOthersTags() {
         Stock stock = getStocksList().get(0);
         List<User> users = getUsersList();
@@ -288,6 +300,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when source user is destination user")
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserIsDestination() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -307,6 +320,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when destination user not found")
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndDestinationUserNotFound() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -321,6 +335,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when source user not found")
     void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserNotFound() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -335,6 +350,7 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Moving stock's ownership from one user to another when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenMovingStocksFromOneToAnotherAndStockNotFound() {
         MoveStockDTO moveStock =
                 createRequestMoveStockDTO(1L, 2L, 100);

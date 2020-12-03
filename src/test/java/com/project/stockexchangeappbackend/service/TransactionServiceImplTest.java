@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.service;
 
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.repository.*;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -58,6 +59,7 @@ class TransactionServiceImplTest {
     ModelMapper modelMapper;
 
     @Test
+    @DisplayName("Getting transaction by id")
     void shouldReturnTransactionById() {
         Stock stock = getStocksList().get(0);
         User user1 = getUsersList().get(0);
@@ -75,6 +77,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting transaction by id when transaction nof found")
     void shouldThrowNotFoundExceptionWhenGettingTransactionById() {
         long id = 1L;
         when(transactionRepository.findById(id)).thenReturn(Optional.empty());
@@ -82,6 +85,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Performing transaction")
     void shouldMakeTransaction() {
         User buyer = getUsersList().get(0);
         User seller = getUsersList().get(2);
@@ -107,6 +111,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Performing transaction when closing selling order")
     void shouldMakeTransactionAndSellingOrderShouldBeClosed() {
         User buyer = getUsersList().get(0);
         User seller = getUsersList().get(2);
@@ -131,6 +136,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Performing transaction when buyer not possess buying stocks")
     void shouldMakeTransactionWhenBuyerNotOwnBuyingStock() {
         User buyer = getUsersList().get(0);
         User seller = getUsersList().get(2);
@@ -152,6 +158,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Performing transaction when user not found")
     void shouldThrowEntityNotFoundWhenMakingTransactionAndUserNotExist() {
         User buyer = getUsersList().get(0);
         User seller = getUsersList().get(2);
@@ -174,6 +181,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Performing transaction when seller not possess enough stock")
     void shouldThrowEntityNotFoundWhenMakingTransactionAndSellerNotOwnStock() {
         User buyer = getUsersList().get(0);
         User seller = getUsersList().get(2);
@@ -192,6 +200,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering transactions")
     void shouldPageAndFilterTransactions() {
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
@@ -218,6 +227,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering logged in user's transactions")
     void shouldPageAndFilterOwnedTransactionsAllTransactionTypes(@Mock SecurityContext securityContext,
                                                                  @Mock Authentication authentication) {
         User user1 = getUsersList().get(0);
@@ -249,6 +259,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering logged in user's transactions - only as a buyer")
     void shouldPageAndFilterOwnedTransactionsOnlyBuyingOrders(@Mock SecurityContext securityContext,
                                                               @Mock Authentication authentication) {
         User user1 = getUsersList().get(0);
@@ -280,6 +291,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering logged in user's transactions - only as a seller")
     void shouldPageAndFilterOwnedTransactionsOnlySellingOrders(@Mock SecurityContext securityContext,
                                                                @Mock Authentication authentication) {
         User user1 = getUsersList().get(0);
@@ -311,6 +323,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering logged in user's transactions - no transactions")
     void shouldPageAndFilterOwnedTransactionsNoneTransactions(@Mock SecurityContext securityContext,
                                                               @Mock Authentication authentication) {
         User user2 = getUsersList().get(2);
@@ -327,6 +340,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering order's transactions")
     void shouldPageAndFilterTransactionsByOrder() {
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
@@ -358,6 +372,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering order's transactions when order not found")
     void shouldThrowEntityNotFoundWhenPagingAndFilteringTransactionsByOrder() {
         User user1 = getUsersList().get(0);
         Stock stock = getStocksList().get(0);
@@ -374,6 +389,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Listing transaction for fixing stock price")
     void shouldReturnTransactionByStockIdForPricing() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -398,6 +414,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Listing transaction for fixing stock price - all transaction")
     void shouldReturnTransactionByStockIdForPricingWithoutFiltering() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
@@ -421,6 +438,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's transactions")
     void shouldPageAndFilterUsersTransactionsAllTransactionTypes() {
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
@@ -450,6 +468,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's transactions - only as a buyer")
     void shouldPageAndFilterUsersTransactionsOnlyBuyingOrders() {
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
@@ -479,6 +498,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's transactions - only as a seller")
     void shouldPageAndFilterUsersTransactionsOnlySellingOrders() {
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
@@ -508,6 +528,7 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's transactions - no transactions")
     void shouldPageAndFilterUsersTransactionsNoneTransactions() {
         User user2 = getUsersList().get(2);
         Pageable pageable = PageRequest.of(0, 20);

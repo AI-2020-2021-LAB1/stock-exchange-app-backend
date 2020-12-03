@@ -1,7 +1,6 @@
 package com.project.stockexchangeappbackend.scheduler;
 
 import com.project.stockexchangeappbackend.entity.StockIndexValue;
-import com.project.stockexchangeappbackend.entity.Transaction;
 import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import com.project.stockexchangeappbackend.service.TransactionService;

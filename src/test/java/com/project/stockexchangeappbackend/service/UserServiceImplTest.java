@@ -12,6 +12,7 @@ import com.project.stockexchangeappbackend.repository.AllOrdersRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceImplTest {
+public class UserServiceImplTest {
 
     @InjectMocks
     UserServiceImpl userService;
@@ -67,6 +68,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Signing up new user")
     void shouldRegisterUser() {
         User user = getUsersList().get(0);
         RegistrationUserDTO registrationUserDTO =
@@ -80,6 +82,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Signing up new user when user already exist")
     void shouldThrowEntityExistsExceptionWhenRegisterUser() {
         User user = getUsersList().get(0);
         RegistrationUserDTO registrationUserDTO =
@@ -91,6 +94,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting user by id")
     void shouldReturnUserById() {
         User user = getUsersList().get(0);
         Long id = user.getId();
@@ -99,6 +103,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting user by id when user not found")
     void shouldThrowEntityExistsExceptionWhenGettingUserById() {
         Long id = 1L;
         when(userRepository.findById(id)).thenReturn(Optional.empty());
@@ -106,6 +111,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting user by email")
     void shouldReturnUserByEmail() {
         User user = getUsersList().get(0);
         String email = user.getEmail();
@@ -114,6 +120,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting user by email when user not found")
     void shouldThrowEntityExistsExceptionWhenGettingUserByEmail() {
         String email = "test@test.com";
         when(userRepository.findByEmailIgnoreCase(email)).thenReturn(Optional.empty());
@@ -121,6 +128,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Changing user's password")
     void shouldChangePassword() {
         User user = getUsersList().get(0);
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldPassword", "newPassword");
@@ -132,6 +140,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Changing user's password when current password wrong")
     void shouldThrowAccessDeniedExceptionWhenChangingPassword() {
         User user = getUsersList().get(0);
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldPassword", "newPassword");
@@ -143,6 +152,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Changing user's password when user not found")
     void shouldThrowEntityNotFoundExceptionWhenChangingPassword() {
         ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldPassword", "newPassword");
         Principal principal = () -> "username";
@@ -152,6 +162,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details")
     void shouldUpdateUsersNames() {
         EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
         User user = getUsersList().get(0);
@@ -162,6 +173,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details when user not found")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUsersNames() {
         EditUserNameDTO editUserNameDTO = new EditUserNameDTO("John", "Kowal");
         Principal principal = () -> "test@test";
@@ -171,6 +183,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering users")
     void shouldPageAndFilterUsers() {
         List<User> users = getUsersList();
         Pageable pageable = PageRequest.of(0, 20);
@@ -187,6 +200,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin")
     void shouldUpdateUser() {
         User user = getUsersList().get(1);
         Long id = user.getId();
@@ -198,6 +212,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin when removing last admin")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndRemovingLastAdmin() {
         User user = getUsersList().get(1);
         Long id = user.getId();
@@ -210,6 +225,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin when blocking admin")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndBlockingAdmin() {
         User user = getUsersList().get(1);
         Long id = user.getId();
@@ -221,6 +237,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin when blocking admin")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndBlockingAdmin2() {
         User user = getUsersList().get(0);
         Long id = user.getId();
@@ -234,6 +251,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin when creating admin who possess orders")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndChangingUserToAdminPossessingOrder() {
         User user = getUsersList().get(0);
         Long id = user.getId();
@@ -247,6 +265,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin when creating admin who possess stocks")
     void shouldThrowInvalidInputDataExceptionWhenUpdatingUserAndChangingUserToAdminPossessingStocks() {
         User user = getUsersList().get(0);
         Long id = user.getId();
@@ -260,6 +279,7 @@ class UserServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating user's details as admin when user not found")
     void shouldThrowEntityNotFoundWhenUpdatingNonExistingUser() {
         Long id = 1L;
         EditUserDetailsDTO editUserDetailsDTO =

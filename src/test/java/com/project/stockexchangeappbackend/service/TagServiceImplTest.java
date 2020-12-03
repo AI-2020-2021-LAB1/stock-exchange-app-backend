@@ -4,6 +4,7 @@ import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.TagRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -39,6 +40,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting existing tag")
     void shouldReturnExistingTag() {
         Tag tag = getTagsList().get(0);
         String tagName = tag.getName();
@@ -47,6 +49,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting non-existing tag")
     void shouldReturnNonExistingTag() {
         Tag tag = getTagsList().get(1);
         String tagName = tag.getName();
@@ -56,6 +59,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Searching existing tag")
     void shouldFindExistingTag() {
         Tag tag = getTagsList().get(0);
         String tagName = tag.getName();
@@ -64,6 +68,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting existing tag when tag not found")
     void shouldThrowNotFoundExceptionWhenLookingForNonExistingTag() {
         String tagName = "TEST";
         when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.empty());
@@ -71,6 +76,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering tags")
     void shouldPageAndFilterTags() {
         List<Tag> tags = getTagsList();
         Pageable pageable = PageRequest.of(0,20);
@@ -86,6 +92,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deleting tag")
     void shouldRemoveTag() {
         Tag tag = getTagsList().get(1);
         String tagName = tag.getName();
@@ -94,6 +101,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deleting tag when desired tag is default")
     void shouldThrowInvalidInputDataExceptionWhenRemovingDefaultTag() {
         Tag tag = getTagsList().get(0);
         String tagName = tag.getName();
@@ -102,6 +110,7 @@ class TagServiceImplTest {
     }
 
     @Test
+    @DisplayName("Deleting tag when tag not found")
     void shouldThrowEntityNotFoundExceptionWhenRemovingTag() {
         Tag tag = getTagsList().get(1);
         String tagName = tag.getName();
