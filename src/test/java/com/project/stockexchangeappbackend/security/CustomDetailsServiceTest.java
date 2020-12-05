@@ -1,6 +1,7 @@
 package com.project.stockexchangeappbackend.security;
 
 import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.exception.UserBannedException;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class CustomDetailsServiceTest {
     void shouldFindLoggingInUser() {
         User user = getUsersList().get(0);
         String username = user.getEmail();
-        when(userRepository.findByEmailIgnoreCaseAndIsActiveTrue(username)).thenReturn(Optional.of(user));
+        when(userRepository.findByEmailIgnoreCase(username)).thenReturn(Optional.of(user));
         var dbUser = customDetailsService.loadUserByUsername(username);
         assertEquals(user.getEmail(), dbUser.getUsername());
         assertEquals(user.getPassword(), dbUser.getPassword());
@@ -44,8 +45,19 @@ class CustomDetailsServiceTest {
     @DisplayName("Searching logging in user when user not found")
     void shouldThrowUsernameNotFoundExceptionWhenLookingForLoggingInUser() {
         String username = "user";
-        when(userRepository.findByEmailIgnoreCaseAndIsActiveTrue(username)).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase(username)).thenReturn(Optional.empty());
         assertThrows(UsernameNotFoundException.class, () -> customDetailsService.loadUserByUsername(username));
+    }
+
+    @Test
+    @DisplayName("Searching logging in user when user banned")
+    void shouldThrowUserBannedExceptionWhenLookingForLoggingInUser() {
+        User user = getUsersList().get(0);
+        user.setIsActive(false);
+        String username = user.getEmail();
+        when(userRepository.findByEmailIgnoreCase(username)).thenReturn(Optional.of(user));
+        assertThrows(UserBannedException.class, () -> customDetailsService.loadUserByUsername(username));
+        user.setIsActive(true);
     }
 
 }
