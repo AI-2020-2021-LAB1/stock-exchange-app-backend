@@ -144,7 +144,7 @@ public class StockServiceImplTest {
     @DisplayName("Updating stock details")
     void shouldUpdateStockDetails() {
         Stock stock = getStocksList().get(0);
-        StockDTO stockDTO = StockDTO.builder().name("new Name").abbreviation("nam").build();
+        EditStockNameDTO stockDTO = EditStockNameDTO.builder().name("new Name").abbreviation("nam").build();
         String id = stock.getId().toString();
 
         when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));
@@ -158,7 +158,8 @@ public class StockServiceImplTest {
     void shouldThrowEntityExistsExceptionWhenUpdatingStockDetailsAndAbbreviationExist() {
         Stock stock = getStocksList().get(0);
         Stock stock2 = getStocksList().get(1);
-        StockDTO stockDTO = StockDTO.builder().name("new Name").abbreviation(stock2.getAbbreviation()).build();
+        EditStockNameDTO stockDTO = EditStockNameDTO.builder()
+                .name("new Name").abbreviation(stock2.getAbbreviation()).build();
         String id = stock.getId().toString();
 
         when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));
@@ -171,7 +172,8 @@ public class StockServiceImplTest {
     void shouldThrowEntityExistsExceptionWhenUpdatingStockDetailsAndNameExist() {
         Stock stock = getStocksList().get(0);
         Stock stock2 = getStocksList().get(1);
-        StockDTO stockDTO = StockDTO.builder().name(stock2.getName()).abbreviation("nam").build();
+        EditStockNameDTO stockDTO = EditStockNameDTO.builder()
+                .name(stock2.getName()).abbreviation("nam").build();
         String id = stock.getId().toString();
 
         when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));

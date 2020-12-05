@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
+import com.project.stockexchangeappbackend.dto.CreateOrderDTO;
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.OrderDTO;
 import com.project.stockexchangeappbackend.dto.TransactionDTO;
@@ -47,7 +48,7 @@ public class OrderController {
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied.")})
     public void createOrder(@ApiParam(value = "Order object to create.", required = true)
-                            @RequestBody @Valid OrderDTO orderDTO) {
+                            @RequestBody @Valid CreateOrderDTO orderDTO) {
         orderService.createOrder(orderDTO);
     }
 

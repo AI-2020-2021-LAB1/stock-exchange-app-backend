@@ -1,6 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.OrderDTO;
+import com.project.stockexchangeappbackend.dto.CreateOrderDTO;
 import com.project.stockexchangeappbackend.dto.StockDTO;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
@@ -94,7 +94,7 @@ public class OrderServiceImplTest {
     void shouldCreateNewOrder(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         Order order = createSellingOrder(1L, orderDTO.getAmount(), orderDTO.getPrice(),
                 orderDTO.getDateExpiration(), user, stock);
@@ -119,7 +119,7 @@ public class OrderServiceImplTest {
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         Resource resource = Resource.builder().id(1L).stock(stock).user(user).amount(stock.getAmount() - 1).build();
         SecurityContextHolder.setContext(securityContext);
@@ -141,7 +141,7 @@ public class OrderServiceImplTest {
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         SecurityContextHolder.setContext(securityContext);
         Order order = createSellingOrder(1L, orderDTO.getAmount(), orderDTO.getPrice(),
@@ -166,7 +166,7 @@ public class OrderServiceImplTest {
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         orderDTO.setPriceType(PriceType.LESS_OR_EQUAL);
         Resource resource = Resource.builder().id(1L).stock(stock).user(user).amount(stock.getAmount()).build();
@@ -189,7 +189,7 @@ public class OrderServiceImplTest {
                                                                                    @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createBuyingOrderDTO(stock.getAmount()*2, OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createBuyingOrderDTO(stock.getAmount()*2, OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         SecurityContextHolder.setContext(securityContext);
 
@@ -206,7 +206,7 @@ public class OrderServiceImplTest {
             @Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createBuyingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createBuyingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         orderDTO.setPriceType(PriceType.GREATER_OR_EQUAL);
         SecurityContextHolder.setContext(securityContext);
@@ -225,7 +225,7 @@ public class OrderServiceImplTest {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
         user.setTag(getTagsList().get(1));
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         Resource resource = Resource.builder().id(1L).stock(stock).user(user).amount(stock.getAmount()).build();
         SecurityContextHolder.setContext(securityContext);
@@ -248,7 +248,7 @@ public class OrderServiceImplTest {
                                                                                  @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         String username = "none";
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
         SecurityContextHolder.setContext(securityContext);
 
@@ -263,7 +263,7 @@ public class OrderServiceImplTest {
     @DisplayName("Creating new order when stock not found")
     void shouldThrowInvalidInputDataExceptionWhenCreatingNewOrderAndStockNotFound() {
         Stock stock = getStocksList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
+        CreateOrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
                 BigDecimal.ONE, stock.getId());
 
         when(stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())).thenReturn(Optional.empty());
@@ -296,10 +296,8 @@ public class OrderServiceImplTest {
     void shouldDeactivateOrder(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
-                BigDecimal.ONE, stock.getId());
-        Order order = createSellingOrder(1L, orderDTO.getAmount(), orderDTO.getPrice(),
-                orderDTO.getDateExpiration(), user, stock);
+        Order order = createSellingOrder(1L, stock.getAmount(), BigDecimal.ONE,
+                OffsetDateTime.now().plusHours(1), user, stock);
         ArchivedOrder archivedOrder = convertOrder(order);
         Long id = stock.getId();
         SecurityContextHolder.setContext(securityContext);
@@ -318,10 +316,8 @@ public class OrderServiceImplTest {
                                              @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
-                BigDecimal.ONE, stock.getId());
-        Order order = createSellingOrder(1L, orderDTO.getAmount(), orderDTO.getPrice(),
-                orderDTO.getDateExpiration(), user, stock);
+        Order order = createSellingOrder(1L, stock.getAmount(), BigDecimal.ONE,
+                OffsetDateTime.now().plusHours(1), user, stock);
         ArchivedOrder archivedOrder = convertOrder(order);
         Long id = stock.getId();
         SecurityContextHolder.setContext(securityContext);
@@ -343,10 +339,8 @@ public class OrderServiceImplTest {
         User user = getUsersList().get(0);
         User user2 = getUsersList().get(1);
         user2.setRole(Role.USER);
-        OrderDTO orderDTO = createSellingOrderDTO(stock.getAmount(), OffsetDateTime.now().plusHours(1),
-                BigDecimal.ONE, stock.getId());
-        Order order = createSellingOrder(1L, orderDTO.getAmount(), orderDTO.getPrice(),
-                orderDTO.getDateExpiration(), user, stock);
+        Order order = createSellingOrder(1L, stock.getAmount(), BigDecimal.ONE,
+                OffsetDateTime.now().plusHours(1), user, stock);
         Long id = stock.getId();
         SecurityContextHolder.setContext(securityContext);
 
@@ -612,18 +606,18 @@ public class OrderServiceImplTest {
                 .build();
     }
 
-    public static OrderDTO createSellingOrderDTO(Integer amount, OffsetDateTime dateExpiration,
+    public static CreateOrderDTO createSellingOrderDTO(Integer amount, OffsetDateTime dateExpiration,
                                                        BigDecimal price, Long stockId) {
-        return OrderDTO.builder()
+        return CreateOrderDTO.builder()
                 .amount(amount).dateExpiration(dateExpiration)
                 .orderType(OrderType.SELLING_ORDER).priceType(PriceType.EQUAL).price(price)
                 .stock(StockDTO.builder().id(stockId).build())
                 .build();
     }
 
-    public static OrderDTO createBuyingOrderDTO(Integer amount, OffsetDateTime dateExpiration,
+    public static CreateOrderDTO createBuyingOrderDTO(Integer amount, OffsetDateTime dateExpiration,
                                                        BigDecimal price, Long stockId) {
-        return OrderDTO.builder()
+        return CreateOrderDTO.builder()
                 .amount(amount).dateExpiration(dateExpiration)
                 .orderType(OrderType.BUYING_ORDER).priceType(PriceType.EQUAL).price(price)
                 .stock(StockDTO.builder().id(stockId).build())
