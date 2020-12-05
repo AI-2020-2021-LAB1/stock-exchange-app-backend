@@ -33,5 +33,4 @@ public class MoveStockDTO {
     @RequiredFields(value = {"id"}, message = "This JSON Object must require field id.")
     private UserDTO userDestination;
 
-
 }

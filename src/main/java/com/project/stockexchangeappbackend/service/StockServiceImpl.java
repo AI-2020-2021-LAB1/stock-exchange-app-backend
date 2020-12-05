@@ -1,9 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.CreateStockDTO;
-import com.project.stockexchangeappbackend.dto.OwnerDTO;
-import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.dto.UpdateStockAmountDTO;
+import com.project.stockexchangeappbackend.dto.*;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
@@ -75,9 +72,10 @@ public class StockServiceImpl implements StockService {
         return stockRepository.save(stock);
     }
 
+    @Override
     @Transactional
     @LogicBusinessMeasureTime
-    public void updateStock(StockDTO stockDTO, String id) {
+    public void updateStock(EditStockNameDTO stockDTO, String id) {
         Stock stock = getStockByIdOrAbbreviation(id);
         Optional<Stock> stockByAbbreviation = stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation().trim());
         if (stockByAbbreviation.isPresent() && !stock.getId().equals(stockByAbbreviation.get().getId())) {

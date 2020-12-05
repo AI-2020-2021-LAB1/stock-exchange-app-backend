@@ -94,7 +94,7 @@ public class StockController {
             @ApiResponse(code = 403, message = "Access Denied."),
             @ApiResponse(code = 404, message = "Given stock not found.", response = ErrorResponse.class)})
     public void updateStock(
-            @ApiParam(value = "Stock object to update.", required = true) @Valid @RequestBody StockDTO stockDTO,
+            @ApiParam(value = "Stock object to update.", required = true) @Valid @RequestBody EditStockNameDTO stockDTO,
             @ApiParam(value = "Abbreviation or id of desired stock", required = true)
             @PathVariable String id) {
         stockService.updateStock(stockDTO, id);
