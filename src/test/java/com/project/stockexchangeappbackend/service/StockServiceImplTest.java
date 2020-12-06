@@ -269,6 +269,23 @@ public class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Reactivation of stock - used abbreviation and name")
+    void shouldCreateStockWhenDeletedStockExistFoundByAbbreviationAndName() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+        stock.setIsDeleted(Boolean.TRUE);
+
+        when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
+                .thenReturn(Optional.of(stock));
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
+        assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
+    }
+
+    @Test
     @DisplayName("Creating stock when given amounts of stock mismatch")
     void shouldThrowInvalidInputDataExceptionWhenCreatingStockAndAmountMismatch() {
         Stock stock = getStocksList().get(0);
@@ -423,8 +440,8 @@ public class StockServiceImplTest {
     }
 
     @Test
-    @DisplayName("Updating stock's amount when at least one of specified user possess updating stock - decreasing amount")
-    void shouldUpdateStockAmountWhenUserAlreadyPossessUpdatingStockDeletingStock() {
+    @DisplayName("Updating stock's amount - decreasing amount")
+    void shouldUpdateStockAmountWhenDeletingStock() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
         UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount()/2);

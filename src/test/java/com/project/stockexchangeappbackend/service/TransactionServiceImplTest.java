@@ -542,6 +542,20 @@ class TransactionServiceImplTest {
         assertEquals(0, output.getNumberOfElements());
     }
 
+    @Test
+    @DisplayName("Paging and filtering user's transactions, when user not found")
+    void shouldThrowEntityNotFoundExceptionWhenPagingAndFilteringUsersTransactionsNoneTransactions() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<Transaction> transactionSpecification =
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("amount"), 50);
+        Long userId = 1L;
+
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class,
+                () -> transactionService.getUserTransactions(pageable, transactionSpecification,
+                        userId, false, false));
+    }
+
     public static void assertTransaction(Transaction output, Transaction expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),

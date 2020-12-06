@@ -436,7 +436,7 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    @DisplayName("Archiving non-active orders")
+    @DisplayName("Archiving expired orders")
     void shouldMoveInactiveOrders() {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
