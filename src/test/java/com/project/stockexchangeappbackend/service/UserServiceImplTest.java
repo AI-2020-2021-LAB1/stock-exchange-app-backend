@@ -77,7 +77,7 @@ public class UserServiceImplTest {
 
         when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registrationUserDTO.getPassword())).thenReturn("encodedPassword");
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         assertAll(() -> userService.registerUser(registrationUserDTO, tag.getName()));
     }
 
@@ -91,6 +91,19 @@ public class UserServiceImplTest {
         Tag tag = getTagsList().get(0);
         when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail())).thenReturn(Optional.of(user));
         assertThrows(EntityExistsException.class, () -> userService.registerUser(registrationUserDTO, tag.getName()));
+    }
+
+    @Test
+    @DisplayName("Signing up new user when tag not found")
+    void shouldThrowInvalidInputDataExceptionWhenRegisteringUser() {
+        User user = getUsersList().get(0);
+        RegistrationUserDTO registrationUserDTO =
+                new RegistrationUserDTO(user.getFirstName(), user.getLastName(), user.getEmail(), user.getPassword());
+        String tag = "non";
+
+        when(userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail())).thenReturn(Optional.empty());
+        when(tagService.getTag(tag)).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> userService.registerUser(registrationUserDTO, tag));
     }
 
     @Test
