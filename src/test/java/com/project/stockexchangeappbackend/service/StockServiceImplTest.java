@@ -229,7 +229,7 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
@@ -245,7 +245,7 @@ public class StockServiceImplTest {
 
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong()))
                 .thenReturn(Optional.of(user));
         assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
@@ -263,7 +263,7 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
                 .thenReturn(Optional.of(stock));
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
@@ -280,7 +280,7 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
                 .thenReturn(Optional.of(stock));
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
@@ -297,7 +297,7 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
         createStockDTO.setAmount(createStockDTO.getAmount()/2);
@@ -314,7 +314,7 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
@@ -330,7 +330,7 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
-        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
@@ -346,9 +346,24 @@ public class StockServiceImplTest {
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
-        when(tagService.getTag(tag2.getName())).thenReturn(tag2);
+        when(tagService.getTag(tag2.getName())).thenReturn(Optional.of(tag2));
         when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag2.getName()));
+    }
+
+    @Test
+    @DisplayName("Creating stock when user tagged using different tag")
+    void shouldThrowInvalidInputDataExceptionWhenTagNotFound() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = getTagsList().get(1);
+
+        when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
+        when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
+        when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test

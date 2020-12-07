@@ -178,6 +178,10 @@ public class StockServiceImpl implements StockService {
         if (stockInDBAbbreviation.isPresent() && !stockInDBAbbreviation.get().getIsDeleted()) {
             throw new EntityExistsException("Stock with given abbreviation already exists.");
         }
+        Optional<Tag> tagOptional = tagService.getTag(tag.trim());
+        if (tagOptional.isEmpty()) {
+            errors.put("tag", List.of("Tag not found."));
+        }
         Stock stock = stockInDBName.isPresent() && (stockInDBAbbreviation.isEmpty() ||
                 stockInDBName.get().getId().equals(stockInDBAbbreviation.get().getId())) ?
                 stockInDBName.get() : stockInDBAbbreviation
@@ -188,7 +192,7 @@ public class StockServiceImpl implements StockService {
         stock.setAmount(stockDTO.getAmount());
         stock.setCurrentPrice(stockDTO.getCurrentPrice());
         stock.setPriceChangeRatio(.0);
-        stock.setTag(tagService.getTag(tag));
+        stock.setTag(tagOptional.orElseGet(() -> null));
         List<Optional<User>> potentialUsers = stockDTO.getOwners().stream()
                 .map(ownerDTO -> userRepository.findById(ownerDTO.getUser().getId()))
                 .collect(Collectors.toList());

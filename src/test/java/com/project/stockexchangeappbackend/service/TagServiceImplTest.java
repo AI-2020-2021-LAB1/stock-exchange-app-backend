@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.CreateTagDTO;
 import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.TagRepository;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 import java.util.Arrays;
 import java.util.List;
@@ -42,20 +44,18 @@ class TagServiceImplTest {
     @Test
     @DisplayName("Getting existing tag")
     void shouldReturnExistingTag() {
-        Tag tag = getTagsList().get(0);
-        String tagName = tag.getName();
-        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.of(tag));
-        assertTag(tag, tagService.getTag(tagName));
+        Optional<Tag> tag = Optional.of(getTagsList().get(0));
+        String tagName = tag.get().getName();
+        when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(tag);
+        assertTag(tag.get(), tagService.getTag(tagName).get());
     }
 
     @Test
     @DisplayName("Getting non-existing tag")
     void shouldReturnNonExistingTag() {
-        Tag tag = getTagsList().get(1);
-        String tagName = tag.getName();
+        String tagName = "tag";
         when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.empty());
-        when(tagRepository.save(Mockito.any(Tag.class))).thenReturn(tag);
-        assertTag(tag, tagService.getTag(tagName));
+        assertTrue(tagService.getTag(tagName).isEmpty());
     }
 
     @Test
@@ -116,6 +116,23 @@ class TagServiceImplTest {
         String tagName = tag.getName();
         when(tagRepository.findByNameIgnoreCase(tagName)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> tagService.removeTag(tagName));
+    }
+
+    @Test
+    @DisplayName("Creating new tag")
+    void shouldCreateNewTag() {
+        CreateTagDTO createTagDTO = new CreateTagDTO("newTag");
+        when(tagRepository.findByNameIgnoreCase(createTagDTO.getName())).thenReturn(Optional.empty());
+        assertAll(() -> tagService.createTag(createTagDTO));
+    }
+
+    @Test
+    @DisplayName("Creating new tag when tag already exist")
+    void shouldThrowEntityExistsExceptionWhenCreatingNewTag() {
+        Tag tag = getTagsList().get(0);
+        CreateTagDTO createTagDTO = new CreateTagDTO(tag.getName());
+        when(tagRepository.findByNameIgnoreCase(createTagDTO.getName())).thenReturn(Optional.of(tag));
+        assertThrows(EntityExistsException.class, () -> tagService.createTag(createTagDTO));
     }
 
     private static List<Tag> tags;
