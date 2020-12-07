@@ -181,6 +181,7 @@ public class StockServiceImpl implements StockService {
         Optional<Tag> tagOptional = tagService.getTag(tag.trim());
         if (tagOptional.isEmpty()) {
             errors.put("tag", List.of("Tag not found."));
+            throw new InvalidInputDataException("Data validation", errors);
         }
         Stock stock = stockInDBName.isPresent() && (stockInDBAbbreviation.isEmpty() ||
                 stockInDBName.get().getId().equals(stockInDBAbbreviation.get().getId())) ?
@@ -192,7 +193,12 @@ public class StockServiceImpl implements StockService {
         stock.setAmount(stockDTO.getAmount());
         stock.setCurrentPrice(stockDTO.getCurrentPrice());
         stock.setPriceChangeRatio(.0);
-        stock.setTag(tagOptional.orElseGet(() -> null));
+        if (stock.getTag() != null && !stock.getTag().getName().equals(tagOptional.get().getName())) {
+            errors.put("tag", List.of("This is reactivation of deleted stock. " +
+                    "Only tag " + stock.getTag().getName() + " can be used."));
+        } else {
+            stock.setTag(tagOptional.get());
+        }
         List<Optional<User>> potentialUsers = stockDTO.getOwners().stream()
                 .map(ownerDTO -> userRepository.findById(ownerDTO.getUser().getId()))
                 .collect(Collectors.toList());

@@ -361,9 +361,24 @@ public class StockServiceImplTest {
 
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
-        when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
         when(tagService.getTag(tag.getName())).thenReturn(Optional.empty());
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
+    }
+
+    @Test
+    @DisplayName("Reactivation stock when using another than old tag")
+    void shouldThrowInvalidInputDataExceptionWhenUsingAnother() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = getTagsList().get(1);
+        stock.setIsDeleted(Boolean.TRUE);
+
+        when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.of(stock));
+        when(tagService.getTag(tag.getName())).thenReturn(Optional.of(tag));
+        assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
+        stock.setIsDeleted(Boolean.FALSE);
     }
 
     @Test
