@@ -15,17 +15,22 @@ import javax.validation.constraints.NotNull;
 @Builder
 @AllArgsConstructor
 @Data
-@ApiModel(description = "Stock ownership object.")
-public class OwnerDTO {
+@ApiModel(description = "Stock object to move stocks from one user to another.")
+public class MoveStockDTO {
 
-    @ApiModelProperty(notes = "The stock's amount of units or change in case update stock's amount")
-    @NotNull(message = "This field is required.")
+    @ApiModelProperty(notes = "The stock's amount of units to move.")
     @Min(value = 1, message = "Amount must be greater or equal {value}.")
+    @NotNull(message = "This field is required.")
     private Integer amount;
 
     @ApiModelProperty(notes = "The owner of given amount of stocks.")
     @NotNull(message = "This field is required.")
     @RequiredFields(value = {"id"}, message = "This JSON Object must require field id.")
-    private UserDTO user;
+    private UserDTO userSource;
+
+    @ApiModelProperty(notes = "The new owner of given amount of stocks.")
+    @NotNull(message = "This field is required.")
+    @RequiredFields(value = {"id"}, message = "This JSON Object must require field id.")
+    private UserDTO userDestination;
 
 }

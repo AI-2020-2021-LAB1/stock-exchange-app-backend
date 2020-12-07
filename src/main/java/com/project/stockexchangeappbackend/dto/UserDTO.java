@@ -38,4 +38,7 @@ public class UserDTO {
     @ApiModelProperty(notes = "The user's tag.")
     private String tag;
 
+    @ApiModelProperty(notes = "The user's status.")
+    private Boolean isActive;
+
 }

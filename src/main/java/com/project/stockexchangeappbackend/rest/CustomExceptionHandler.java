@@ -6,6 +6,7 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -103,6 +104,15 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
         return ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message(exc.getMessage())
+                .build();
+    }
+
+    @ExceptionHandler({CannotCreateTransactionException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse httpCannotCreateTransactionException(CannotCreateTransactionException exc) {
+        return ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message("Cannot perform database operation.")
                 .build();
     }
 

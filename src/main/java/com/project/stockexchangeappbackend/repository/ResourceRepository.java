@@ -33,6 +33,13 @@ public interface ResourceRepository extends JpaRepository<Resource, Long>, JpaSp
     Optional<Resource> findByUserAndStock(User user, Stock stock);
 
     @DBQueryMeasureTime
-    void deleteByStock (Stock stock);
+    void deleteByStock(Stock stock);
+
+    @Override
+    @DBQueryMeasureTime
+    void deleteById(Long id);
+
+    @DBQueryMeasureTime
+    Long countByUser(User user);
 
 }

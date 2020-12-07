@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.security;
 
+import com.project.stockexchangeappbackend.exception.UserBannedException;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,9 @@ public class CustomDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(final String username) throws UsernameNotFoundException {
         com.project.stockexchangeappbackend.entity.User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
+        if (!user.getIsActive()) {
+            throw new UserBannedException("User is banned");
+        }
         return new User(user.getEmail(), user.getPassword(),
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
     }

@@ -1,6 +1,6 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.OrderDTO;
+import com.project.stockexchangeappbackend.dto.CreateOrderDTO;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
@@ -44,7 +44,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public void createOrder(OrderDTO orderDTO) {
+    public void createOrder(CreateOrderDTO orderDTO) {
         Stock stock = stockRepository.findByIdAndIsDeletedFalse(orderDTO.getStock().getId())
                 .orElseThrow(() -> new InvalidInputDataException("Validation error",
                         Map.of("stock", "Stock company not found.")));
@@ -132,7 +132,7 @@ public class OrderServiceImpl implements OrderService {
         return allOrdersRepository.findAll(Specification.where(userIsPrincipal).and(specification), pageable);
     }
 
-    private Order validateOrder(OrderDTO orderDTO, Stock stock, User user) {
+    private Order validateOrder(CreateOrderDTO orderDTO, Stock stock, User user) {
         Map<String, List<String>> errors = new HashMap<>();
         if (orderDTO.getOrderType() == OrderType.BUYING_ORDER) {
             if (orderDTO.getPriceType() == PriceType.GREATER_OR_EQUAL) {

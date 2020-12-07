@@ -3,10 +3,10 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.dto.StockIndexValueDTO;
 import com.project.stockexchangeappbackend.entity.Stock;
 import com.project.stockexchangeappbackend.entity.StockIndexValue;
-import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.repository.StockIndexValueRepository;
 import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,12 +19,13 @@ import org.springframework.data.jpa.domain.Specification;
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.assertStock;
-import static com.project.stockexchangeappbackend.service.StockServiceImplTest.createCustomStock;
+import static com.project.stockexchangeappbackend.service.StockServiceImplTest.getStocksList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
@@ -44,10 +45,12 @@ class StockIndexValueServiceImplTest {
     StockIndexTimeProperties stockIndexTimeProperties;
 
     @Test
+    @DisplayName("Appending current stock price")
     void shouldAppendValue() {
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
-        StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+        Stock stock = getStocksList().get(0);
+        StockIndexValue stockIndexValue =
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+
         when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(24);
         when(stockIndexTimeProperties.getFixingPriceCycle()).thenReturn(30000);
         when(stockIndexValueRepository.count(Mockito.any(Specification.class))).thenReturn(24L);
@@ -55,11 +58,14 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Appending current stock price when list of stock price is full")
     void shouldAppendValueWhenMaxRecordsExceed() {
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
-        StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
-        StockIndexValue prevStockIndexValue = createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+        Stock stock = getStocksList().get(0);
+        StockIndexValue stockIndexValue =
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+        StockIndexValue prevStockIndexValue =
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+
         when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(1);
         when(stockIndexTimeProperties.getFixingPriceCycle()).thenReturn(30000);
         when(stockIndexValueRepository.count(Mockito.any(Specification.class))).thenReturn(121L);
@@ -69,18 +75,24 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock price in OHLC format")
     void shouldReturnStockIndexValues() {
-        Long stockId = 1L;
         Integer interval = 1;
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
-        List<StockIndexValue> results = List.of(
-                createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.TEN), OffsetDateTime.now()),
-                createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), OffsetDateTime.now()),
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now().minusMinutes(1)),
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now().minusMinutes(1)));
+        Stock stock = getStocksList().get(0);
+        Long stockId = stock.getId();
+        OffsetDateTime now = OffsetDateTime.now();
+        List<StockIndexValue> results = new ArrayList<>(List.of(
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ZERO), now),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), now.minusSeconds(15)),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.TEN), now.minusSeconds(2*15)),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), now.minusSeconds(3*15)),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ZERO), now.minusSeconds(4*15)),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), now.minusSeconds(5*15)),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.TEN), now.minusSeconds(6*15)),
+            createCustomStockIndexValue(stock, stock.getCurrentPrice().add(BigDecimal.ONE), now.minusSeconds(7*15))));
         List<StockIndexValueDTO> expected = List.of(
-                new StockIndexValueDTO(results));
+                new StockIndexValueDTO(results.subList(5, 8)),
+                new StockIndexValueDTO(results.subList(0, 6)));
 
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
@@ -93,11 +105,12 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock price in OHLC format when history data not found")
     void shouldReturnStockIndexValuesEmptyList() {
-        Long stockId = 1L;
         Integer interval = 1;
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(1L, "WIG20", "W20", 100, BigDecimal.TEN, tag);
+        Stock stock = getStocksList().get(0);
+        Long stockId = stock.getId();
+
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
                 .thenReturn(Collections.emptyList());
@@ -105,6 +118,7 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock price in OHLC format when stock not found")
     void shouldThrowExceptionNotFoundWhenGettingStockIndexHistory() {
         Long stockId = 1L;
         Integer interval = 1;
@@ -114,13 +128,13 @@ class StockIndexValueServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting value before specified period of time")
     void shouldReturnFirstHistoryValueBefore() {
-        Long stockId = 1L;
-        Integer minutes = 1;
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(stockId, "WIG20", "W20", 100, BigDecimal.TEN, tag);
+        int minutes = 1;
+        Stock stock = getStocksList().get(0);
         StockIndexValue stockIndexValue = createCustomStockIndexValue(stock, BigDecimal.TEN,
                 OffsetDateTime.now().minusMinutes(minutes));
+
         when(stockIndexValueRepository.findFirstByStockAndTimestampBeforeOrderByTimestampDesc(
                 Mockito.eq(stock), Mockito.any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(stockIndexValue));

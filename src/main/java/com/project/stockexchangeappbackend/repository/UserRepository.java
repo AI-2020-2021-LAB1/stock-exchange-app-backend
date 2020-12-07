@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.repository;
 
+import com.project.stockexchangeappbackend.entity.Role;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @DBQueryMeasureTime
     Optional<User> findByEmailIgnoreCase(String email);
 
+    @DBQueryMeasureTime
+    Optional<User> findByEmailIgnoreCaseAndIsActiveTrue(String email);
+
     @Override
     @DBQueryMeasureTime
     <S extends User> S save(S s);
@@ -29,5 +33,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     @Override
     @DBQueryMeasureTime
     Page<User> findAll(@Nullable Specification<User> specification, Pageable pageable);
+
+    @DBQueryMeasureTime
+    Long countByRole(Role role);
 
 }

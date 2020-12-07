@@ -1,12 +1,11 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.CreateStockDTO;
-import com.project.stockexchangeappbackend.dto.OwnerDTO;
-import com.project.stockexchangeappbackend.dto.StockDTO;
-import com.project.stockexchangeappbackend.dto.UserDTO;
+import com.project.stockexchangeappbackend.dto.*;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,12 +28,13 @@ import java.util.stream.Collectors;
 
 import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createCustomOrder;
 import static com.project.stockexchangeappbackend.service.TagServiceImplTest.assertTag;
-import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.getTagsList;
+import static com.project.stockexchangeappbackend.service.UserServiceImplTest.getUsersList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class StockServiceImplTest {
+public class StockServiceImplTest {
 
     @InjectMocks
     StockServiceImpl stockService;
@@ -63,16 +63,22 @@ class StockServiceImplTest {
     @Mock
     ModelMapper modelMapper;
 
+    @BeforeEach
+    void setup() {
+        setStockList();
+    }
+
     @Test
+    @DisplayName("Getting stock by id")
     void shouldReturnStockById() {
-        Long id = 1L;
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(id, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20), tag);
+        Stock stock = getStocksList().get(0);
+        Long id = stock.getId();
         when(stockRepository.findByIdAndIsDeletedFalse(id)).thenReturn(Optional.of(stock));
         assertStock(stockService.getStockById(id), stock);
     }
 
     @Test
+    @DisplayName("Getting stock by id when stock not found")
     void shouldThrowEntityNotFoundWhenGettingStockById() {
         Long id = 1L;
         when(stockRepository.findByIdAndIsDeletedFalse(id)).thenReturn(Optional.empty());
@@ -80,14 +86,13 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering stocks")
     void shouldPageAndFilterStocks() {
-        Tag tag = new Tag(1L, "default");
-        List<Stock> stocks = Arrays.asList(
-                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag),
-                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20), tag));
+        List<Stock> stocks = getStocksList();
         Pageable pageable = PageRequest.of(0,20);
         Specification<Stock> stockSpecification =
-                (Specification<Stock>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
+
         when(stockRepository.findAll(Mockito.any(Specification.class), Mockito.eq(pageable)))
                 .thenReturn(new PageImpl<>(stocks, pageable, stocks.size()));
         Page<Stock> output = stockService.getStocks(pageable, stockSpecification);
@@ -98,11 +103,27 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Getting stock by abbreviation")
+    void shouldReturnStockByAbbreviation() {
+        Stock stock = getStocksList().get(0);
+        String abbreviation = stock.getAbbreviation();
+        when(stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(abbreviation)).thenReturn(Optional.of(stock));
+        assertStock(stockService.getStockByAbbreviation(abbreviation), stock);
+    }
+
+    @Test
+    @DisplayName("Getting stock by abbreviation when stock not found")
+    void shouldThrowEntityNotFoundWhenGettingStockByAbbreviation() {
+        String abbreviation = "non";
+        when(stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(abbreviation)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> stockService.getStockByAbbreviation(abbreviation));
+    }
+
+    @Test
+    @DisplayName("Listing all stocks")
     void shouldReturnAllStocks() {
-        Tag tag = new Tag(1L, "default");
-        List<Stock> stocks = Arrays.asList(
-                createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag),
-                createCustomStock(2L, "WIG20", "W20", 10000, BigDecimal.valueOf(10.20), tag));
+        List<Stock> stocks = getStocksList();
+
         when(stockRepository.findAll(Mockito.any(Specification.class))).thenReturn(stocks);
         List<Stock> output = stockService.getAllStocks();
         assertEquals(stocks.size(), output.size());
@@ -112,42 +133,116 @@ class StockServiceImplTest {
     }
 
     @Test
-    void shouldUpdateStock() {
-        Tag tag = new Tag(1L, "default");
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 10000, BigDecimal.valueOf(100.20), tag);
+    @DisplayName("Updating stock object")
+    void shouldUpdateStockObject() {
+        Stock stock = getStocksList().get(0);
         when(stockRepository.save(stock)).thenReturn(stock);
         assertStock(stockService.updateStock(stock), stock);
     }
 
     @Test
+    @DisplayName("Updating stock details")
+    void shouldUpdateStockDetails() {
+        Stock stock = getStocksList().get(0);
+        EditStockNameDTO stockDTO = EditStockNameDTO.builder().name("new Name").abbreviation("nam").build();
+        String id = stock.getId().toString();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));
+        when(stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation())).thenReturn(Optional.empty());
+        when(stockRepository.findByNameIgnoreCase(stockDTO.getName())).thenReturn(Optional.empty());
+        assertAll(() -> stockService.updateStock(stockDTO, id));
+    }
+
+    @Test
+    @DisplayName("Updating stock details when given abbreviation already in use")
+    void shouldThrowEntityExistsExceptionWhenUpdatingStockDetailsAndAbbreviationExist() {
+        Stock stock = getStocksList().get(0);
+        Stock stock2 = getStocksList().get(1);
+        EditStockNameDTO stockDTO = EditStockNameDTO.builder()
+                .name("new Name").abbreviation(stock2.getAbbreviation()).build();
+        String id = stock.getId().toString();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));
+        when(stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation())).thenReturn(Optional.of(stock2));
+        assertThrows(EntityExistsException.class, () -> stockService.updateStock(stockDTO, id));
+    }
+
+    @Test
+    @DisplayName("Updating stock details when given name already in use")
+    void shouldThrowEntityExistsExceptionWhenUpdatingStockDetailsAndNameExist() {
+        Stock stock = getStocksList().get(0);
+        Stock stock2 = getStocksList().get(1);
+        EditStockNameDTO stockDTO = EditStockNameDTO.builder()
+                .name(stock2.getName()).abbreviation("nam").build();
+        String id = stock.getId().toString();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));
+        when(stockRepository.findByAbbreviationIgnoreCase(stockDTO.getAbbreviation())).thenReturn(Optional.empty());
+        when(stockRepository.findByNameIgnoreCase(stockDTO.getName())).thenReturn(Optional.of(stock2));
+        assertThrows(EntityExistsException.class, () -> stockService.updateStock(stockDTO, id));
+    }
+
+    @Test
+    @DisplayName("Getting stock by id")
+    void shouldReturnStockByIdOrAbbreviation() {
+        Stock stock = getStocksList().get(0);
+        String id = stock.getId().toString();
+        when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.of(stock));
+        assertStock(stockService.getStockByIdOrAbbreviation(id), stock);
+    }
+
+    @Test
+    @DisplayName("Getting stock by abbreviation")
+    void shouldReturnStockByIdOrAbbreviation2() {
+        Stock stock = getStocksList().get(0);
+        String id = stock.getName();
+        when(stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(id)).thenReturn(Optional.of(stock));
+        assertStock(stockService.getStockByIdOrAbbreviation(id), stock);
+    }
+
+    @Test
+    @DisplayName("Getting stock by id when stock not found")
+    void shouldThrowEntityNotFoundExceptionWhenGettingStockByIdOrAbbreviation() {
+        Stock stock = getStocksList().get(0);
+        String id = stock.getId().toString();
+        when(stockRepository.findByIdAndIsDeletedFalse(Long.valueOf(id))).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> stockService.getStockByIdOrAbbreviation(id));
+    }
+
+    @Test
+    @DisplayName("Getting stock by abbreviation when stock not found")
+    void shouldThrowEntityNotFoundExceptionWhenGettingStockByIdOrAbbreviation2() {
+        Stock stock = getStocksList().get(0);
+        String id = stock.getName();
+        when(stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(id)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> stockService.getStockByIdOrAbbreviation(id));
+    }
+
+    @Test
+    @DisplayName("Creating new stock")
     void shouldCreateStock() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
-        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
         when(tagService.getTag(tag.getName())).thenReturn(tag);
-        when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
+    @DisplayName("Reactivation of stock - used name")
     void shouldCreateStockWhenDeletedStockExistFoundByName() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), true, tag);
-        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+        stock.setIsDeleted(Boolean.TRUE);
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(tagService.getTag(tag.getName())).thenReturn(tag);
@@ -157,150 +252,333 @@ class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Reactivation of stock - used abbreviation")
     void shouldCreateStockWhenDeletedStockExistFoundByAbbreviation() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), true, tag);
-        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+        stock.setIsDeleted(Boolean.TRUE);
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
                 .thenReturn(Optional.of(stock));
         when(tagService.getTag(tag.getName())).thenReturn(tag);
-        when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
+    @DisplayName("Reactivation of stock - used abbreviation and name")
+    void shouldCreateStockWhenDeletedStockExistFoundByAbbreviationAndName() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+        stock.setIsDeleted(Boolean.TRUE);
+
+        when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
+        when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
+                .thenReturn(Optional.of(stock));
+        when(tagService.getTag(tag.getName())).thenReturn(tag);
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
+        assertAll(() -> stockService.createStock(createStockDTO, tag.getName()));
+    }
+
+    @Test
+    @DisplayName("Creating stock when given amounts of stock mismatch")
     void shouldThrowInvalidInputDataExceptionWhenCreatingStockAndAmountMismatch() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
-        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+        createStockDTO.setAmount(createStockDTO.getAmount()*2);
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
         when(tagService.getTag(tag.getName())).thenReturn(tag);
-        when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
+        createStockDTO.setAmount(createStockDTO.getAmount()/2);
     }
 
     @Test
+    @DisplayName("Creating stock when user not found")
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersNotFound() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
         when(tagService.getTag(tag.getName())).thenReturn(tag);
-        when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.empty());
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.empty());
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
+    @DisplayName("Creating stock when given user is admin")
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersIsAdmin() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
-        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.ADMIN, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(1);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
         when(tagService.getTag(tag.getName())).thenReturn(tag);
-        when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
+    @DisplayName("Creating stock when user tagged using different tag")
     void shouldThrowInvalidInputDataExceptionWhenOneOfUsersIsTaggedUsingAnotherTagThanStock() {
-        Tag tag = new Tag(1L, "default");
-        Tag tag2 = new Tag(2L, "test");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount(), BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(null, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), tag);
-        User user = createCustomUser(ownerDTO.getUser().getId(), "test@test.com",
-                "John", "Kowal", BigDecimal.ZERO, Role.USER, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag2 = getTagsList().get(1);
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation())).thenReturn(Optional.empty());
         when(modelMapper.map(createStockDTO, Stock.class)).thenReturn(stock);
         when(tagService.getTag(tag2.getName())).thenReturn(tag2);
-        when(userRepository.findById(Mockito.anyLong()))
-                .thenReturn(Optional.of(user));
+        when(userRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(user));
         assertThrows(InvalidInputDataException.class, () -> stockService.createStock(createStockDTO, tag2.getName()));
     }
 
     @Test
+    @DisplayName("Creating stock when stock already exists - found abbreviation")
     void shouldThrowEntityAlreadyExistsExceptionWhenGivenAbbreviationFound() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(1L, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), false, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
+
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.empty());
         when(stockRepository.findByAbbreviationIgnoreCase(createStockDTO.getAbbreviation()))
                 .thenReturn(Optional.of(stock));
-
         assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
+    @DisplayName("Creating stock when stock already exists - found name")
     void shouldThrowEntityAlreadyExistsExceptionWhenGivenNameFound() {
-        Tag tag = new Tag(1L, "default");
-        OwnerDTO ownerDTO = createCustomOwnerDTO(100, 1L);
-        CreateStockDTO createStockDTO = createCustomCreateStockDTO("WIG20", "W20",
-                ownerDTO.getAmount()*2, BigDecimal.TEN, Collections.singletonList(ownerDTO));
-        Stock stock = createCustomStock(1L, createStockDTO.getName(), createStockDTO.getAbbreviation(),
-                createStockDTO.getAmount(), createStockDTO.getCurrentPrice(), false, tag);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        CreateStockDTO createStockDTO = createRequestCreateStockDTO(stock, user);
+        Tag tag = stock.getTag();
         when(stockRepository.findByNameIgnoreCase(createStockDTO.getName())).thenReturn(Optional.of(stock));
-
         assertThrows(EntityExistsException.class, () -> stockService.createStock(createStockDTO, tag.getName()));
     }
 
     @Test
+    @DisplayName("Deleting stock")
     void shouldDeleteStock() {
-        Long stockId = 1L;
-        Stock stock = createCustomStock(stockId, "WIG30", "WIG", 10000, BigDecimal.valueOf(100.20));
-        User user = createCustomUser(1L, "test@test.com", "John", "Kowal", BigDecimal.ZERO);
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        stock.setResources(new ArrayList<>(
+                Collections.singletonList(
+                        Resource.builder().stock(stock).user(user).amount(stock.getAmount()).build()
+                )));
+        Long stockId = stock.getId();
         List<Order> stocksOrders = List.of(createCustomOrder(1L, 100, 100,
                 OrderType.SELLING_ORDER, PriceType.EQUAL, BigDecimal.TEN, OffsetDateTime.now().minusDays(1),
                 OffsetDateTime.now().plusHours(1), null, user, stock));
         List<ArchivedOrder> archivedOrders = stocksOrders.stream()
-                .map(OrderServiceImplTest::createCustomArchivedOrder)
+                .map(OrderServiceImplTest::convertOrder)
                 .collect(Collectors.toList());
+
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
         when(orderRepository.findByStock(stock)).thenReturn(stocksOrders);
         when(modelMapper.map(Mockito.any(Order.class), Mockito.eq(ArchivedOrder.class)))
                 .thenReturn(archivedOrders.get(0));
         assertAll(() -> stockService.deleteStock(stockId));
+        stock.getResources().clear();
     }
 
     @Test
+    @DisplayName("Deleting stock when stock not found")
     void shouldThrowEntityNotFoundExceptionWhenDeletingStock() {
         Long stockId = 1L;
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class, () -> stockService.deleteStock(stockId));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount")
+    void shouldUpdateStockAmount() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.empty());
+        assertAll(() -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when at least one of specified user possess updating stock - increasing amount")
+    void shouldUpdateStockAmountWhenUserAlreadyPossessUpdatingStockAddingStock() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        Long stockId = stock.getId();
+        Resource resource = Resource.builder().id(1L).stock(stock).user(user).amount(10).build();
+        stock.getResources().add(resource);
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        assertAll(() -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount - decreasing amount")
+    void shouldUpdateStockAmountWhenDeletingStock() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount()/2);
+        updateStockAmount.setAmount(updateStockAmount.getAmount()*-1);
+        Resource resource = Resource.builder().id(1L).stock(stock).user(user).amount(stock.getAmount()/2).build();
+        stock.getResources().add(resource);
+        user.setTag(stock.getTag());
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        assertAll(() -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when at least one of specified user not possessing updating stock")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserNotOwnStock() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount()/2);
+        updateStockAmount.setAmount(-stock.getAmount()/2);
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when at least one of specified user tagged using different tag")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserTaggedUsingAnotherTag() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        Long stockId = stock.getId();
+        user.setTag(getTagsList().get(1));
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when at least one of specified user is admin")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserIsAdmin() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(1);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        updateStockAmount.getOwners().get(0).getUser().setId(user.getId());
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when at least one of specified user not found")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndUserNotFound() {
+        Stock stock = getStocksList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when amount after update is non-positive")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndNonPositiveValueAfterChange() {
+        Stock stock = getStocksList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount()*2);
+        updateStockAmount.setAmount(updateStockAmount.getAmount()*-1);
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when amounts mismatch")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndAmountValuesMismatch() {
+        Stock stock = getStocksList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        updateStockAmount.setAmount(updateStockAmount.getAmount()/2);
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when amount is zero")
+    void shouldThrowInvalidInputDataExceptionWhenUpdatingStockAmountAndAmountIsZero() {
+        Stock stock = getStocksList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(0);
+        Long stockId = stock.getId();
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        assertThrows(InvalidInputDataException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    @Test
+    @DisplayName("Updating stock's amount when stock not found")
+    void shouldThrowEntityNotFoundExceptionWhenUpdatingStockAmountAndStockNotFound() {
+        Stock stock = getStocksList().get(0);
+        UpdateStockAmountDTO updateStockAmount = createRequestUpdateStockAmountDTO(stock.getAmount());
+        updateStockAmount.setAmount(updateStockAmount.getAmount()/2);
+        Long stockId = 3L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> stockService.updateStockAmount(stockId, updateStockAmount));
+    }
+
+    public static List<Stock> stocks;
+
+    public static List<Stock> getStocksList() {
+        if (stocks == null) {
+            setStockList();
+        }
+        return stocks;
+    }
+
+    private static void setStockList() {
+        var tags = getTagsList();
+        stocks = Arrays.asList(
+                Stock.builder()
+                        .id(1L).name("WiG20").abbreviation("W20").amount(10000).currentPrice(BigDecimal.ZERO)
+                        .tag(tags.get(0)).isDeleted(Boolean.FALSE).resources(new ArrayList<>())
+                        .build(),
+                Stock.builder()
+                        .id(2L).name("WiG30").abbreviation("W30").amount(10000).currentPrice(BigDecimal.ZERO)
+                        .tag(tags.get(0)).isDeleted(Boolean.FALSE).resources(new ArrayList<>())
+                        .build());
     }
 
     public static void assertStock(Stock output, Stock expected) {
@@ -312,68 +590,29 @@ class StockServiceImplTest {
                 () -> assertTag(expected.getTag(), output.getTag()));
     }
 
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                            Integer amount, BigDecimal currentPrice) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .build();
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                          Integer amount, BigDecimal currentPrice, Tag tag) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .tag(tag)
-                .build();
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                          Integer amount, BigDecimal currentPrice, Boolean isDeleted) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .isDeleted(isDeleted)
-                .build();
-    }
-
-    public static Stock createCustomStock(Long id, String name, String abbreviation,
-                                          Integer amount, BigDecimal currentPrice, Boolean isDeleted, Tag tag) {
-        return Stock.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .resources(new ArrayList<>())
-                .isDeleted(isDeleted)
-                .tag(tag)
-                .build();
-    }
-
-    public static StockDTO createCustomStockDTO(Long id, String name, String abbreviation,
-                                                 Integer amount, BigDecimal currentPrice) {
-        return StockDTO.builder()
-                .id(id).name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .build();
-    }
-
-    public static CreateStockDTO createCustomCreateStockDTO(String name, String abbreviation, Integer amount,
-                                                            BigDecimal currentPrice, List<OwnerDTO> owners) {
+    public static CreateStockDTO createRequestCreateStockDTO(Stock stock, User user) {
         return CreateStockDTO.builder()
-                .name(name).abbreviation(abbreviation)
-                .amount(amount).currentPrice(currentPrice)
-                .owners(owners)
+                .name(stock.getName())
+                .abbreviation(stock.getAbbreviation())
+                .amount(stock.getAmount())
+                .currentPrice(BigDecimal.TEN)
+                .owners(Collections.singletonList(
+                        OwnerDTO.builder()
+                                .amount(stock.getAmount())
+                                .user(UserDTO.builder().id(user.getId()).build())
+                                .build()))
                 .build();
     }
 
-    public static OwnerDTO createCustomOwnerDTO(Integer amount, Long userId) {
-        return OwnerDTO.builder()
+    public static UpdateStockAmountDTO createRequestUpdateStockAmountDTO(Integer amount) {
+        return UpdateStockAmountDTO.builder()
                 .amount(amount)
-                .user(UserDTO.builder().id(userId).build())
-                .build();
+                .owners(Collections.singletonList(
+                        OwnerDTO.builder()
+                                .amount(amount)
+                                .user(UserDTO.builder().id(1L).build())
+                                .build()
+                )).build();
     }
 
 }

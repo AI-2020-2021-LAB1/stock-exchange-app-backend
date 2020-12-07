@@ -1,21 +1,20 @@
 package com.project.stockexchangeappbackend.service;
 
+import com.project.stockexchangeappbackend.dto.MoveStockDTO;
 import com.project.stockexchangeappbackend.dto.OwnerDTO;
 import com.project.stockexchangeappbackend.dto.ResourceDTO;
 import com.project.stockexchangeappbackend.dto.UserDTO;
-import com.project.stockexchangeappbackend.entity.OrderType;
-import com.project.stockexchangeappbackend.entity.Resource;
-import com.project.stockexchangeappbackend.entity.Stock;
-import com.project.stockexchangeappbackend.entity.User;
+import com.project.stockexchangeappbackend.entity.*;
+import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.OrderRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -35,8 +34,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.project.stockexchangeappbackend.service.StockServiceImplTest.createCustomStock;
-import static com.project.stockexchangeappbackend.service.UserServiceImplTest.createCustomUser;
+import static com.project.stockexchangeappbackend.service.OrderServiceImplTest.createSellingOrder;
+import static com.project.stockexchangeappbackend.service.StockServiceImplTest.getStocksList;
+import static com.project.stockexchangeappbackend.service.TagServiceImplTest.getTagsList;
+import static com.project.stockexchangeappbackend.service.UserServiceImplTest.getUsersList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -64,24 +65,29 @@ class ResourceServiceImplTest {
     ModelMapper modelMapper;
 
     @Test
-    void shouldPageAndFilterResources(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ONE);
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 100, BigDecimal.TEN);
-        List<Resource> resources = Collections.singletonList(createCustomResource(1L, stock, user, 100));
+    @DisplayName("Paging and filtering logged in user's stocks")
+    void shouldPageAndFilterOwnedResources(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        User user = getUsersList().get(0);
+        List<Resource> resources = getStocksList().stream()
+                .map(stock -> createCustomResource(1L, stock, user, stock.getAmount()))
+                .collect(Collectors.toList());
         List<ResourceDTO> resourcesDTO = resources.stream()
-                .map(res -> createCustomResourceDTO(res.getId(), res.getStock(), res.getAmount()))
+                .map(res -> createCustomResourceDTO(res.getStock().getId(), res.getStock(), res.getAmount()))
                 .collect(Collectors.toList());
         Pageable pageable = PageRequest.of(0,20);
         Specification<Resource> resourceSpecification =
-                (Specification<Resource>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
         SecurityContextHolder.setContext(securityContext);
+
         when(securityContext.getAuthentication()).thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user.getEmail());
         when(resourceRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(resources, pageable, resources.size()));
-        when(modelMapper.map(resources.get(0), ResourceDTO.class)).thenReturn(resourcesDTO.get(0));
+        when(modelMapper.map(any(Resource.class), eq(ResourceDTO.class)))
+                .thenReturn(resourcesDTO.get(0))
+                .thenReturn(resourcesDTO.get(1));
         when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
-                eq(stock), eq(user), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
+                any(Stock.class), eq(user), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
                 .thenReturn(Collections.emptyList());
         Page<ResourceDTO> output = resourceService.getOwnedResources(pageable, resourceSpecification);
         assertEquals(resourcesDTO.size(), output.getNumberOfElements());
@@ -91,23 +97,28 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's stocks")
     void shouldPageAndFilterUsersResources() {
-        Long userId = 1L;
-        User user = createCustomUser(userId, "test@test.pl", "John", "Kowal", BigDecimal.ONE);
-        Stock stock = createCustomStock(1L, "WIG30", "W30", 100, BigDecimal.TEN);
-        List<Resource> resources = Collections.singletonList(createCustomResource(1L, stock, user, 100));
+        User user = getUsersList().get(0);
+        List<Resource> resources = getStocksList().stream()
+                .map(stock -> createCustomResource(1L, stock, user, stock.getAmount()))
+                .collect(Collectors.toList());
         List<ResourceDTO> resourcesDTO = resources.stream()
-                .map(res -> createCustomResourceDTO(res.getId(), res.getStock(), res.getAmount()))
+                .map(res -> createCustomResourceDTO(res.getStock().getId(), res.getStock(), res.getAmount()))
                 .collect(Collectors.toList());
         Pageable pageable = PageRequest.of(0,20);
         Specification<Resource> resourceSpecification =
-                (Specification<Resource>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
+        Long userId = user.getId();
+
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
         when(resourceRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(resources, pageable, resources.size()));
-        when(modelMapper.map(resources.get(0), ResourceDTO.class)).thenReturn(resourcesDTO.get(0));
+        when(modelMapper.map(any(Resource.class), eq(ResourceDTO.class)))
+                .thenReturn(resourcesDTO.get(0))
+                .thenReturn(resourcesDTO.get(1));
         when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
-                eq(stock), eq(user), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
+                any(Stock.class), eq(user), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
                 .thenReturn(Collections.emptyList());
         Page<ResourceDTO> output = resourceService.getUsersResources(pageable, resourceSpecification, userId);
         assertEquals(resourcesDTO.size(), output.getNumberOfElements());
@@ -117,32 +128,42 @@ class ResourceServiceImplTest {
     }
 
     @Test
+    @DisplayName("Paging and filtering user's stocks when user not found")
     void shouldThrowEntityNotFoundExceptionWhenPagingAndFilteringUsersResources() {
         Long userId = 1L;
         Pageable pageable = PageRequest.of(0,20);
         Specification<Resource> resourceSpecification =
-                (Specification<Resource>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("name"), "WIG");
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> resourceService.getUsersResources(pageable, resourceSpecification, userId));
+        assertThrows(EntityNotFoundException.class,
+                () -> resourceService.getUsersResources(pageable, resourceSpecification, userId));
     }
 
     @Test
+
+    @DisplayName("Paging and filtering stock's owners")
     void shouldPageAndFilterStockOwners() {
-        Long stockId = 1L;
-        User user = createCustomUser(1L, "test@test.pl", "John", "Kowal", BigDecimal.ONE);
-        Stock stock = createCustomStock(stockId, "WIG30", "W30", 100, BigDecimal.TEN);
-        List<Resource> resources = Collections.singletonList(createCustomResource(1L, stock, user, 100));
+        Stock stock = getStocksList().get(0);
+        Long stockId = stock.getId();
+        List<Resource> resources = getUsersList().stream()
+                .map(user -> createCustomResource(user.getId(), stock, user,
+                        stock.getAmount()/getUsersList().size()))
+                .collect(Collectors.toList());
         List<OwnerDTO> ownersDTO = resources.stream()
                 .map(res -> createCustomOwnerDTO(res.getUser(), res.getAmount()))
                 .collect(Collectors.toList());
         Pageable pageable = PageRequest.of(0,20);
         Specification<Resource> resourceSpecification =
-                (Specification<Resource>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("email"), "test");
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("email"), "user");
+
         when(stockRepository.findByIdAndIsDeletedFalse(stockId))
                 .thenReturn(Optional.of(stock));
         when(resourceRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(resources, pageable, resources.size()));
-        when(modelMapper.map(resources.get(0).getUser(), UserDTO.class)).thenReturn(ownersDTO.get(0).getUser());
+        when(modelMapper.map(any(User.class), eq(UserDTO.class)))
+                .thenReturn(ownersDTO.get(0).getUser())
+                .thenReturn(ownersDTO.get(1).getUser())
+                .thenReturn(ownersDTO.get(2).getUser());
         Page<OwnerDTO> output = resourceService.getStockOwners(pageable, resourceSpecification, stockId);
         assertEquals(ownersDTO.size(), output.getNumberOfElements());
         for (int i=0; i<ownersDTO.size(); i++) {
@@ -151,14 +172,191 @@ class ResourceServiceImplTest {
     }
 
     @Test
-    void shouldThrowEntityNotFoundExceptionWHenPagingAndFilteringStockOwnersAndStockNotFound() {
+    @DisplayName("Paging and filtering stock's owners when stock not found")
+    void shouldThrowEntityNotFoundExceptionWhenPagingAndFilteringStockOwnersAndStockNotFound() {
         Long stockId = 1L;
         Pageable pageable = PageRequest.of(0,20);
         Specification<Resource> resourceSpecification =
-                (Specification<Resource>) (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("email"), "test");
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("email"), "test");
+
         when(stockRepository.findByIdAndIsDeletedFalse(stockId))
                 .thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class, () -> resourceService.getStockOwners(pageable, resourceSpecification, stockId));
+        assertThrows(EntityNotFoundException.class,
+                () -> resourceService.getStockOwners(pageable, resourceSpecification, stockId));
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another")
+    void shouldMoveStocksFromOneToAnother() {
+        Stock stock = getStocksList().get(0);
+        List<User> users = getUsersList();
+        users.get(1).setRole(Role.USER);
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(users.get(0).getId(), users.get(1).getId(), stock.getAmount()/2);
+        Resource resource = createCustomResource(1L, stock, users.get(0), stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(users.get(0)));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(users.get(1)));
+        when(resourceRepository.findByUserAndStock(users.get(0), stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                any(Stock.class), any(User.class), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)
+        )).thenReturn(Collections.emptyList());
+        when(resourceRepository.findByUserAndStock(users.get(1),stock)).thenReturn(Optional.empty());
+        assertAll(() -> resourceService.moveStock(stockId, moveStock));
+        users.get(0).setRole(Role.USER);
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another - not all stocks")
+    void shouldMoveStocksFromOneToAnotherNotAllUserSourceStocks() {
+        Stock stock = getStocksList().get(0);
+        List<User> users = getUsersList();
+        users.get(1).setRole(Role.USER);
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(users.get(0).getId(), users.get(1).getId(), stock.getAmount()/4);
+        Resource resource = createCustomResource(1L, stock, users.get(0), stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(users.get(0)));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(users.get(1)));
+        when(resourceRepository.findByUserAndStock(users.get(0), stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                any(Stock.class), any(User.class), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)
+        )).thenReturn(Collections.emptyList());
+        when(resourceRepository.findByUserAndStock(users.get(1),stock)).thenReturn(Optional.empty());
+        assertAll(() -> resourceService.moveStock(stockId, moveStock));
+        users.get(0).setRole(Role.USER);
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when source user not having enough stocks")
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserNotHaveEnoughStock() {
+        Stock stock = getStocksList().get(0);
+        List<User> users = getUsersList();
+        users.get(1).setRole(Role.USER);
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(users.get(0).getId(), users.get(1).getId(), stock.getAmount()/2);
+        Resource resource = createCustomResource(1L, stock, users.get(0), stock.getAmount()/2);
+        Order order = createSellingOrder(1L, stock.getAmount()/4, BigDecimal.ONE,
+                OffsetDateTime.now().plusHours(1), users.get(0), stock);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(users.get(0)));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(users.get(1)));
+        when(resourceRepository.findByUserAndStock(users.get(0), stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                eq(stock), eq(users.get(0)), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
+                .thenReturn(Collections.singletonList(order));
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+        users.get(1).setRole(Role.ADMIN);
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when destination user is admin")
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserIsAdmin() {
+        Stock stock = getStocksList().get(0);
+        List<User> users = getUsersList();
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(users.get(0).getId(), users.get(1).getId(), stock.getAmount()/2);
+        Resource resource = createCustomResource(1L, stock, users.get(0), stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(users.get(0)));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(users.get(1)));
+        when(resourceRepository.findByUserAndStock(users.get(0), stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                eq(stock), eq(users.get(0)), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when users tagged using another tag")
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndOthersTags() {
+        Stock stock = getStocksList().get(0);
+        List<User> users = getUsersList();
+        users.get(1).setRole(Role.USER);
+        users.get(1).setTag(getTagsList().get(1));
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(users.get(0).getId(), users.get(1).getId(), stock.getAmount()/2);
+        Resource resource = createCustomResource(1L, stock, users.get(0), stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(users.get(0)));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(users.get(1)));
+        when(resourceRepository.findByUserAndStock(users.get(0), stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                eq(stock), eq(users.get(0)), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class))).
+                thenReturn(Collections.emptyList());
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+        users.get(1).setRole(Role.ADMIN);
+        users.get(1).setTag(getTagsList().get(0));
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when source user is destination user")
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserIsDestination() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(user.getId(), user.getId(), stock.getAmount()/2);
+        Resource resource = createCustomResource(1L, stock, user, stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(user));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(user));
+        when(resourceRepository.findByUserAndStock(user, stock)).thenReturn(Optional.of(resource));
+        when(orderRepository.findByStockAndUserAndOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
+                eq(stock), eq(user), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
+                .thenReturn(Collections.emptyList());
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when destination user not found")
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndDestinationUserNotFound() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(user.getId(), 2L, stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.of(user));
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.empty());
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when source user not found")
+    void shouldThrowInvalidInputDataExceptionWhenMovingStocksFromOneToAnotherAndSourceUserNotFound() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(user.getId(), 2L, stock.getAmount()/2);
+        Long stockId = 1L;
+
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
+        when(userRepository.findById(moveStock.getUserSource().getId())).thenReturn(Optional.empty());
+        when(userRepository.findById(moveStock.getUserDestination().getId())).thenReturn(Optional.of(user));
+        assertThrows(InvalidInputDataException.class, () -> resourceService.moveStock(stockId, moveStock));
+    }
+
+    @Test
+    @DisplayName("Moving stock's ownership from one user to another when stock not found")
+    void shouldThrowEntityNotFoundExceptionWhenMovingStocksFromOneToAnotherAndStockNotFound() {
+        MoveStockDTO moveStock =
+                createRequestMoveStockDTO(1L, 2L, 100);
+        Long stockId = 1L;
+        when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> resourceService.moveStock(stockId, moveStock));
     }
 
     public static void assertResourceDTO(ResourceDTO output, ResourceDTO expected) {
@@ -209,6 +407,14 @@ class ResourceServiceImplTest {
                         .lastName(user.getLastName())
                         .money(user.getMoney())
                         .build())
+                .build();
+    }
+
+    public static MoveStockDTO createRequestMoveStockDTO (Long sourceId, Long destinationId, Integer amount) {
+        return MoveStockDTO.builder()
+                .amount(amount)
+                .userSource(UserDTO.builder().id(sourceId).build())
+                .userDestination(UserDTO.builder().id(destinationId).build())
                 .build();
     }
 

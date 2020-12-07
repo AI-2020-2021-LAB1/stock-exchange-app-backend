@@ -2,6 +2,7 @@ package com.project.stockexchangeappbackend.dto;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
@@ -11,6 +12,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
 @Data
+@AllArgsConstructor
 @Builder
 @ApiModel(description = "User object to registration in database.")
 public class RegistrationUserDTO {
@@ -39,7 +41,7 @@ public class RegistrationUserDTO {
                     "one lowercase letter, one number and one special character.")
     @ApiModelProperty(notes = "The user's password. This field must contain: minimum eight characters, " +
             "at least one uppercase letter, one lowercase letter, one number and one special character.",
-            required = true, allowableValues="range[6, infinity]")
+            required = true, allowableValues="range[8, infinity]")
     private String password;
 
 }

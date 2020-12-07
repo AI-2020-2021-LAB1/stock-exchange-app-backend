@@ -1,6 +1,5 @@
 package com.project.stockexchangeappbackend.repository;
 
-import com.project.stockexchangeappbackend.entity.ArchivedOrder;
 import com.project.stockexchangeappbackend.entity.Transaction;
 import com.project.stockexchangeappbackend.util.timemeasuring.DBQueryMeasureTime;
 import org.springframework.data.domain.Page;

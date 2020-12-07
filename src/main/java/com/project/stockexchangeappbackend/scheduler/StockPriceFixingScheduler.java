@@ -1,7 +1,6 @@
 package com.project.stockexchangeappbackend.scheduler;
 
 import com.project.stockexchangeappbackend.entity.StockIndexValue;
-import com.project.stockexchangeappbackend.entity.Transaction;
 import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import com.project.stockexchangeappbackend.service.TransactionService;
@@ -33,7 +32,7 @@ public class StockPriceFixingScheduler {
                     BigDecimal newPrice = BigDecimal.valueOf(
                             transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount())
                             .stream()
-                            .mapToInt(Transaction::getAmount)
+                            .mapToDouble(transaction -> transaction.getUnitPrice().doubleValue())
                             .average()
                             .orElseGet(() -> stock.getCurrentPrice().doubleValue()));
                     stock.setCurrentPrice(newPrice);

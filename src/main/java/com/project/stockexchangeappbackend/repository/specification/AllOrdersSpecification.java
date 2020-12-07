@@ -8,6 +8,7 @@ import net.kaczmarzyk.spring.data.jpa.web.annotation.Spec;
 import org.springframework.data.jpa.domain.Specification;
 
 @Join(path = "stock", alias = "s")
+@Join(path = "s.tag", alias = "t")
 @And({
         @Spec(path = "remainingAmount", spec = GreaterThanOrEqual.class, params = {"remainingAmount>"}),
         @Spec(path = "remainingAmount", spec = LessThanOrEqual.class, params = {"remainingAmount<"}),
@@ -29,6 +30,7 @@ import org.springframework.data.jpa.domain.Specification;
         @Spec(path = "dateClosing", spec = Null.class, params = {"active"}),
         @Spec(path = "s.name", spec = LikeIgnoreCase.class, params = {"name"}),
         @Spec(path = "s.abbreviation", spec = LikeIgnoreCase.class, params = {"abbreviation"}),
+        @Spec(path = "t.name", spec = EqualIgnoreCase.class, params = {"tag"})
 })
 
 public interface AllOrdersSpecification extends Specification<AllOrders> {

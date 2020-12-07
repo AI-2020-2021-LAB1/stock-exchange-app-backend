@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.validation.Valid;
 import java.security.Principal;
 
 @RestController
@@ -72,6 +74,8 @@ public class UsersController {
                     value = "Filtering criteria for field `money`. Param is exact value. (omitted if null)"),
             @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
+            @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
+                    value = "Filtering criteria for field `active`. Param is exact value. (omitted if null)")
     })
     public Page<UserDTO> getUsers(@ApiIgnore Pageable pageable, UserSpecification specification) {
         return userService.getUsers(pageable, specification)
@@ -85,6 +89,29 @@ public class UsersController {
             @ApiResponse(code = 404, message = "Given user not found.", response = ErrorResponse.class)})
     public UserDTO getUser(Principal principal) {
         return mapper.map(userService.findUserByEmail(principal.getName()), UserDTO.class);
+    }
+
+    @PostMapping("/config/change-password")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiOperation(value = "Change user's password", notes = "Required one role of: USER, ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "User password was successfully changed."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class)})
+    public void changePassword(@ApiParam(value = "Change password object", required = true)
+                               @RequestBody @Valid ChangePasswordDTO changePasswordDTO, Principal principal) {
+        userService.changeUserPassword(changePasswordDTO, principal);
+    }
+
+    @PutMapping("/config/user-data")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @ApiOperation(value = "Change logged in user first and last name", notes = "Required one role of: USER, ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "User first and last name was successfully changed."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class)
+    })
+    public void changeDetails(@ApiParam(value = "User's details object to edit.", required = true)
+                                  @RequestBody @Valid EditUserNameDTO userName, Principal principal) {
+        userService.changeUserDetails(userName, principal);
     }
 
     @GetMapping("/stock/owned")
@@ -169,7 +196,9 @@ public class UsersController {
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<OrderDTO> getOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification) {
         return orderService.getOwnedOrders(pageable, specification)
@@ -276,7 +305,9 @@ public class UsersController {
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<OrderDTO> getUserOwnedOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification specification,
                                              @ApiParam(value = "The user's id.", required = true)
@@ -375,6 +406,20 @@ public class UsersController {
                                                      @ApiParam("The user's id") @PathVariable Long id) {
         return transactionService.getUserTransactions(pageable, specification, id, isSeller, isBuyer)
                 .map(transaction -> mapper.map(transaction, TransactionDTO.class));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @ApiOperation(value = "Update existing user as administrator", notes = "Required role of: ADMIN")
+    @ApiResponses({@ApiResponse(code = 200, message = "User's details were successfully updated."),
+            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
+                    response = ErrorResponse.class),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 404, message = "User not found.", response = ErrorResponse.class)})
+    public void updateUser(@ApiParam(value = "User's details object to edit.", required = true)
+                           @RequestBody @Valid EditUserDetailsDTO editUserDetailsDTO,
+                           @ApiParam("The user's id") @PathVariable Long id) {
+        userService.updateUser(id, editUserDetailsDTO);
     }
 
 }

@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
+import com.project.stockexchangeappbackend.dto.CreateOrderDTO;
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.OrderDTO;
 import com.project.stockexchangeappbackend.dto.TransactionDTO;
@@ -47,7 +48,7 @@ public class OrderController {
                     response = ErrorResponse.class),
             @ApiResponse(code = 403, message = "Access Denied.")})
     public void createOrder(@ApiParam(value = "Order object to create.", required = true)
-                            @RequestBody @Valid OrderDTO orderDTO) {
+                            @RequestBody @Valid CreateOrderDTO orderDTO) {
         orderService.createOrder(orderDTO);
     }
 
@@ -98,7 +99,9 @@ public class OrderController {
             @ApiImplicitParam(name = "dateClosing<", dataType = "date", paramType = "query",
                     value = "Filtering criteria for field `creationClosing`. (omitted if null)"),
             @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for state of order. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
+                    value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
     })
     public Page<OrderDTO> getOrders(@ApiIgnore Pageable pageable, AllOrdersSpecification allOrdersSpecification) {
         return orderService.findAllOrders(pageable, allOrdersSpecification)
