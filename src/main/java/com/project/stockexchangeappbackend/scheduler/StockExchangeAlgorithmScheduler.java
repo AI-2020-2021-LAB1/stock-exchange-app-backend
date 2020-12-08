@@ -16,7 +16,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
@@ -53,18 +52,11 @@ public class StockExchangeAlgorithmScheduler {
                         .sorted(Comparator.comparing(Order::getPrice))
                         .collect(Collectors.toList())));
 
-        ConcurrentMap<Stock, List<Order>> groupedAndSortedSellingOrders =  groupedBuyingOrdersByStock.entrySet()
-                .parallelStream()
-                .collect(Collectors.toConcurrentMap(Map.Entry::getKey, entry -> {
-                    List<Order> relatedList = groupedBuyingOrdersByStock.get(entry.getKey());
-                    return orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(entry.getKey(),
-                            relatedList.get(relatedList.size() - 1).getPrice());
-                }));
-
         groupedBuyingOrdersByStock.entrySet().parallelStream()
                 .forEach(entry -> {
                     List<Order> buyingOrders = entry.getValue();
-                    List<Order> sellingOrders = groupedAndSortedSellingOrders.get(entry.getKey());
+                    List<Order> sellingOrders = orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(
+                            entry.getKey(), entry.getValue().get(entry.getValue().size() - 1).getPrice());
                     int index = 0;
                     while (!(buyingOrders.isEmpty() || sellingOrders.isEmpty())) {
                         Order buyingOrder = buyingOrders.get(index);
