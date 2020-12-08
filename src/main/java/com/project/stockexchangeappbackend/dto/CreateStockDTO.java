@@ -21,6 +21,7 @@ public class CreateStockDTO {
 
     @ApiModelProperty(notes = "The stock's name.")
     @NotBlank(message = "This field is required.")
+    @Size(max = 255, message = "Length of the name can be {max} characters long.")
     private String name;
 
     @ApiModelProperty(notes = "The stock's abbreviation.")

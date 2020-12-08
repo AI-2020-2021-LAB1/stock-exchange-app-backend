@@ -18,6 +18,7 @@ import javax.validation.constraints.Size;
 public class EditStockNameDTO {
 
     @ApiModelProperty(notes = "The stock's name.")
+    @Size(max = 255, message = "Length of the name can be {max} characters long.")
     @NotBlank(message = "This field is required.")
     private String name;
 

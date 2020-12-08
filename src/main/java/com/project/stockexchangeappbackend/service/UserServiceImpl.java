@@ -5,6 +5,7 @@ import com.project.stockexchangeappbackend.dto.EditUserDetailsDTO;
 import com.project.stockexchangeappbackend.dto.EditUserNameDTO;
 import com.project.stockexchangeappbackend.dto.RegistrationUserDTO;
 import com.project.stockexchangeappbackend.entity.Role;
+import com.project.stockexchangeappbackend.entity.Tag;
 import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.AllOrdersRepository;
@@ -48,6 +49,8 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByEmailIgnoreCase(registrationUserDTO.getEmail()).isPresent()) {
             throw new EntityExistsException("User with given email already exists.");
         }
+        Tag tagObject = tagService.getTag(tag.trim())
+                .orElseThrow(() -> new InvalidInputDataException("Tag not found", null));
         userRepository.save(User.builder()
                 .email(registrationUserDTO.getEmail().trim())
                 .password(passwordEncoder.encode(registrationUserDTO.getPassword()))
@@ -55,7 +58,7 @@ public class UserServiceImpl implements UserService {
                 .lastName(registrationUserDTO.getLastName().trim())
                 .role(Role.USER)
                 .money(BigDecimal.ZERO)
-                .tag(tagService.getTag(tag.trim()))
+                .tag(tagObject)
                 .isActive(true)
                 .build());
         log.info("User " + registrationUserDTO.getEmail() + " was successfully registered.");

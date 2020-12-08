@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface StockService {
@@ -17,6 +18,7 @@ public interface StockService {
     Stock getStockByAbbreviation(String abbreviation);
     List<Stock> getAllStocks();
     Stock updateStock(Stock stock);
+    void updateStocks(Collection<Stock> stocks);
     void updateStock(EditStockNameDTO stock, String id);
     Stock getStockByIdOrAbbreviation(String id);
     void createStock(CreateStockDTO stockDTO, String tag);

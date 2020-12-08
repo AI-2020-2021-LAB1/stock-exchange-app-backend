@@ -1,5 +1,6 @@
 package com.project.stockexchangeappbackend.rest;
 
+import com.project.stockexchangeappbackend.dto.CreateTagDTO;
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.TagDTO;
 import com.project.stockexchangeappbackend.repository.specification.TagSpecification;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
+
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/tag")
@@ -60,6 +63,16 @@ public class TagController {
             @ApiResponse(code = 404, message = "Tag not found.", response = ErrorResponse.class)})
     public void deleteTag(@ApiParam(value = "The tag's name.") @PathVariable(value = "name") String tag) {
         tagService.removeTag(tag);
+    }
+
+    @PostMapping
+    @ApiOperation(value = "Create new tag", notes = "Required role ADMIN.")
+    @ApiResponses({@ApiResponse(code = 200, message = "Tag was successfully retrieved."),
+            @ApiResponse(code = 401, message = "Unauthorized."),
+            @ApiResponse(code = 403, message = "Access Denied."),
+            @ApiResponse(code = 409, message = "Tag already exist.", response = ErrorResponse.class)})
+    public void createTag(@ApiParam(value = "The tag's object.") @RequestBody @Valid CreateTagDTO tag) {
+        tagService.createTag(tag);
     }
 
 }

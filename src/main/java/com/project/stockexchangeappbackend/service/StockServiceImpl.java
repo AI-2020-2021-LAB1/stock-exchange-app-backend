@@ -53,6 +53,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Stock getStockByAbbreviation(String abbreviation) {
         return stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(abbreviation)
                 .orElseThrow(() -> new EntityNotFoundException("Stock Not Found"));
@@ -60,6 +61,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public List<Stock> getAllStocks() {
         Specification<Stock> stockNotDeleted = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("isDeleted"), false);
@@ -68,8 +70,16 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional
     public Stock updateStock(Stock stock) {
         return stockRepository.save(stock);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void updateStocks(Collection<Stock> stocks) {
+        stockRepository.saveAll(stocks);
     }
 
     @Override
@@ -178,6 +188,11 @@ public class StockServiceImpl implements StockService {
         if (stockInDBAbbreviation.isPresent() && !stockInDBAbbreviation.get().getIsDeleted()) {
             throw new EntityExistsException("Stock with given abbreviation already exists.");
         }
+        Optional<Tag> tagOptional = tagService.getTag(tag.trim());
+        if (tagOptional.isEmpty()) {
+            errors.put("tag", List.of("Tag not found."));
+            throw new InvalidInputDataException("Data validation", errors);
+        }
         Stock stock = stockInDBName.isPresent() && (stockInDBAbbreviation.isEmpty() ||
                 stockInDBName.get().getId().equals(stockInDBAbbreviation.get().getId())) ?
                 stockInDBName.get() : stockInDBAbbreviation
@@ -188,7 +203,12 @@ public class StockServiceImpl implements StockService {
         stock.setAmount(stockDTO.getAmount());
         stock.setCurrentPrice(stockDTO.getCurrentPrice());
         stock.setPriceChangeRatio(.0);
-        stock.setTag(tagService.getTag(tag));
+        if (stock.getTag() != null && !stock.getTag().getName().equals(tagOptional.get().getName())) {
+            errors.put("tag", List.of("This is reactivation of deleted stock. " +
+                    "Only tag " + stock.getTag().getName() + " can be used."));
+        } else {
+            stock.setTag(tagOptional.get());
+        }
         List<Optional<User>> potentialUsers = stockDTO.getOwners().stream()
                 .map(ownerDTO -> userRepository.findById(ownerDTO.getUser().getId()))
                 .collect(Collectors.toList());
