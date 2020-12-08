@@ -53,6 +53,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Stock getStockByAbbreviation(String abbreviation) {
         return stockRepository.findByAbbreviationIgnoreCaseAndIsDeletedFalse(abbreviation)
                 .orElseThrow(() -> new EntityNotFoundException("Stock Not Found"));
@@ -60,6 +61,7 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public List<Stock> getAllStocks() {
         Specification<Stock> stockNotDeleted = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("isDeleted"), false);
@@ -68,8 +70,16 @@ public class StockServiceImpl implements StockService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional
     public Stock updateStock(Stock stock) {
         return stockRepository.save(stock);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional
+    public void updateStocks(Collection<Stock> stocks) {
+        stockRepository.saveAll(stocks);
     }
 
     @Override

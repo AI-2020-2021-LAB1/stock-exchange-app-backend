@@ -27,7 +27,6 @@ public class StockPriceFixingScheduler {
         log.info("Stocks' price fixing started.");
         long start = System.nanoTime();
         stockService.getAllStocks()
-                .parallelStream()
                 .forEach(stock -> {
                     BigDecimal newPrice = BigDecimal.valueOf(
                             transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount())

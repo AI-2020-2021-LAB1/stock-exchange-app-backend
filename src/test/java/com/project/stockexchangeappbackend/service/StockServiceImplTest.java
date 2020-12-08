@@ -141,6 +141,12 @@ public class StockServiceImplTest {
     }
 
     @Test
+    @DisplayName("Updating stocks' objects")
+    void shouldUpdateStocksObjects() {
+        assertAll(() -> stockService.updateStocks(getStocksList()));
+    }
+
+    @Test
     @DisplayName("Updating stock details")
     void shouldUpdateStockDetails() {
         Stock stock = getStocksList().get(0);

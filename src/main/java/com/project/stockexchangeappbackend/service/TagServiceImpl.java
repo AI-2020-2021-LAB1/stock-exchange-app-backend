@@ -23,14 +23,14 @@ public class TagServiceImpl implements TagService {
     private final TagRepository tagRepository;
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public Optional<Tag> getTag(String name) {
         return tagRepository.findByNameIgnoreCase(name);
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public Tag findTag(String name) {
         return tagRepository.findByNameIgnoreCase(name.trim())
@@ -38,7 +38,7 @@ public class TagServiceImpl implements TagService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
     public Page<Tag> getTags(Pageable pageable, Specification<Tag> specification) {
         return tagRepository.findAll(specification, pageable);

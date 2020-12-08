@@ -63,11 +63,15 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Page<Transaction> findAllTransactions(Pageable pageable, Specification<Transaction> specification) {
         return transactionRepository.findAll(specification, pageable);
     }
 
     @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Page<Transaction> getOwnedTransactions(Pageable pageable, Specification<Transaction> specification,
                                                   boolean isSeller, boolean isBuyer) {
         String principal = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -87,6 +91,8 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Page<Transaction> getTransactionsByOrder(Pageable pageable, Specification<Transaction> specification,
                                                     Long orderId) {
         AllOrders order = allOrdersRepository.findById(orderId)
@@ -107,6 +113,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public List<Transaction> getTransactionsByStockIdForPricing(Long stockId, Integer amount) {
         List<Transaction> transactions = transactionRepository.getTransactionsByStockId(stockId);
         int sumOfAmount = amount;
@@ -123,6 +131,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public Page<Transaction> getUserTransactions(Pageable pageable, Specification<Transaction> specification,
                                                  Long userId, boolean isSeller, boolean isBuyer) {
         User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found"));

@@ -11,7 +11,6 @@ import java.util.Optional;
 public interface StockIndexValueService {
 
     void appendValue(StockIndexValue stockIndexValue);
-
     List<StockIndexValueDTO> getStockIndexValues(Long stockId, Specification<StockIndexValue> specification, Integer interval);
     Optional<StockIndexValue> getFirstStockIndexValueBeforeMinutesAgo(Stock stock, Integer minutes);
 
