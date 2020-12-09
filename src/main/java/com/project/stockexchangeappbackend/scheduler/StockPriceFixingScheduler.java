@@ -59,6 +59,7 @@ public class StockPriceFixingScheduler {
             log.error("Cannot perform database operation");
             exc.printStackTrace();
         }
+        threadPool.shutdown();
         long stop = (System.nanoTime() - start) / 1000000;
         log.info("Stocks' price fixing stopped. Execution time: " + stop + " ms.");
         log.info(Integer.valueOf(ForkJoinPool.commonPool().getParallelism()).toString());
