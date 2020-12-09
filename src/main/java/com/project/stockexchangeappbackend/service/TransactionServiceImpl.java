@@ -4,6 +4,7 @@ import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
@@ -60,6 +62,9 @@ public class TransactionServiceImpl implements TransactionService {
         updateOrder(buyingOrder);
         updateOrder(sellingOrder);
         exchangeMoneyAndStocks(buyingOrder, sellingOrder, amount, pricePerUnit);
+        log.info("Transaction with stock " + archivedBuyingOrder.getStock().getAbbreviation() + " between " +
+                archivedBuyingOrder.getUser().getEmail() + " and " +
+                archivedSellingOrder.getUser().getEmail() + " was successfully created.");
     }
 
     @Override
