@@ -112,6 +112,7 @@ public class StockExchangeAlgorithmScheduler {
                         }
                     }
                 })).join();
+        threadPool.shutdown();
         long stop = (System.nanoTime() - start) / 1000000;
         log.info("Stock exchange algorithm stopped. Execution time: " + stop + " ms.");
     }

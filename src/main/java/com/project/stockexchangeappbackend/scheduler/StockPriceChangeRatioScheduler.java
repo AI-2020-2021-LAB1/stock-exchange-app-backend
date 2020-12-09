@@ -50,6 +50,7 @@ public class StockPriceChangeRatioScheduler {
             log.error("Cannot perform database operation");
             exc.printStackTrace();
         }
+        threadPool.shutdown();
         long stop = (System.nanoTime() - start) / 1000000;
         log.info("Stocks' price change ratio fixing fixing stopped. Execution time: " + stop + " ms.");
     }
