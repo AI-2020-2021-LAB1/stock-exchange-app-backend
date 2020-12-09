@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
@@ -52,7 +54,9 @@ public class OrderServiceImpl implements OrderService {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied"));
-        orderRepository.save(validateOrder(orderDTO, stock, user));
+        Order order = orderRepository.save(validateOrder(orderDTO, stock, user));
+        log.info(orderDTO.getOrderType().toString() + " with id " + order.getId() + " of user " +
+                user.getEmail() + " was successfully created.");
     }
 
     @Override
@@ -79,6 +83,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
         archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
         archivedOrderRepository.save(archivedOrder);
+        log.info(archivedOrder.getOrderType().toString() + " with id " + order.getId() + " was successfully deactivated.");
     }
 
     @Override
@@ -122,7 +127,10 @@ public class OrderServiceImpl implements OrderService {
                     return modelMapper.map(order, ArchivedOrder.class);
                 })
                 .collect(Collectors.toList());
-        archivedOrderRepository.saveAll(archivedOrders);
+        archivedOrderRepository.saveAll(archivedOrders).forEach(order -> {
+            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully archived.");
+        });
+
     }
 
     @Override

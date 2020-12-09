@@ -90,6 +90,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setPassword(passwordEncoder.encode(changePasswordDTO.getNewPassword()));
         userRepository.save(user);
+        log.info("User " + user.getEmail() + "'s password was successfully changed.");
     }
 
     @Override
@@ -101,6 +102,7 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(editUserNameDTO.getFirstName().trim());
         user.setLastName(editUserNameDTO.getLastName().trim());
         userRepository.save(user);
+        log.info("User " + user.getEmail() + "'s details were successfully changed.");
     }
 
     @Override
@@ -145,6 +147,7 @@ public class UserServiceImpl implements UserService {
         user.setRole(editUserDetailsDTO.getRole());
         user.setIsActive(editUserDetailsDTO.getIsActive());
         userRepository.save(user);
+        log.info("User " + user.getEmail() + " was successfully updated.");
     }
 
 }

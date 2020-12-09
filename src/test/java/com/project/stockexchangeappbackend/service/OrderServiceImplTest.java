@@ -110,6 +110,7 @@ public class OrderServiceImplTest {
                 eq(stock), eq(user), eq(OrderType.SELLING_ORDER), any(OffsetDateTime.class)))
                 .thenReturn(Collections.emptyList());
         when(modelMapper.map(orderDTO, Order.class)).thenReturn(order);
+        when(orderRepository.save(order)).thenReturn(order);
         assertAll(() -> orderService.createOrder(orderDTO));
     }
 
