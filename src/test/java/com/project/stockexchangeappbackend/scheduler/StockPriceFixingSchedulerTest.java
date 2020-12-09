@@ -7,6 +7,7 @@ import com.project.stockexchangeappbackend.entity.User;
 import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import com.project.stockexchangeappbackend.service.TransactionService;
+import com.project.stockexchangeappbackend.util.ThreadsProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,6 +43,9 @@ class StockPriceFixingSchedulerTest {
     @Mock
     StockIndexValueService stockIndexValueService;
 
+    @Mock
+    ThreadsProperties threadsProperties;
+
     @Test
     @DisplayName("Fixing stock price")
     void testScheduler() {
@@ -61,14 +65,11 @@ class StockPriceFixingSchedulerTest {
                 .collect(Collectors.toList());
 
         when(stockService.getAllStocks()).thenReturn(stockList);
+        when(threadsProperties.getStockProcessing()).thenReturn(1);
         when(transactionService.getTransactionsByStockIdForPricing(stockList.get(0).getId(), stockList.get(0).getAmount()))
                 .thenReturn(stockTransactions.get(0));
         when(transactionService.getTransactionsByStockIdForPricing(stockList.get(1).getId(), stockList.get(1).getAmount()))
                 .thenReturn(stockTransactions.get(1));
-        when(stockService.updateStock(stockList.get(0)))
-                .thenReturn(stockList.get(0));
-        when(stockService.updateStock(stockList.get(1)))
-                .thenReturn(stockList.get(1));
         assertAll(() -> stockPriceFixingScheduler.run());
     }
 

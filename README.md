@@ -29,6 +29,8 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - MAX_PRICE_HISTORY_PERIOD (default: 24) - time in hours of storing stock's price history
 - SPRING_PROFILES_ACTIVE - Spring's profile (the given profiles should be separated by commas e.g. `data,https`)
 - MAX_DB_CONNECTIONS (default: 10) - maximal number of database connections
+- STOCK_PROCESSING_THREADS (default: 8) - number of threads which perform operations on stocks (e.g. 
+  fixing stock's price or change price ratio)
 ### Pre-created users
 Profile `data` provides 40 pre-registered users:
 - Credentials of users with role USER: `FSDBH{1-39}@gmail.com:Admin!23`  
