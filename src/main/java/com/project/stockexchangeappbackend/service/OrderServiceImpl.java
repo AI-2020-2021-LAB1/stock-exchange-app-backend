@@ -38,7 +38,6 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
-
     @Transactional(readOnly = true)
     public AllOrders findOrderById(Long id) {
         return allOrdersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
@@ -54,8 +53,9 @@ public class OrderServiceImpl implements OrderService {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied"));
-        orderRepository.save(validateOrder(orderDTO, stock, user));
-        log.info(orderDTO.getOrderType().toString() + " of user " + user.getEmail() + " was successfully created.");
+        Order order = orderRepository.save(validateOrder(orderDTO, stock, user));
+        log.info(orderDTO.getOrderType().toString() + " with id " + order.getId() + " of user " +
+                user.getEmail() + " was successfully created.");
     }
 
     @Override
@@ -82,7 +82,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
         archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
         archivedOrderRepository.save(archivedOrder);
-        log.info(archivedOrder.getOrderType().toString() + " of user " + user.getEmail() + " was successfully deactivated.");
+        log.info(archivedOrder.getOrderType().toString() + " with id " + order.getId() + " was successfully deactivated.");
     }
 
     @Override
@@ -122,6 +122,7 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.delete(order);
             order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
             archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
+            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully deactivated.");
         });
     }
 

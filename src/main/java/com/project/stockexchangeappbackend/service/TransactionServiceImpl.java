@@ -62,7 +62,8 @@ public class TransactionServiceImpl implements TransactionService {
         updateOrder(buyingOrder);
         updateOrder(sellingOrder);
         exchangeMoneyAndStocks(buyingOrder, sellingOrder, amount, pricePerUnit);
-        log.info("Transaction between " + archivedBuyingOrder.getUser().getEmail() + " and " +
+        log.info("Transaction with stock " + archivedBuyingOrder.getStock().getAbbreviation() + " between " +
+                archivedBuyingOrder.getUser().getEmail() + " and " +
                 archivedSellingOrder.getUser().getEmail() + " was successfully created.");
     }
 

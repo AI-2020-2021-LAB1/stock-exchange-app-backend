@@ -94,6 +94,7 @@ public class ResourceServiceImpl implements ResourceService {
                         .amount(0).build());
         destinationResource.setAmount(destinationResource.getAmount() + moveStock.getAmount());
         resourceRepository.save(destinationResource);
+
     }
 
     private Page<ResourceDTO> findResources(Pageable pageable, Specification<Resource> specification, String username) {

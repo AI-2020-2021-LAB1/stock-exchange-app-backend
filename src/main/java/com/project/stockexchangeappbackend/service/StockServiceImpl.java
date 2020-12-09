@@ -1,6 +1,9 @@
 package com.project.stockexchangeappbackend.service;
 
-import com.project.stockexchangeappbackend.dto.*;
+import com.project.stockexchangeappbackend.dto.CreateStockDTO;
+import com.project.stockexchangeappbackend.dto.EditStockNameDTO;
+import com.project.stockexchangeappbackend.dto.OwnerDTO;
+import com.project.stockexchangeappbackend.dto.UpdateStockAmountDTO;
 import com.project.stockexchangeappbackend.entity.*;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
@@ -74,16 +77,17 @@ public class StockServiceImpl implements StockService {
     @LogicBusinessMeasureTime
     @Transactional
     public Stock updateStock(Stock stock) {
-        return stockRepository.save(stock);
-
+        Stock updatedStock = stockRepository.save(stock);
+        log.info("Stock with id " + updatedStock.getId() + " was successfully updated");
+        return updatedStock;
     }
 
     @Override
     @LogicBusinessMeasureTime
     @Transactional
     public void updateStocks(Collection<Stock> stocks) {
-        stockRepository.saveAll(stocks);
-
+        List<Stock> updatedStocks = stockRepository.saveAll(stocks);
+        updatedStocks.forEach(stock -> log.info("Stock with id " + stock.getId() + " was successfully updated"));
     }
 
     @Override
@@ -102,7 +106,8 @@ public class StockServiceImpl implements StockService {
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
         stock.setName(stockDTO.getName().trim());
         stockRepository.save(stock);
-        log.info("Stock with id " + id + " was successfully updated.");
+        log.info("Stock " + stockDTO.getAbbreviation() + " was successfully updated to abbreviation: " + stock.getAbbreviation()
+                + " name: " + stock.getName() + ".");
     }
 
     @Override
@@ -183,7 +188,8 @@ public class StockServiceImpl implements StockService {
                     stock.getResources().remove(resource);
                 });
         stockRepository.save(stock);
-        log.info("Stock " + stock.getAbbreviation() + "'s amount was successfully updated.");
+        log.info("Stock " + stock.getAbbreviation() + "'s amount was successfully updated to new value " +
+                stock.getAmount() + ".");
     }
 
     private Stock validateCreateStockDTO(CreateStockDTO stockDTO, String tag) {
@@ -237,14 +243,14 @@ public class StockServiceImpl implements StockService {
                     return true;
                 }).collect(Collectors.toList());
         if (potentialUsers.size() == filteredOwner.size()) {
-                stock.setResources(filteredOwner.stream().map(ownerDTO -> {
-                    int index = stockDTO.getOwners().indexOf(ownerDTO);
-                    return Resource.builder()
-                            .stock(stock)
-                            .amount(ownerDTO.getAmount())
-                            .user(potentialUsers.get(index).get())
-                            .build();
-                }).collect(Collectors.toList()));
+            stock.setResources(filteredOwner.stream().map(ownerDTO -> {
+                int index = stockDTO.getOwners().indexOf(ownerDTO);
+                return Resource.builder()
+                        .stock(stock)
+                        .amount(ownerDTO.getAmount())
+                        .user(potentialUsers.get(index).get())
+                        .build();
+            }).collect(Collectors.toList()));
         }
         if (stockDTO.getAmount() != stockDTO.getOwners().stream().mapToInt(OwnerDTO::getAmount).sum()) {
             errors.put("amount",
@@ -304,12 +310,12 @@ public class StockServiceImpl implements StockService {
                     errors.get("owners[" + index + "].user").add("User doesn't possess enough stock.");
                 }
                 return resource.orElseGet(() -> Resource.builder()
-                                .amount(0).stock(stock).user(user.get())
-                                .build());
+                        .amount(0).stock(stock).user(user.get())
+                        .build());
             }).collect(Collectors.toList()));
-            for (int i=0; i<resources.size(); i++) {
+            for (int i = 0; i < resources.size(); i++) {
                 resources.get(i).setAmount(resources.get(i).getAmount() + updateStockAmount.getOwners().get(i).getAmount()
-                        *(int)Math.signum(updateStockAmount.getAmount()));
+                        * (int) Math.signum(updateStockAmount.getAmount()));
             }
         }
         if (!errors.isEmpty()) {

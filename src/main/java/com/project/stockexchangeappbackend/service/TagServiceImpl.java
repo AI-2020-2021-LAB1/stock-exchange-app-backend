@@ -56,6 +56,7 @@ public class TagServiceImpl implements TagService {
             throw new InvalidInputDataException("Tag DEFAULT cannot be deleted", null);
         }
         tagRepository.delete(tag);
+        log.info("Tag " + name + " was successfully deleted.");
     }
 
     @Override
