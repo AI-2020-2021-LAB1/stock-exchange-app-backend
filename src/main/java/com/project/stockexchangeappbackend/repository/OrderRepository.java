@@ -17,8 +17,17 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
 
+    @Override
     @DBQueryMeasureTime
     <S extends Order> S save(S s);
+
+    @Override
+    @DBQueryMeasureTime
+    <S extends Order> List<S> saveAll(Iterable<S> var1);
+
+    @Override
+    @DBQueryMeasureTime
+    void deleteAll(Iterable<? extends Order> var1);
 
     @Override
     @DBQueryMeasureTime
