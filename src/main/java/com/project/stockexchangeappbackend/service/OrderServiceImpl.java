@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
@@ -36,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @LogicBusinessMeasureTime
+
     @Transactional(readOnly = true)
     public AllOrders findOrderById(Long id) {
         return allOrdersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
@@ -52,6 +55,7 @@ public class OrderServiceImpl implements OrderService {
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied"));
         orderRepository.save(validateOrder(orderDTO, stock, user));
+        log.info(orderDTO.getOrderType().toString() + " of user " + user.getEmail() + " was successfully created.");
     }
 
     @Override
@@ -78,6 +82,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
         archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
         archivedOrderRepository.save(archivedOrder);
+        log.info(archivedOrder.getOrderType().toString() + " of user " + user.getEmail() + " was successfully deactivated.");
     }
 
     @Override

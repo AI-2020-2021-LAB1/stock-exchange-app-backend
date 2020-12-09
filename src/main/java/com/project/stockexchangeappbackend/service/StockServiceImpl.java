@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class StockServiceImpl implements StockService {
 
@@ -73,6 +75,7 @@ public class StockServiceImpl implements StockService {
     @Transactional
     public Stock updateStock(Stock stock) {
         return stockRepository.save(stock);
+
     }
 
     @Override
@@ -80,6 +83,7 @@ public class StockServiceImpl implements StockService {
     @Transactional
     public void updateStocks(Collection<Stock> stocks) {
         stockRepository.saveAll(stocks);
+
     }
 
     @Override
@@ -98,6 +102,7 @@ public class StockServiceImpl implements StockService {
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
         stock.setName(stockDTO.getName().trim());
         stockRepository.save(stock);
+        log.info("Stock with id " + id + " was successfully updated.");
     }
 
     @Override
@@ -123,6 +128,7 @@ public class StockServiceImpl implements StockService {
                     return res.get(0);
                 }).collect(Collectors.toList()));
         stockRepository.save(stock);
+        log.info("Stock " + stock.getAbbreviation() + " was successfully created.");
     }
 
     @Override
@@ -145,6 +151,7 @@ public class StockServiceImpl implements StockService {
         stockIndexValueRepository.deleteByStock(stock);
         stock.getResources().clear();
         stockRepository.save(stock);
+        log.info("Stock " + stock.getAbbreviation() + " was successfully deleted.");
     }
 
 
@@ -176,6 +183,7 @@ public class StockServiceImpl implements StockService {
                     stock.getResources().remove(resource);
                 });
         stockRepository.save(stock);
+        log.info("Stock " + stock.getAbbreviation() + "'s amount was successfully updated.");
     }
 
     private Stock validateCreateStockDTO(CreateStockDTO stockDTO, String tag) {

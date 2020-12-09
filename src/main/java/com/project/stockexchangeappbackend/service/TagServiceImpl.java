@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.TagRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -17,6 +18,7 @@ import javax.persistence.EntityNotFoundException;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @AllArgsConstructor
 public class TagServiceImpl implements TagService {
 
@@ -67,6 +69,7 @@ public class TagServiceImpl implements TagService {
         tagRepository.save(Tag.builder()
                 .name(createTagDTO.getName().trim().toUpperCase())
                 .build());
+        log.info("Tag " + createTagDTO.getName() + " was successfully created.");
     }
 
 }
