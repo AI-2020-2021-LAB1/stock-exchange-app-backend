@@ -5,21 +5,19 @@ import com.project.stockexchangeappbackend.entity.StockIndexValue;
 import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import com.project.stockexchangeappbackend.service.TransactionService;
-import com.project.stockexchangeappbackend.util.ThreadsProperties;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Component
@@ -30,19 +28,17 @@ public class StockPriceFixingScheduler {
     private final StockService stockService;
     private final TransactionService transactionService;
     private final StockIndexValueService stockIndexValueService;
-    private final ThreadsProperties threadsProperties;
 
     @Scheduled(fixedDelayString = "${application.stock.fixingPriceCycle}")
-    public void run() throws InterruptedException {
+    public void run() throws ExecutionException, InterruptedException {
         log.info("Stocks' price fixing started.");
         long start = System.nanoTime();
 
         OffsetDateTime timestamp = OffsetDateTime.now(ZoneId.systemDefault());
         List<Stock> stocks = stockService.getAllStocks();
-        Collection<StockIndexValue> stockIndexValues = new LinkedBlockingQueue<>();
-        final Semaphore semaphore = new Semaphore(threadsProperties.getStockProcessing());
-        List<Runnable> threads = stocks.stream()
-                .map(stock -> (Runnable) () -> {
+        ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()/2));
+        Collection<StockIndexValue> stockIndexValues = threadPool.submit(() -> stocks.parallelStream()
+                .map(stock -> {
                     BigDecimal newPrice = BigDecimal.valueOf(
                             transactionService.getTransactionsByStockIdForPricing(stock.getId(), stock.getAmount())
                                     .stream()
@@ -50,24 +46,22 @@ public class StockPriceFixingScheduler {
                                     .average()
                                     .orElseGet(() -> stock.getCurrentPrice().doubleValue()));
                     stock.setCurrentPrice(newPrice);
-                    stockIndexValues.add(StockIndexValue.builder()
+                    return StockIndexValue.builder()
                             .timestamp(timestamp)
                             .value(newPrice)
                             .stock(stock)
-                            .build());
-                    semaphore.release();
-                }).collect(Collectors.toList());
-        for (Runnable thread : threads) {
-            semaphore.acquire();
-            thread.run();
+                            .build();
+                }).collect(Collectors.toList())).get();
+        try {
+            stockService.updateStocks(stocks);
+            stockIndexValueService.appendValues(stockIndexValues);
+        } catch (DataIntegrityViolationException exc) {
+            log.error("Cannot perform database operation");
+            exc.printStackTrace();
         }
-        for (int i=0; i<threadsProperties.getStockProcessing(); i++) {
-            semaphore.acquire();
-        }
-        stockService.updateStocks(stocks);
-        stockIndexValueService.appendValues(stockIndexValues);
         long stop = (System.nanoTime() - start) / 1000000;
         log.info("Stocks' price fixing stopped. Execution time: " + stop + " ms.");
+        log.info(Integer.valueOf(ForkJoinPool.commonPool().getParallelism()).toString());
     }
 
 }

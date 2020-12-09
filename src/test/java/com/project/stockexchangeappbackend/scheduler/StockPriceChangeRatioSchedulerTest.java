@@ -5,7 +5,6 @@ import com.project.stockexchangeappbackend.entity.StockIndexValue;
 import com.project.stockexchangeappbackend.service.StockIndexValueService;
 import com.project.stockexchangeappbackend.service.StockService;
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
-import com.project.stockexchangeappbackend.util.ThreadsProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,8 +37,6 @@ class StockPriceChangeRatioSchedulerTest {
     @Mock
     StockIndexTimeProperties stockIndexTimeProperties;
 
-    @Mock
-    ThreadsProperties threadsProperties;
 
     @Test
     @DisplayName("Fixing stock price change ratio")
@@ -54,7 +51,6 @@ class StockPriceChangeRatioSchedulerTest {
                 .collect(Collectors.toList());
 
         when(stockService.getAllStocks()).thenReturn(stockList);
-        when(threadsProperties.getStockProcessing()).thenReturn(1);
         when(stockIndexTimeProperties.getStockPriceChangeRatioPeriod()).thenReturn(60000);
         when(stockIndexValueService.getFirstStockIndexValueBeforeMinutesAgo(stockList.get(0), 1))
                 .thenReturn(Optional.of(stockIndexValues.get(0)));
@@ -76,7 +72,6 @@ class StockPriceChangeRatioSchedulerTest {
                 .collect(Collectors.toList());
 
         when(stockService.getAllStocks()).thenReturn(stockList);
-        when(threadsProperties.getStockProcessing()).thenReturn(1);
         when(stockIndexTimeProperties.getStockPriceChangeRatioPeriod()).thenReturn(60000);
         when(stockIndexValueService.getFirstStockIndexValueBeforeMinutesAgo(stockList.get(0), 1))
                 .thenReturn(Optional.of(stockIndexValues.get(0)));

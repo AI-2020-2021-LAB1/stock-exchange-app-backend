@@ -42,8 +42,6 @@ application:
     fixingPriceCycle: ${FIXING_PRICE_CYCLE:15000}
     maxPriceHistoryPeriod: ${MAX_PRICE_HISTORY_PERIOD:24}
     stockPriceChangeRatioPeriod: ${STOCK_PRICE_CHANGE_RATIO_PERIOD:3600000}
-  thread:
-    stockProcessing: ${STOCK_PROCESSING_THREADS:8}
 
 logging:
   level:
@@ -52,3 +50,9 @@ logging:
         models:
           parameters:
             AbstractSerializableParameter: ERROR
+
+server:
+  tomcat:
+    threads:
+      max: ${MAX_PROCESSED_REQUESTS_SIMULTANEOUSLY:200}
+    accept-count: ${MAX_SIZE_WAITING_REQUESTS_QUEUE:100}
