@@ -122,7 +122,7 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.delete(order);
             order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
             archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
-            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully deactivated.");
+            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully archived.");
         });
     }
 

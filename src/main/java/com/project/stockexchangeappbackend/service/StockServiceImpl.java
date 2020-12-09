@@ -86,8 +86,8 @@ public class StockServiceImpl implements StockService {
     @LogicBusinessMeasureTime
     @Transactional
     public void updateStocks(Collection<Stock> stocks) {
-        List<Stock> updatedStocks = stockRepository.saveAll(stocks);
-        updatedStocks.forEach(stock -> log.info("Stock with id " + stock.getId() + " was successfully updated"));
+        stockRepository.saveAll(stocks)
+                .forEach(stock -> log.info("Stock with id " + stock.getId() + " was successfully updated"));
     }
 
     @Override
@@ -106,8 +106,7 @@ public class StockServiceImpl implements StockService {
         stock.setAbbreviation(stockDTO.getAbbreviation().trim());
         stock.setName(stockDTO.getName().trim());
         stockRepository.save(stock);
-        log.info("Stock " + stockDTO.getAbbreviation() + " was successfully updated to abbreviation: " + stock.getAbbreviation()
-                + " name: " + stock.getName() + ".");
+        log.info("Stock " + stockDTO.getAbbreviation() + " was successfully updated.");
     }
 
     @Override
@@ -323,5 +322,4 @@ public class StockServiceImpl implements StockService {
         }
         return resources;
     }
-
 }
