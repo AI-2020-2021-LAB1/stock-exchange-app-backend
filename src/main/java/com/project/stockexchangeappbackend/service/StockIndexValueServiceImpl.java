@@ -17,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,13 +32,18 @@ public class StockIndexValueServiceImpl implements StockIndexValueService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional
-    public void appendValue(StockIndexValue stockIndexValue) {
-        stockIndexValueRepository.save(stockIndexValue);
-        final int records = stockIndexTimeProperties.getMaxPriceHistoryPeriod()*3600/
-                (stockIndexTimeProperties.getFixingPriceCycle()/1000);
-        if (stockIndexValueRepository.count(getSpecificationById(stockIndexValue.getStock().getId())) > records) {
-            stockIndexValueRepository.delete(
-                    stockIndexValueRepository.findFirstByStockOrderByTimestampAsc(stockIndexValue.getStock()).get());
+    public void appendValues(Collection<StockIndexValue> stockIndexValues) {
+        stockIndexValueRepository.saveAll(stockIndexValues);
+
+        int stockPriceRefreshCycle = stockIndexTimeProperties.getFixingPriceCycle()/1000;
+        int maxPriceHistoryPeriod = stockIndexTimeProperties.getMaxPriceHistoryPeriod()*3600;
+        int records = maxPriceHistoryPeriod/stockPriceRefreshCycle- 1;
+        OffsetDateTime timeLimit = OffsetDateTime.now().minusSeconds(maxPriceHistoryPeriod - stockPriceRefreshCycle);
+        List<Long> stocksWithExceedHistory = stockIndexValueRepository.findStockWithExceedHistory(records);
+        if (!stocksWithExceedHistory.isEmpty()) {
+            stockIndexValueRepository.deleteAll(
+                    stockIndexValueRepository.findByStockIdInAndTimestampIsBeforeOrderByTimestampAsc(
+                            stocksWithExceedHistory, timeLimit));
         }
     }
 

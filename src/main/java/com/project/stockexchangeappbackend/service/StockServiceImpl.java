@@ -144,13 +144,13 @@ public class StockServiceImpl implements StockService {
         stock.setIsDeleted(true);
         stock.setAmount(0);
         stock.setCurrentPrice(BigDecimal.ZERO);
-        orderRepository.findByStock(stock).forEach(order -> {
-            orderRepository.delete(order);
-            ArchivedOrder archivedOrder = archivedOrderRepository.findById(id)
-                    .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
-            archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
-            archivedOrderRepository.save(archivedOrder);
-        });
+        List<Order> orders = orderRepository.findByStock(stock);
+        orderRepository.deleteAll(orders);
+        archivedOrderRepository.saveAll(orders.stream()
+                .map(order -> {
+                    order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+                    return modelMapper.map(order, ArchivedOrder.class);
+                }).collect(Collectors.toList()));
         resourceRepository.deleteByStock(stock);
         stockIndexValueRepository.deleteByStock(stock);
         stock.getResources().clear();

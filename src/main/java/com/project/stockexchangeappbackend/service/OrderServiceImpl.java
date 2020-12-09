@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -117,13 +118,19 @@ public class OrderServiceImpl implements OrderService {
     @LogicBusinessMeasureTime
     @Transactional
     public void moveInactiveOrders() {
-        orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
-                OffsetDateTime.now(ZoneId.systemDefault()), 0).parallelStream().forEach(order -> {
-            orderRepository.delete(order);
-            order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
-            archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
+        List<Order> orders = orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
+                OffsetDateTime.now(ZoneId.systemDefault()), 0);
+        orderRepository.deleteAll(orders);
+        List<ArchivedOrder> archivedOrders = orders.stream()
+                .map(order -> {
+                    order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+                    return modelMapper.map(order, ArchivedOrder.class);
+                })
+                .collect(Collectors.toList());
+        archivedOrderRepository.saveAll(archivedOrders).forEach(order -> {
             log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully archived.");
         });
+
     }
 
     @Override

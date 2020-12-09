@@ -27,6 +27,8 @@ import java.util.Optional;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.assertStock;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.getStocksList;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,33 +47,36 @@ class StockIndexValueServiceImplTest {
     StockIndexTimeProperties stockIndexTimeProperties;
 
     @Test
-    @DisplayName("Appending current stock price")
+    @DisplayName("Appending current stocks' prices")
     void shouldAppendValue() {
         Stock stock = getStocksList().get(0);
-        StockIndexValue stockIndexValue =
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+        List<StockIndexValue> stockIndexValue = Collections.singletonList(
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now()));
 
-        when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(24);
         when(stockIndexTimeProperties.getFixingPriceCycle()).thenReturn(30000);
-        when(stockIndexValueRepository.count(Mockito.any(Specification.class))).thenReturn(24L);
-        assertAll(() -> stockIndexValueService.appendValue(stockIndexValue));
+        when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(24);
+        when(stockIndexValueRepository.findStockWithExceedHistory(any(Integer.class)))
+                .thenReturn(Collections.emptyList());
+        assertAll(() -> stockIndexValueService.appendValues(stockIndexValue));
     }
 
     @Test
-    @DisplayName("Appending current stock price when list of stock price is full")
+    @DisplayName("Appending current stock's prices when list of stock price is full")
     void shouldAppendValueWhenMaxRecordsExceed() {
         Stock stock = getStocksList().get(0);
-        StockIndexValue stockIndexValue =
-                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
+        List<StockIndexValue> stockIndexValue = Collections.singletonList(
+                createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now()));
         StockIndexValue prevStockIndexValue =
                 createCustomStockIndexValue(stock, stock.getCurrentPrice(), OffsetDateTime.now());
-
-        when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(1);
+        List<Long> stocksId = Collections.singletonList(stock.getId());
         when(stockIndexTimeProperties.getFixingPriceCycle()).thenReturn(30000);
-        when(stockIndexValueRepository.count(Mockito.any(Specification.class))).thenReturn(121L);
-        when(stockIndexValueRepository.findFirstByStockOrderByTimestampAsc(stock))
-                .thenReturn(Optional.of(prevStockIndexValue));
-        assertAll(() -> stockIndexValueService.appendValue(stockIndexValue));
+        when(stockIndexTimeProperties.getMaxPriceHistoryPeriod()).thenReturn(1);
+        when(stockIndexValueRepository.findStockWithExceedHistory(any(Integer.class)))
+                .thenReturn(stocksId);
+        when(stockIndexValueRepository.findByStockIdInAndTimestampIsBeforeOrderByTimestampAsc(
+                eq(stocksId), any(OffsetDateTime.class)))
+                .thenReturn(Collections.singletonList(prevStockIndexValue));
+        assertAll(() -> stockIndexValueService.appendValues(stockIndexValue));
     }
 
     @Test
@@ -95,7 +100,7 @@ class StockIndexValueServiceImplTest {
                 new StockIndexValueDTO(results.subList(0, 6)));
 
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
-        when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
+        when(stockIndexValueRepository.findAll(any(Specification.class), any(Sort.class)))
                 .thenReturn(results);
         List<StockIndexValueDTO> output = stockIndexValueService.getStockIndexValues(stockId, null, interval);
         assertEquals(expected.size(), output.size());
@@ -112,7 +117,7 @@ class StockIndexValueServiceImplTest {
         Long stockId = stock.getId();
 
         when(stockRepository.findByIdAndIsDeletedFalse(stockId)).thenReturn(Optional.of(stock));
-        when(stockIndexValueRepository.findAll(Mockito.any(Specification.class), Mockito.any(Sort.class)))
+        when(stockIndexValueRepository.findAll(any(Specification.class), any(Sort.class)))
                 .thenReturn(Collections.emptyList());
         assertEquals(0, stockIndexValueService.getStockIndexValues(stockId, null, interval).size());
     }
@@ -136,7 +141,7 @@ class StockIndexValueServiceImplTest {
                 OffsetDateTime.now().minusMinutes(minutes));
 
         when(stockIndexValueRepository.findFirstByStockAndTimestampBeforeOrderByTimestampDesc(
-                Mockito.eq(stock), Mockito.any(OffsetDateTime.class)))
+                eq(stock), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(stockIndexValue));
         assertStockIndexValue(stockIndexValue,
                 stockIndexValueService.getFirstStockIndexValueBeforeMinutesAgo(stock, minutes).get());

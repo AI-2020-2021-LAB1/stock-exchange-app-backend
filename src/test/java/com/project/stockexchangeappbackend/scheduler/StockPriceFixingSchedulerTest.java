@@ -42,6 +42,7 @@ class StockPriceFixingSchedulerTest {
     @Mock
     StockIndexValueService stockIndexValueService;
 
+
     @Test
     @DisplayName("Fixing stock price")
     void testScheduler() {
@@ -65,10 +66,6 @@ class StockPriceFixingSchedulerTest {
                 .thenReturn(stockTransactions.get(0));
         when(transactionService.getTransactionsByStockIdForPricing(stockList.get(1).getId(), stockList.get(1).getAmount()))
                 .thenReturn(stockTransactions.get(1));
-        when(stockService.updateStock(stockList.get(0)))
-                .thenReturn(stockList.get(0));
-        when(stockService.updateStock(stockList.get(1)))
-                .thenReturn(stockList.get(1));
         assertAll(() -> stockPriceFixingScheduler.run());
     }
 

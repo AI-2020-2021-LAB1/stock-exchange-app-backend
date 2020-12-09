@@ -50,3 +50,9 @@ logging:
         models:
           parameters:
             AbstractSerializableParameter: ERROR
+
+server:
+  tomcat:
+    threads:
+      max: ${MAX_PROCESSED_REQUESTS_SIMULTANEOUSLY:200}
+    accept-count: ${MAX_SIZE_WAITING_REQUESTS_QUEUE:100}

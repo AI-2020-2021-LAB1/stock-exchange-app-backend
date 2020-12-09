@@ -8,6 +8,7 @@ import com.project.stockexchangeappbackend.service.OrderService;
 import com.project.stockexchangeappbackend.service.TransactionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 @Component
@@ -52,11 +55,22 @@ public class StockExchangeAlgorithmScheduler {
                         .sorted(Comparator.comparing(Order::getPrice))
                         .collect(Collectors.toList())));
 
-        groupedBuyingOrdersByStock.entrySet().parallelStream()
+        ConcurrentMap<Stock, List<Order>> groupedAndSortedSellingOrders =  groupedBuyingOrdersByStock.entrySet()
+                .stream()
+                .collect(Collectors.toConcurrentMap(Map.Entry::getKey, entry -> {
+                    List<Order> relatedList = groupedBuyingOrdersByStock.get(entry.getKey());
+                    return orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(entry.getKey(),
+                            relatedList.get(relatedList.size() - 1).getPrice());
+                }));
+
+        ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()/2));
+        threadPool.submit( () ->
+            groupedBuyingOrdersByStock.entrySet().parallelStream()
+                .filter(entry -> entry.getValue().size() > 0 &&
+                        groupedAndSortedSellingOrders.get(entry.getKey()).size() > 0)
                 .forEach(entry -> {
                     List<Order> buyingOrders = entry.getValue();
-                    List<Order> sellingOrders = orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(
-                            entry.getKey(), entry.getValue().get(entry.getValue().size() - 1).getPrice());
+                    List<Order> sellingOrders = groupedAndSortedSellingOrders.get(entry.getKey());
                     int index = 0;
                     while (!(buyingOrders.isEmpty() || sellingOrders.isEmpty())) {
                         Order buyingOrder = buyingOrders.get(index);
@@ -77,7 +91,13 @@ public class StockExchangeAlgorithmScheduler {
                                 sellingOrders.remove(sellingOrder);
                                 index = 0;
                             }
-                            transactionService.makeTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
+                            try {
+                                transactionService.makeTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
+                            } catch (DataIntegrityViolationException exc) {
+                                log.error("Cannot perform database operation");
+                                exc.printStackTrace();
+                                break;
+                            }
                         } else {
                             if (index == buyingOrders.size() - 1) {
                                 sellingOrders.remove(sellingOrder);
@@ -91,7 +111,7 @@ public class StockExchangeAlgorithmScheduler {
                             }
                         }
                     }
-                });
+                })).join();
         long stop = (System.nanoTime() - start) / 1000000;
         log.info("Stock exchange algorithm stopped. Execution time: " + stop + " ms.");
     }
