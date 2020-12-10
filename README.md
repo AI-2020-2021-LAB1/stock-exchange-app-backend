@@ -28,7 +28,7 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - STOCK_PRICE_CHANGE_RATIO_PERIOD (default: 3600000) - time in milliseconds of refreshing stocks' price change ratio
 - MAX_PRICE_HISTORY_PERIOD (default: 24) - time in hours of storing stock's price history
 - SPRING_PROFILES_ACTIVE - Spring's profile (the given profiles should be separated by commas e.g. `data,https`)
-- MAX_DB_CONNECTIONS (default: 10) - maximal number of database connections
+- MAX_DB_CONNECTIONS (default: 80) - maximal number of database connections
 - MAX_PROCESSED_REQUESTS_SIMULTANEOUSLY (default: 200) - maximal number of requests processed simultaneously
 - MAX_SIZE_WAITING_REQUESTS_QUEUE (default: 100) - maximal size of waiting request
 

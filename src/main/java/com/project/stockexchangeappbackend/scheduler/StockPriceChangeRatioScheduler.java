@@ -31,7 +31,7 @@ public class StockPriceChangeRatioScheduler {
     public void run() throws ExecutionException, InterruptedException {
         log.info("Stocks' price change ratio fixing started.");
         long start = System.nanoTime();
-        ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()/4));
+        ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()/2));
         try {
             stockService.updateStocks(threadPool.submit(() ->
                     stockService.getAllStocks().parallelStream()
