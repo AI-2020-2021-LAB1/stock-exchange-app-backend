@@ -27,7 +27,7 @@ import java.security.Principal;
 @AllArgsConstructor
 @Api(value = "Users", description = "REST API for users' management", tags = "Users")
 @ApiResponses({@ApiResponse(code = 401, message = "Unauthorized.")})
-public class UsersController {
+public class    UsersController {
 
     private final UserService userService;
     private final ResourceService resourceService;

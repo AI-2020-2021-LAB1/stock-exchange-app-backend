@@ -63,7 +63,7 @@ public class StockExchangeAlgorithmScheduler {
                             relatedList.get(relatedList.size() - 1).getPrice());
                 }));
 
-        ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()/2));
+        ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
         threadPool.submit( () ->
             groupedBuyingOrdersByStock.entrySet().parallelStream()
                 .filter(entry -> entry.getValue().size() > 0 &&
@@ -89,8 +89,8 @@ public class StockExchangeAlgorithmScheduler {
                             if (sellingOrder.getRemainingAmount() == 0) {
                                 sellingOrder.setDateClosing(transactionTime);
                                 sellingOrders.remove(sellingOrder);
-                                index = 0;
                             }
+                            index = 0;
                             try {
                                 transactionService.makeTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
                             } catch (DataIntegrityViolationException exc) {

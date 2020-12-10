@@ -25,7 +25,7 @@ public class MeasureTimeAspect {
             long executionTime = System.nanoTime() - start;
             processingTime.setBusinessLogicExecutionTime(executionTime);
             return proceed;
-        } catch (BeanCreationException exc) {
+        } catch (BeanCreationException | IllegalStateException exc) {
             return proceed;
         } catch (Throwable t) {
             long executionTime = System.nanoTime() - start;
@@ -45,7 +45,7 @@ public class MeasureTimeAspect {
             processingTime.setDatabaseOperationExecutionTime(
                     processingTime.getDatabaseOperationExecutionTime() + executionTime);
             return proceed;
-        } catch (BeanCreationException exc) {
+        } catch (BeanCreationException | IllegalStateException exc) {
             return proceed;
         } catch (Throwable t) {
             long executionTime = System.nanoTime() - start;
