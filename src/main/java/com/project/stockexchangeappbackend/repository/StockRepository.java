@@ -22,6 +22,10 @@ public interface StockRepository extends JpaRepository<Stock, Long>, JpaSpecific
 
     @Override
     @DBQueryMeasureTime
+    <S extends Stock> List<S> saveAll(Iterable<S> var1);
+
+    @Override
+    @DBQueryMeasureTime
     Optional<Stock> findById(Long id);
 
     @DBQueryMeasureTime

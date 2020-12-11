@@ -7,7 +7,7 @@ spring:
     password: ${POSTGRES_PASSWORD:admin}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: ${MAX_DB_CONNECTIONS:10}
+      maximum-pool-size: ${MAX_DB_CONNECTIONS:80}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     properties:
@@ -50,3 +50,10 @@ logging:
         models:
           parameters:
             AbstractSerializableParameter: ERROR
+
+server:
+  tomcat:
+    threads:
+      max: ${MAX_PROCESSED_REQUESTS_SIMULTANEOUSLY:200}
+    accept-count: ${MAX_SIZE_WAITING_REQUESTS_QUEUE:100}
+

@@ -12,6 +12,7 @@ import com.project.stockexchangeappbackend.repository.StockRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ import java.time.ZoneId;
 import java.util.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ResourceServiceImpl implements ResourceService {
 
@@ -94,6 +96,8 @@ public class ResourceServiceImpl implements ResourceService {
                         .amount(0).build());
         destinationResource.setAmount(destinationResource.getAmount() + moveStock.getAmount());
         resourceRepository.save(destinationResource);
+        log.info("Stock " + stock.getAbbreviation() + " was successfully moved from " + source.get().getEmail() + " to " +
+                destination.get().getEmail() + ".");
     }
 
     private Page<ResourceDTO> findResources(Pageable pageable, Specification<Resource> specification, String username) {

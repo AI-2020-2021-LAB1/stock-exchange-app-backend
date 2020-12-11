@@ -37,6 +37,7 @@ class StockPriceChangeRatioSchedulerTest {
     @Mock
     StockIndexTimeProperties stockIndexTimeProperties;
 
+
     @Test
     @DisplayName("Fixing stock price change ratio")
     void testScheduler() {

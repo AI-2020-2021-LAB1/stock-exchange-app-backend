@@ -2,6 +2,8 @@ package com.project.stockexchangeappbackend.rest;
 
 import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
+import org.springframework.core.NestedRuntimeException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
@@ -107,9 +109,9 @@ public class CustomExceptionHandler extends DefaultHandlerExceptionResolver {
                 .build();
     }
 
-    @ExceptionHandler({CannotCreateTransactionException.class})
+    @ExceptionHandler({CannotCreateTransactionException.class, DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse httpCannotCreateTransactionException(CannotCreateTransactionException exc) {
+    public ErrorResponse httpCannotCreateTransactionException(NestedRuntimeException exc) {
         return ErrorResponse.builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message("Cannot perform database operation.")

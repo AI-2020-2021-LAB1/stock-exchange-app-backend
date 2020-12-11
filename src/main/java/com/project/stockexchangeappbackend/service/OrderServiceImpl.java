@@ -6,6 +6,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.*;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,8 +22,10 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
@@ -51,7 +54,9 @@ public class OrderServiceImpl implements OrderService {
         String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository.findByEmailIgnoreCase(username)
                 .orElseThrow(() -> new AccessDeniedException("Access Denied"));
-        orderRepository.save(validateOrder(orderDTO, stock, user));
+        Order order = orderRepository.save(validateOrder(orderDTO, stock, user));
+        log.info(orderDTO.getOrderType().toString() + " with id " + order.getId() + " of user " +
+                user.getEmail() + " was successfully created.");
     }
 
     @Override
@@ -78,6 +83,7 @@ public class OrderServiceImpl implements OrderService {
                 .orElseGet(() -> modelMapper.map(order, ArchivedOrder.class));
         archivedOrder.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
         archivedOrderRepository.save(archivedOrder);
+        log.info(archivedOrder.getOrderType().toString() + " with id " + order.getId() + " was successfully deactivated.");
     }
 
     @Override
@@ -112,12 +118,19 @@ public class OrderServiceImpl implements OrderService {
     @LogicBusinessMeasureTime
     @Transactional
     public void moveInactiveOrders() {
-        orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
-                OffsetDateTime.now(ZoneId.systemDefault()), 0).parallelStream().forEach(order -> {
-            orderRepository.delete(order);
-            order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
-            archivedOrderRepository.save(modelMapper.map(order, ArchivedOrder.class));
+        List<Order> orders = orderRepository.findByDateExpirationIsBeforeOrRemainingAmountOrDateClosingIsNotNull(
+                OffsetDateTime.now(ZoneId.systemDefault()), 0);
+        orderRepository.deleteAll(orders);
+        List<ArchivedOrder> archivedOrders = orders.stream()
+                .map(order -> {
+                    order.setDateClosing(OffsetDateTime.now(ZoneId.systemDefault()));
+                    return modelMapper.map(order, ArchivedOrder.class);
+                })
+                .collect(Collectors.toList());
+        archivedOrderRepository.saveAll(archivedOrders).forEach(order -> {
+            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully archived.");
         });
+
     }
 
     @Override
