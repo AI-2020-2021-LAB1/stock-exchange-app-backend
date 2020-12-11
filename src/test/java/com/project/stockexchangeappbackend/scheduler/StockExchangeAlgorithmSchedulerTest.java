@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -27,6 +28,7 @@ import static com.project.stockexchangeappbackend.service.UserServiceImplTest.ge
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -136,6 +138,30 @@ class StockExchangeAlgorithmSchedulerTest {
                 .thenReturn(activeSellingOrders.get(0));
         when(orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(eq(stockList.get(1)), any(BigDecimal.class)))
                 .thenReturn(activeSellingOrders.get(1));
+        assertAll(() -> stockExchangeAlgorithmScheduler.run());
+    }
+
+    @Test
+    @DisplayName("Exchange algorithm - when cannot perform database operation")
+    void testSchedulerWhenCannotPerformDatabaseOperation() {
+        List<Stock> stockList = getStocksList();
+        List<Order> activeBuyingOrders = stockList.stream()
+                .map(stock -> createBuyingOrder(1L, stock.getAmount(), stock.getCurrentPrice(),
+                        OffsetDateTime.now().plusHours(1), getUsersList().get(0), stock)).collect(Collectors.toList());
+        List<List<Order>> activeSellingOrders = activeBuyingOrders.stream()
+                .map(order -> new ArrayList<>(Collections.singleton(
+                        createSellingOrder(2L, order.getAmount(), order.getPrice(), order.getDateExpiration(),
+                                getUsersList().get(2), order.getStock()))))
+                .collect(Collectors.toList());
+
+        when(orderService.getActiveBuyingOrders()).thenReturn(activeBuyingOrders);
+        when(orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(eq(stockList.get(0)), any(BigDecimal.class)))
+                .thenReturn(activeSellingOrders.get(0));
+        when(orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(eq(stockList.get(1)), any(BigDecimal.class)))
+                .thenReturn(activeSellingOrders.get(1));
+        doThrow(new DataIntegrityViolationException("Database error"))
+                .when(transactionService)
+                        .makeTransaction(any(Order.class), any(Order.class), any(Integer.class), any(BigDecimal.class));
         assertAll(() -> stockExchangeAlgorithmScheduler.run());
     }
 
