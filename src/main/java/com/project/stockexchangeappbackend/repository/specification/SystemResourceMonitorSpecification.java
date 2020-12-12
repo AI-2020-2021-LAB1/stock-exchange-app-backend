@@ -1,6 +1,6 @@
 package com.project.stockexchangeappbackend.repository.specification;
 
-import com.project.stockexchangeappbackend.entity.StockIndexValue;
+import com.project.stockexchangeappbackend.entity.SystemResourcesMonitor;
 import net.kaczmarzyk.spring.data.jpa.domain.GreaterThanOrEqual;
 import net.kaczmarzyk.spring.data.jpa.domain.LessThanOrEqual;
 import net.kaczmarzyk.spring.data.jpa.web.annotation.And;
@@ -11,5 +11,5 @@ import org.springframework.data.jpa.domain.Specification;
         @Spec(path = "timestamp", spec = GreaterThanOrEqual.class, params = {"datetime>"}),
         @Spec(path = "timestamp", spec = LessThanOrEqual.class, params = {"datetime<"}),
 })
-public interface StockIndexValueSpecification  extends Specification<StockIndexValue> {
+public interface SystemResourceMonitorSpecification extends Specification<SystemResourcesMonitor> {
 }

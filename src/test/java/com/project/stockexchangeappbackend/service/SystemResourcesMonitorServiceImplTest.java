@@ -9,11 +9,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import oshi.hardware.GlobalMemory;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +63,23 @@ class SystemResourcesMonitorServiceImplTest {
                         .memoryUsage(25.0)
                         .build());
         assertAll(() -> systemResourcesMonitorService.addSystemResources());
+    }
+
+    @Test
+    @DisplayName("Paging and filtering system resources")
+    void shouldPageAndFilterSystemResources() {
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<SystemResourcesMonitor> specification = (root, criteriaQuery, criteriaBuilder) ->
+                criteriaBuilder.equal(root.get("datetime<"), OffsetDateTime.now());
+        when(systemResourcesMonitorRepository.findAll(specification, pageable))
+                .thenReturn(new PageImpl<>(
+                        List.of(SystemResourcesMonitor.builder()
+                        .timestamp(OffsetDateTime.now())
+                        .cpuUsage(1.2)
+                        .memoryUsed(255L)
+                        .memoryUsage(25.0)
+                        .build()), pageable, 1L));
+        assertAll(() -> systemResourcesMonitorService.getInfo(pageable, specification));
     }
 
 }

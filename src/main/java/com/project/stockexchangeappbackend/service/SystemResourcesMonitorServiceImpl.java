@@ -3,7 +3,11 @@ package com.project.stockexchangeappbackend.service;
 import com.project.stockexchangeappbackend.entity.SystemResourcesMonitor;
 import com.project.stockexchangeappbackend.repository.SystemResourcesMonitorRepository;
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
+import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import oshi.hardware.GlobalMemory;
@@ -35,6 +39,13 @@ public class SystemResourcesMonitorServiceImpl implements SystemResourcesMonitor
         if (systemResourcesMonitorRepository.count() > records) {
             systemResourcesMonitorRepository.delete(systemResourcesMonitorRepository.findFirstByOrderByTimestampAsc());
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @LogicBusinessMeasureTime
+    public Page<SystemResourcesMonitor> getInfo(Pageable pageable, Specification<SystemResourcesMonitor> specification) {
+        return systemResourcesMonitorRepository.findAll(specification, pageable);
     }
 
 }
