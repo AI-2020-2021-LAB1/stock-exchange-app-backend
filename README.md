@@ -23,9 +23,9 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - ACCESS_TOKEN_VALIDITY_SECONDS (default: 3600) - Access token expiration
 - REFRESH_TOKEN_VALIDITY_SECONDS (default: 108000) - Refresh token expiration
 - JWT_SECRET (default: secret) - JWT signed key
-- STOCK_ALGORITHM_CYCLE (default: 1000) - time in milliseconds between two next execution of stock exchange algorithm
-- FIXING_PRICE_CYCLE (default: 15000) - time in milliseconds of refreshing stocks' price per unit
-- STOCK_PRICE_CHANGE_RATIO_PERIOD (default: 3600000) - time in milliseconds of refreshing stocks' price change ratio
+- STOCK_ALGORITHM_CYCLE (default: 15000) - time in milliseconds between two next execution of stock exchange algorithm
+- FIXING_PRICE_CYCLE (default: 60000) - time in milliseconds of refreshing stocks' price per unit
+- STOCK_PRICE_CHANGE_RATIO_PERIOD (default: 60000) - time in milliseconds of refreshing stocks' price change ratio
 - MAX_PRICE_HISTORY_PERIOD (default: 24) - time in hours of storing stock's price history
 - SPRING_PROFILES_ACTIVE - Spring's profile (the given profiles should be separated by commas e.g. `data,https`)
 - MAX_DB_CONNECTIONS (default: 80) - maximal number of database connections
