@@ -31,7 +31,8 @@ API Docs is available at: [http://localhost:8080/swagger-ui.html](http://localho
 - MAX_DB_CONNECTIONS (default: 80) - maximal number of database connections
 - MAX_PROCESSED_REQUESTS_SIMULTANEOUSLY (default: 200) - maximal number of requests processed simultaneously
 - MAX_SIZE_WAITING_REQUESTS_QUEUE (default: 100) - maximal size of waiting request
-
+- SYSTEM_RESOURCES_MONITOR_INTERVAL (default: 500) - interval in milliseconds of saving system resources info to database
+- SYSTEM_RESOURCES_MONITOR_HISTORY (default: 24) - time in hours of storing system resources info
 ### Pre-created users
 Profile `data` provides 40 pre-registered users:
 - Credentials of users with role USER: `FSDBH{1-39}@gmail.com:Admin!23`  
