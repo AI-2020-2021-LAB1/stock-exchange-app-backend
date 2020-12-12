@@ -38,10 +38,12 @@ security:
 
 application:
   stock:
-    algorithm-cycle: ${STOCK_ALGORITHM_CYCLE:1000}
-    fixingPriceCycle: ${FIXING_PRICE_CYCLE:15000}
+    algorithm-cycle: ${STOCK_ALGORITHM_CYCLE:15000}
+    fixingPriceCycle: ${FIXING_PRICE_CYCLE:60000}
     maxPriceHistoryPeriod: ${MAX_PRICE_HISTORY_PERIOD:24}
-    stockPriceChangeRatioPeriod: ${STOCK_PRICE_CHANGE_RATIO_PERIOD:3600000}
+    stockPriceChangeRatioPeriod: ${STOCK_PRICE_CHANGE_RATIO_PERIOD:60000}
+    systemResourcesMonitorInterval: ${SYSTEM_RESOURCES_MONITOR_INTERVAL:500}
+    systemResourcesMonitorHistory: ${SYSTEM_RESOURCES_MONITOR_HISTORY:24}
 
 logging:
   level:
