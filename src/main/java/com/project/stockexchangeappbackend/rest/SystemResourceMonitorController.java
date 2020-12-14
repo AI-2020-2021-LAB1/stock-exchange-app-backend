@@ -7,15 +7,15 @@ import com.project.stockexchangeappbackend.service.SystemResourcesMonitorService
 import io.swagger.annotations.*;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -38,22 +38,15 @@ public class SystemResourceMonitorController {
             @ApiResponse(code = 401, message = "Unauthorized."),
             @ApiResponse(code = 403, message = "Access Denied")})
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "page", dataType = "integer", paramType = "query",
-                    value = "Results page you want to retrieve (0..N).", defaultValue = "0"),
-            @ApiImplicitParam(name = "size", dataType = "integer", paramType = "query",
-                    value = "Number of records per page.", defaultValue = "20"),
-            @ApiImplicitParam(name = "sort", allowMultiple = true, dataType = "string", paramType = "query",
-                    value = "Sorting criteria in the format: property(,asc|desc). " +
-                            "Default sort order is ascending. Multiple sort criteria are supported."),
             @ApiImplicitParam(name = "datetime>", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `timestamp` (omitted if null)."),
             @ApiImplicitParam(name = "datetime<", dataType = "integer", paramType = "query",
                     value = "Filtering criteria for field `timestamp` (omitted if null).")
     })
-    public Page<SystemResourcesMonitorDTO> getInfo(SystemResourceMonitorSpecification specification,
-                                                   @ApiIgnore Pageable pageable) {
-        return systemResourcesMonitorService.getInfo(pageable, specification)
-                .map(info -> modelMapper.map(info, SystemResourcesMonitorDTO.class));
+    public List<SystemResourcesMonitorDTO> getInfo(SystemResourceMonitorSpecification specification) {
+        return systemResourcesMonitorService.getInfo(specification).stream()
+                .map(info -> modelMapper.map(info, SystemResourcesMonitorDTO.class))
+                .collect(Collectors.toList());
     }
 
 }

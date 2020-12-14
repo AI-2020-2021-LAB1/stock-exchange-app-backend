@@ -5,8 +5,7 @@ import com.project.stockexchangeappbackend.repository.SystemResourcesMonitorRepo
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +14,7 @@ import oshi.hardware.GlobalMemory;
 import java.lang.management.ManagementFactory;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
@@ -44,8 +44,8 @@ public class SystemResourcesMonitorServiceImpl implements SystemResourcesMonitor
     @Override
     @Transactional(readOnly = true)
     @LogicBusinessMeasureTime
-    public Page<SystemResourcesMonitor> getInfo(Pageable pageable, Specification<SystemResourcesMonitor> specification) {
-        return systemResourcesMonitorRepository.findAll(specification, pageable);
+    public List<SystemResourcesMonitor> getInfo(Specification<SystemResourcesMonitor> specification) {
+        return systemResourcesMonitorRepository.findAll(specification, Sort.by("timestamp").ascending());
     }
 
 }
