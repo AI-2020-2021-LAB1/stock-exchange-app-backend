@@ -4,6 +4,8 @@ import com.project.stockexchangeappbackend.util.timemeasuring.ProcessingTime;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.annotation.RequestScope;
+import oshi.SystemInfo;
+import oshi.hardware.GlobalMemory;
 
 @Configuration
 public class CustomBeansConfiguration {
@@ -13,4 +15,10 @@ public class CustomBeansConfiguration {
     public ProcessingTime responseObject() {
         return new ProcessingTime();
     }
+
+    @Bean
+    public GlobalMemory globalMemory(){
+        return new SystemInfo().getHardware().getMemory();
+    }
+
 }
