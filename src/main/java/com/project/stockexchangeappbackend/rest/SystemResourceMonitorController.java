@@ -1,6 +1,5 @@
 package com.project.stockexchangeappbackend.rest;
 
-import com.project.stockexchangeappbackend.dto.ErrorResponse;
 import com.project.stockexchangeappbackend.dto.SystemResourcesMonitorDTO;
 import com.project.stockexchangeappbackend.repository.specification.SystemResourceMonitorSpecification;
 import com.project.stockexchangeappbackend.service.SystemResourcesMonitorService;
@@ -33,8 +32,6 @@ public class SystemResourceMonitorController {
     @PreAuthorize("hasAnyRole('ADMIN')")
     @ApiOperation(value = "Page and filter system resource info.", notes = "Required role: ADMIN")
     @ApiResponses({@ApiResponse(code = 200, message = "System resources' info was successfully retrieved."),
-            @ApiResponse(code = 400, message = "The request could not be understood or was missing required parameters.",
-                    response = ErrorResponse.class),
             @ApiResponse(code = 401, message = "Unauthorized."),
             @ApiResponse(code = 403, message = "Access Denied")})
     @ApiImplicitParams({
