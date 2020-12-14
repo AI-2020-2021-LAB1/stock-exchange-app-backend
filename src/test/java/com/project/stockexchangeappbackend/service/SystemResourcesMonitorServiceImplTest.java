@@ -9,9 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import oshi.hardware.GlobalMemory;
 
@@ -19,6 +17,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,18 +68,26 @@ class SystemResourcesMonitorServiceImplTest {
     @Test
     @DisplayName("Paging and filtering system resources")
     void shouldPageAndFilterSystemResources() {
-        Pageable pageable = PageRequest.of(0, 20);
+        List<SystemResourcesMonitor> expected = List.of(SystemResourcesMonitor.builder()
+                .timestamp(OffsetDateTime.now())
+                .cpuUsage(1.2)
+                .memoryUsed(255L)
+                .memoryUsage(25.0)
+                .build());
         Specification<SystemResourcesMonitor> specification = (root, criteriaQuery, criteriaBuilder) ->
                 criteriaBuilder.equal(root.get("datetime<"), OffsetDateTime.now());
-        when(systemResourcesMonitorRepository.findAll(specification, pageable))
-                .thenReturn(new PageImpl<>(
-                        List.of(SystemResourcesMonitor.builder()
-                        .timestamp(OffsetDateTime.now())
-                        .cpuUsage(1.2)
-                        .memoryUsed(255L)
-                        .memoryUsage(25.0)
-                        .build()), pageable, 1L));
-        assertAll(() -> systemResourcesMonitorService.getInfo(pageable, specification));
+        when(systemResourcesMonitorRepository.findAll(any(Specification.class), any(Sort.class)))
+                .thenReturn(expected);
+        List<SystemResourcesMonitor> output = systemResourcesMonitorService.getInfo(specification);
+        assertEquals(expected.size(), output.size());
+        for (int j=0; j<expected.size(); j++) {
+            final int i = j;
+            assertAll(() -> assertEquals(expected.get(i).getId(), output.get(i).getId()),
+                    () -> assertEquals(expected.get(i).getTimestamp(), output.get(i).getTimestamp()),
+                    () -> assertEquals(expected.get(i).getMemoryUsed(), output.get(i).getMemoryUsed()),
+                    () -> assertEquals(expected.get(i).getMemoryUsage(), output.get(i).getMemoryUsage()),
+                    () -> assertEquals(expected.get(i).getCpuUsage(), output.get(i).getCpuUsage()));
+        }
     }
 
 }

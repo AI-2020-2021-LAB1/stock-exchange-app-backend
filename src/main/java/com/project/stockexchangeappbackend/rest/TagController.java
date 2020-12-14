@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import springfox.documentation.annotations.ApiIgnore;
@@ -55,6 +56,7 @@ public class TagController {
     }
 
     @DeleteMapping("/{name}")
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Delete tag by name and every object tagged this name", notes = "Required role ADMIN.")
     @ApiResponses({@ApiResponse(code = 200, message = "Tag was successfully retrieved."),
             @ApiResponse(code = 400, message = "Tag cannot be deleted.", response = ErrorResponse.class),
@@ -66,6 +68,7 @@ public class TagController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @ApiOperation(value = "Create new tag", notes = "Required role ADMIN.")
     @ApiResponses({@ApiResponse(code = 200, message = "Tag was successfully retrieved."),
             @ApiResponse(code = 401, message = "Unauthorized."),
