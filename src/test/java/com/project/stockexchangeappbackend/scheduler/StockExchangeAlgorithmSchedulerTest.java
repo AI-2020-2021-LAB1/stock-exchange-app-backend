@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -159,7 +160,7 @@ class StockExchangeAlgorithmSchedulerTest {
                 .thenReturn(activeSellingOrders.get(0));
         when(orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(eq(stockList.get(1)), any(BigDecimal.class)))
                 .thenReturn(activeSellingOrders.get(1));
-        doThrow(new DataIntegrityViolationException("Database error"))
+        doThrow(new EntityNotFoundException())
                 .when(transactionService)
                         .makeTransaction(any(Order.class), any(Order.class), any(Integer.class), any(BigDecimal.class));
         assertAll(() -> stockExchangeAlgorithmScheduler.run());
