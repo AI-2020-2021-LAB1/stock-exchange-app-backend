@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -59,8 +60,8 @@ class TransactionServiceImplTest {
     ModelMapper modelMapper;
 
     @Test
-    @DisplayName("Getting transaction by id")
-    void shouldReturnTransactionById() {
+    @DisplayName("Getting transaction by id as admin")
+    void shouldReturnTransactionByIdAsAdmin(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
@@ -71,7 +72,37 @@ class TransactionServiceImplTest {
         Transaction transaction =
                 new Transaction(1L, OffsetDateTime.now(), order1.getAmount(), order1.getPrice(), order1, order2);
         Long id = transaction.getId();
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        SecurityContextHolder.setContext(securityContext);
 
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
+        when(transactionRepository.findById(id)).thenReturn(Optional.of(transaction));
+        assertTransaction(transactionService.findTransactionById(id), transaction);
+    }
+
+    @Test
+    @DisplayName("Getting transaction by id as user")
+    void shouldReturnTransactionByIdAsUser(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        Stock stock = getStocksList().get(0);
+        User user1 = getUsersList().get(0);
+        User user2 = getUsersList().get(2);
+        ArchivedOrder order1 =
+                createBuyingArchivedOrder(1L, 100,  BigDecimal.ONE, OffsetDateTime.now(), user1, stock);
+        ArchivedOrder order2 =
+                createSellingArchivedOrder(2L, 100,  BigDecimal.ONE, OffsetDateTime.now(), user2, stock);
+        order1.setUser(null);
+        order2.setUser(null);
+        Transaction transaction =
+                new Transaction(1L, OffsetDateTime.now(), order1.getAmount(), order1.getPrice(), order1, order2);
+        Long id = transaction.getId();
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        SecurityContextHolder.setContext(securityContext);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
         when(transactionRepository.findById(id)).thenReturn(Optional.of(transaction));
         assertTransaction(transactionService.findTransactionById(id), transaction);
     }
@@ -104,6 +135,8 @@ class TransactionServiceImplTest {
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(archivedBuyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
         when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
+        when(orderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(buyingOrder));
+        when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.of(buyerResource));
         assertAll(() -> transactionService.makeTransaction(buyingOrder, sellingOrder,
@@ -129,6 +162,8 @@ class TransactionServiceImplTest {
         when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(archivedBuyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
         when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
+        when(orderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(buyingOrder));
+        when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.of(buyerResource));
         assertAll(() -> transactionService.makeTransaction(buyingOrder, sellingOrder,
@@ -150,6 +185,8 @@ class TransactionServiceImplTest {
         when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
         when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
+        when(orderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(buyingOrder));
+        when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.empty());
         when(userRepository.findById(buyer.getId())).thenReturn(Optional.of(buyer));
@@ -172,6 +209,8 @@ class TransactionServiceImplTest {
         when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
         when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
+        when(orderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(buyingOrder));
+        when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.empty());
         when(userRepository.findById(buyer.getId())).thenReturn(Optional.empty());
@@ -193,6 +232,8 @@ class TransactionServiceImplTest {
         when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
         when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
         when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
+        when(orderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(buyingOrder));
+        when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.empty());
         assertThrows(EntityNotFoundException.class,
                 () -> transactionService.makeTransaction(buyingOrder, sellingOrder,
@@ -200,8 +241,9 @@ class TransactionServiceImplTest {
     }
 
     @Test
-    @DisplayName("Paging and filtering transactions")
-    void shouldPageAndFilterTransactions() {
+    @DisplayName("Paging and filtering transactions as Admin")
+    void shouldPageAndFilterTransactionsAsAdmin(@Mock SecurityContext securityContext,
+                                                @Mock Authentication authentication) {
         User user1 = getUsersList().get(0);
         User user2 = getUsersList().get(2);
         Stock stock = getStocksList().get(0);
@@ -216,7 +258,47 @@ class TransactionServiceImplTest {
         Pageable pageable = PageRequest.of(0, 20);
         Specification<Transaction> transactionSpecification =
                 (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("amount"), 50);
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        SecurityContextHolder.setContext(securityContext);
 
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
+        when(transactionRepository.findAll(transactionSpecification, pageable))
+                .thenReturn(new PageImpl<>(transactions, pageable, transactions.size()));
+        Page<Transaction> output = transactionService.findAllTransactions(pageable, transactionSpecification);
+        assertEquals(transactions.size(), output.getNumberOfElements());
+        for (int i = 0; i < transactions.size(); i++) {
+            assertEquals(transactions.get(i), output.getContent().get(i));
+        }
+    }
+
+    @Test
+    @DisplayName("Paging and filtering transactions as User")
+    void shouldPageAndFilterTransactionsAsUser(@Mock SecurityContext securityContext,
+                                                @Mock Authentication authentication) {
+        User user1 = getUsersList().get(0);
+        User user2 = getUsersList().get(2);
+        Stock stock = getStocksList().get(0);
+        ArchivedOrder order1 =
+                createBuyingArchivedOrder(1L, 100,  BigDecimal.ONE, OffsetDateTime.now(), user1, stock);
+        ArchivedOrder order2 =
+                createSellingArchivedOrder(2L, 100,  BigDecimal.ONE, OffsetDateTime.now(), user2, stock);
+        order1.setUser(null);
+        order2.setUser(null);
+        List<Transaction> transactions = Arrays.asList(
+                new Transaction(1L, OffsetDateTime.now(), order1.getAmount()/2, order1.getPrice(), order1, order2),
+                new Transaction(2L, OffsetDateTime.now(), order1.getAmount()/2, order1.getPrice(), order1, order2)
+        );
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<Transaction> transactionSpecification =
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("amount"), 50);
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        SecurityContextHolder.setContext(securityContext);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
         when(transactionRepository.findAll(transactionSpecification, pageable))
                 .thenReturn(new PageImpl<>(transactions, pageable, transactions.size()));
         Page<Transaction> output = transactionService.findAllTransactions(pageable, transactionSpecification);

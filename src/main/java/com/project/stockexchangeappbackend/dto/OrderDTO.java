@@ -51,4 +51,8 @@ public class OrderDTO {
     @ApiModelProperty(notes = "Stock's object related with this order.")
     private StockDTO stock;
 
+    @ApiModelProperty(notes = "Principal of this order. (Present if data were requested by admin.")
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private UserDTO user;
+
 }

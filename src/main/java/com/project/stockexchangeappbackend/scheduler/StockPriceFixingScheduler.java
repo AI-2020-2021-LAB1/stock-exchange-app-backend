@@ -56,8 +56,7 @@ public class StockPriceFixingScheduler {
             stockService.updateStocks(stocks);
             stockIndexValueService.appendValues(stockIndexValues);
         } catch (DataIntegrityViolationException exc) {
-            log.error("Cannot perform database operation");
-            exc.printStackTrace();
+            log.error("Cannot update stocks' price - non-existing tag");
         }
         threadPool.shutdown();
         long stop = (System.nanoTime() - start) / 1000000;

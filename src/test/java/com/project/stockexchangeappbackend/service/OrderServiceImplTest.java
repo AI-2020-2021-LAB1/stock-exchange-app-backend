@@ -20,16 +20,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.assertStock;
 import static com.project.stockexchangeappbackend.service.StockServiceImplTest.getStocksList;
@@ -69,14 +67,38 @@ public class OrderServiceImplTest {
     ResourceRepository resourceRepository;
 
     @Test
-    @DisplayName("Getting order by id")
-    void shouldReturnOrder() {
+    @DisplayName("Getting order by id as admin")
+    void shouldReturnOrderAsAdmin(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Long id = 1L;
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
         AllOrders allOrder =
                 createBuyingAllOrder(id, 10, BigDecimal.ONE, OffsetDateTime.now().plusHours(2), user, stock);
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        SecurityContextHolder.setContext(securityContext);
 
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
+        when(allOrdersRepository.findById(id)).thenReturn(Optional.of(allOrder));
+        assertAllOrder(orderService.findOrderById(id), allOrder);
+    }
+
+    @Test
+    @DisplayName("Getting order by id as user")
+    void shouldReturnOrderAsUser(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        Long id = 1L;
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        AllOrders allOrder =
+                createBuyingAllOrder(id, 10, BigDecimal.ONE, OffsetDateTime.now().plusHours(2), user, stock);
+        allOrder.setUser(null);
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        SecurityContextHolder.setContext(securityContext);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
         when(allOrdersRepository.findById(id)).thenReturn(Optional.of(allOrder));
         assertAllOrder(orderService.findOrderById(id), allOrder);
     }
@@ -272,7 +294,8 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    void shouldPageAndFilterOrders() {
+    @DisplayName("Paging and filtering orders as admin")
+    void shouldPageAndFilterOrdersAsAdmin(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
         Stock stock = getStocksList().get(0);
         User user = getUsersList().get(0);
         List<AllOrders> orders = Arrays.asList(
@@ -282,7 +305,40 @@ public class OrderServiceImplTest {
         Pageable pageable = PageRequest.of(0, 20);
         Specification<AllOrders> allOrdersSpecification =
                 (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("amount"), 100);
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        SecurityContextHolder.setContext(securityContext);
 
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
+        when(allOrdersRepository.findAll(allOrdersSpecification, pageable))
+                .thenReturn(new PageImpl<>(orders, pageable, orders.size()));
+        Page<AllOrders> output = orderService.findAllOrders(pageable, allOrdersSpecification);
+        assertEquals(orders.size(), output.getNumberOfElements());
+        for (int i = 0; i < orders.size(); i++) {
+            assertAllOrder(output.getContent().get(i), orders.get(i));
+        }
+    }
+
+    @Test
+    @DisplayName("Paging and filtering orders as user")
+    void shouldPageAndFilterOrdersAsUser(@Mock SecurityContext securityContext, @Mock Authentication authentication) {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        List<AllOrders> orders = Arrays.asList(
+                createBuyingAllOrder(1L, 100, BigDecimal.ONE, OffsetDateTime.now().plusHours(2), user, stock),
+                createSellingAllOrder(2L, 100, BigDecimal.ONE, OffsetDateTime.now().plusHours(2), user, stock)
+        );
+        orders.forEach(order -> order.setUser(null));
+        Pageable pageable = PageRequest.of(0, 20);
+        Specification<AllOrders> allOrdersSpecification =
+                (root, criteriaQuery, criteriaBuilder) -> criteriaBuilder.equal(root.get("amount"), 100);
+        Collection authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        SecurityContextHolder.setContext(securityContext);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.getAuthorities())
+                .thenReturn(authorities);
         when(allOrdersRepository.findAll(allOrdersSpecification, pageable))
                 .thenReturn(new PageImpl<>(orders, pageable, orders.size()));
         Page<AllOrders> output = orderService.findAllOrders(pageable, allOrdersSpecification);
@@ -477,6 +533,25 @@ public class OrderServiceImplTest {
         }
     }
 
+    @Test
+    @DisplayName("Refreshing state of active order by id")
+    void shouldRefreshStateOfOrder() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        Order order = createSellingOrder(1L, 100, BigDecimal.ONE, OffsetDateTime.now(), user, stock);
+        Long id = order.getId();
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        assertOrder(orderService.refreshObjectById(id).get(), order);
+    }
+
+    @Test
+    @DisplayName("Refreshing state of active order by id when order not found")
+    void shouldRefreshStateOfOrderWhenOrderNotFound() {
+        Long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.empty());
+        assertTrue(orderService.refreshObjectById(id).isEmpty());
+    }
+
     public static void assertOrder(Order output, Order expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),
@@ -502,7 +577,10 @@ public class OrderServiceImplTest {
                 () -> assertEquals(expected.getPriceType(), output.getPriceType()),
                 () -> assertEquals(expected.getPrice(), output.getPrice()),
                 () -> assertStock(expected.getStock(), output.getStock()),
-                () -> assertUser(expected.getUser(), output.getUser()));
+                () -> assertEquals(expected.getUser(), output.getUser()));
+        if (expected.getUser() != null) {
+            assertUser(expected.getUser(), output.getUser());
+        }
     }
 
     public static void assertArchivedOrder(ArchivedOrder output, ArchivedOrder expected) {
@@ -516,7 +594,10 @@ public class OrderServiceImplTest {
                 () -> assertEquals(expected.getPriceType(), output.getPriceType()),
                 () -> assertEquals(expected.getPrice(), output.getPrice()),
                 () -> assertStock(expected.getStock(), output.getStock()),
-                () -> assertUser(expected.getUser(), output.getUser()));
+                () -> assertEquals(expected.getUser(), output.getUser()));
+        if (expected.getUser() != null) {
+            assertUser(expected.getUser(), output.getUser());
+        }
     }
 
     public static Order createCustomOrder(Long id, Integer amount, Integer remainingAmount, OrderType orderType,

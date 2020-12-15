@@ -35,12 +35,17 @@ public class TransactionServiceImpl implements TransactionService {
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public Transaction findTransactionById(Long id) {
-        return transactionRepository.findById(id)
+        Transaction transaction =  transactionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Transaction Not Found"));
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            transaction.getBuyingOrder().setUser(null);
+            transaction.getSellingOrder().setUser(null);
+        }
+        return transaction;
     }
 
     @Override
-    @LogicBusinessMeasureTime
     @Transactional
     public void makeTransaction(Order buyingOrder, Order sellingOrder, int amount, BigDecimal pricePerUnit) {
         ArchivedOrder archivedBuyingOrder = archivedOrderRepository.findById(buyingOrder.getId())
@@ -71,7 +76,15 @@ public class TransactionServiceImpl implements TransactionService {
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public Page<Transaction> findAllTransactions(Pageable pageable, Specification<Transaction> specification) {
-        return transactionRepository.findAll(specification, pageable);
+        Page<Transaction> transactions = transactionRepository.findAll(specification, pageable);
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            transactions.forEach(transaction -> {
+                transaction.getBuyingOrder().setUser(null);
+                transaction.getSellingOrder().setUser(null);
+            });
+        }
+        return transactions;
     }
 
     @Override
@@ -91,7 +104,15 @@ public class TransactionServiceImpl implements TransactionService {
                         .join("sellingOrder")
                         .join("user")
                         .get("email"), principal);
-        return getTransactions(pageable, specification, isSeller, isBuyer, userIsBuyer, userIsSeller);
+        Page<Transaction> transactions =
+                getTransactions(pageable, specification, isSeller, isBuyer, userIsBuyer, userIsSeller);
+
+        transactions.forEach(transaction -> {
+            transaction.getBuyingOrder().setUser(null);
+            transaction.getSellingOrder().setUser(null);
+        });
+
+        return transactions;
     }
 
 
@@ -114,7 +135,15 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> spec1 = Specification.where(withBuyingOrder).and(specification);
         Specification<Transaction> spec2 = Specification.where(withSellingOrder).and(specification);
 
-        return transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+        Page<Transaction> transactions = transactionRepository.findAll(Specification.where(spec1).or(spec2), pageable);
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            transactions.forEach(transaction -> {
+                transaction.getBuyingOrder().setUser(null);
+                transaction.getSellingOrder().setUser(null);
+            });
+        }
+        return transactions;
     }
 
     @Override
@@ -156,8 +185,10 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private void updateOrder(Order order) {
+        Order ord = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         if (order.getRemainingAmount() == 0) {
-            orderRepository.deleteById(order.getId());
+            orderRepository.delete(ord);
         } else {
             orderRepository.save(order);
         }
