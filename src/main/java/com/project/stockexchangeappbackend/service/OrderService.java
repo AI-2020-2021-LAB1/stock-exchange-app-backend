@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 
 public interface OrderService {
@@ -31,5 +32,7 @@ public interface OrderService {
     void deactivateOrder(Long id);
 
     Page<AllOrders> getOrdersByUser(Pageable pageable, Specification<AllOrders> specification, Long id);
+
+    Optional<Order> refreshObjectById(Long id);
 
 }

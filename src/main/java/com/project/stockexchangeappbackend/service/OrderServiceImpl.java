@@ -101,6 +101,13 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
+    public Optional<Order> refreshObjectById(Long id) {
+        return orderRepository.findById(id);
+    }
+
+    @Override
+    @LogicBusinessMeasureTime
+    @Transactional(readOnly = true)
     public List<Order> getActiveBuyingOrders() {
         return orderRepository.findByOrderTypeAndDateExpirationIsAfterAndDateClosingIsNull(
                 OrderType.BUYING_ORDER, OffsetDateTime.now(ZoneId.systemDefault()));
@@ -127,9 +134,9 @@ public class OrderServiceImpl implements OrderService {
                     return modelMapper.map(order, ArchivedOrder.class);
                 })
                 .collect(Collectors.toList());
-        archivedOrderRepository.saveAll(archivedOrders).forEach(order -> {
-            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully archived.");
-        });
+        archivedOrderRepository.saveAll(archivedOrders).forEach(order ->
+            log.info(order.getOrderType().toString() + " with id " + order.getId() + " was successfully archived.")
+        );
 
     }
 

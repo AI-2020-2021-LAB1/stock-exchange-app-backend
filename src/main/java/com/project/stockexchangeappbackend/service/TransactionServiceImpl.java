@@ -40,7 +40,6 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    @LogicBusinessMeasureTime
     @Transactional
     public void makeTransaction(Order buyingOrder, Order sellingOrder, int amount, BigDecimal pricePerUnit) {
         ArchivedOrder archivedBuyingOrder = archivedOrderRepository.findById(buyingOrder.getId())
@@ -156,8 +155,10 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private void updateOrder(Order order) {
+        Order ord = orderRepository.findById(order.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Order not found"));
         if (order.getRemainingAmount() == 0) {
-            orderRepository.deleteById(order.getId());
+            orderRepository.delete(ord);
         } else {
             orderRepository.save(order);
         }

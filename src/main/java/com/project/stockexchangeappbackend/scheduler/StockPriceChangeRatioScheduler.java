@@ -47,8 +47,7 @@ public class StockPriceChangeRatioScheduler {
                                 }
                             }).collect(Collectors.toList())).get());
         } catch (DataIntegrityViolationException exc) {
-            log.error("Cannot perform database operation");
-            exc.printStackTrace();
+            log.error("Cannot update stocks' price change ratio - non-existing tag");
         }
         threadPool.shutdown();
         long stop = (System.nanoTime() - start) / 1000000;

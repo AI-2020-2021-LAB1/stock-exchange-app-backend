@@ -477,6 +477,25 @@ public class OrderServiceImplTest {
         }
     }
 
+    @Test
+    @DisplayName("Refreshing state of active order by id")
+    void shouldRefreshStateOfOrder() {
+        Stock stock = getStocksList().get(0);
+        User user = getUsersList().get(0);
+        Order order = createSellingOrder(1L, 100, BigDecimal.ONE, OffsetDateTime.now(), user, stock);
+        Long id = order.getId();
+        when(orderRepository.findById(id)).thenReturn(Optional.of(order));
+        assertOrder(orderService.refreshObjectById(id).get(), order);
+    }
+
+    @Test
+    @DisplayName("Refreshing state of active order by id when order not found")
+    void shouldRefreshStateOfOrderWhenOrderNotFound() {
+        Long id = 1L;
+        when(orderRepository.findById(id)).thenReturn(Optional.empty());
+        assertTrue(orderService.refreshObjectById(id).isEmpty());
+    }
+
     public static void assertOrder(Order output, Order expected) {
         assertAll(() -> assertEquals(expected.getId(), output.getId()),
                 () -> assertEquals(expected.getAmount(), output.getAmount()),

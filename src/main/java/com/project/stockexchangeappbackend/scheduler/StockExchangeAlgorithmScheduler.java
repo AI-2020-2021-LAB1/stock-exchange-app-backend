@@ -8,16 +8,15 @@ import com.project.stockexchangeappbackend.service.OrderService;
 import com.project.stockexchangeappbackend.service.TransactionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -55,22 +54,13 @@ public class StockExchangeAlgorithmScheduler {
                         .sorted(Comparator.comparing(Order::getPrice))
                         .collect(Collectors.toList())));
 
-        ConcurrentMap<Stock, List<Order>> groupedAndSortedSellingOrders =  groupedBuyingOrdersByStock.entrySet()
-                .stream()
-                .collect(Collectors.toConcurrentMap(Map.Entry::getKey, entry -> {
-                    List<Order> relatedList = groupedBuyingOrdersByStock.get(entry.getKey());
-                    return orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(entry.getKey(),
-                            relatedList.get(relatedList.size() - 1).getPrice());
-                }));
-
         ForkJoinPool threadPool = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors()));
         threadPool.submit( () ->
             groupedBuyingOrdersByStock.entrySet().parallelStream()
-                .filter(entry -> entry.getValue().size() > 0 &&
-                        groupedAndSortedSellingOrders.get(entry.getKey()).size() > 0)
                 .forEach(entry -> {
                     List<Order> buyingOrders = entry.getValue();
-                    List<Order> sellingOrders = groupedAndSortedSellingOrders.get(entry.getKey());
+                    List<Order> sellingOrders = orderService.getActiveSellingOrdersByStockAndPriceLessThanEqual(
+                            entry.getKey(), buyingOrders.get(buyingOrders.size() - 1).getPrice());
                     int index = 0;
                     while (!(buyingOrders.isEmpty() || sellingOrders.isEmpty())) {
                         Order buyingOrder = buyingOrders.get(index);
@@ -84,19 +74,30 @@ public class StockExchangeAlgorithmScheduler {
                             sellingOrder.setRemainingAmount(sellingOrder.getRemainingAmount() - transactionAmount);
                             if (buyingOrder.getRemainingAmount() == 0) {
                                 buyingOrder.setDateClosing(transactionTime);
-                                buyingOrders.remove(buyingOrder);
                             }
                             if (sellingOrder.getRemainingAmount() == 0) {
                                 sellingOrder.setDateClosing(transactionTime);
-                                sellingOrders.remove(sellingOrder);
                             }
                             index = 0;
                             try {
                                 transactionService.makeTransaction(buyingOrder, sellingOrder, transactionAmount, transactionPrice);
-                            } catch (DataIntegrityViolationException exc) {
-                                log.error("Cannot perform database operation");
-                                exc.printStackTrace();
-                                break;
+                                if (buyingOrder.getRemainingAmount() == 0) {
+                                    buyingOrders.remove(buyingOrder);
+                                }
+                                if (sellingOrder.getRemainingAmount() == 0) {
+                                    sellingOrders.remove(sellingOrder);
+                                }
+                            } catch (EntityNotFoundException e) {
+                                if (orderService.refreshObjectById(buyingOrder.getId()).isEmpty()) {
+                                    buyingOrders.remove(buyingOrder);
+                                    sellingOrder.setRemainingAmount(sellingOrder.getRemainingAmount() + transactionAmount);
+                                    sellingOrder.setDateClosing(null);
+                                }
+                                if (orderService.refreshObjectById(sellingOrder.getId()).isEmpty()) {
+                                    sellingOrders.remove(sellingOrder);
+                                    buyingOrder.setRemainingAmount(buyingOrder.getRemainingAmount() + transactionAmount);
+                                    buyingOrder.setDateClosing(null);
+                                }
                             }
                         } else {
                             if (index == buyingOrders.size() - 1) {
