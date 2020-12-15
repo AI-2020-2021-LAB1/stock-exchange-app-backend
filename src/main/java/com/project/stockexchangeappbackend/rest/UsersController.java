@@ -75,7 +75,9 @@ public class    UsersController {
             @ApiImplicitParam(name = "tag", dataType = "string", paramType = "query",
                     value = "Filtering criteria for field `tag`. Param is exact value.  (omitted if null)"),
             @ApiImplicitParam(name = "active", dataType = "boolean", paramType = "query",
-                    value = "Filtering criteria for field `active`. Param is exact value. (omitted if null)")
+                    value = "Filtering criteria for field `active`. Param is exact value. (omitted if null)"),
+            @ApiImplicitParam(name = "search", dataType = "string", paramType = "query",
+                    value = "Searching criteria for fields: `firstName`, `lastName`, `email`. (omitted if null)"),
     })
     public Page<UserDTO> getUsers(@ApiIgnore Pageable pageable, UserSpecification specification) {
         return userService.getUsers(pageable, specification)
