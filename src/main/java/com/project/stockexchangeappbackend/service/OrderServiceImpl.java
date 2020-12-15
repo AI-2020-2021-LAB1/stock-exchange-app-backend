@@ -41,7 +41,13 @@ public class OrderServiceImpl implements OrderService {
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public AllOrders findOrderById(Long id) {
-        return allOrdersRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
+        AllOrders order = allOrdersRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Order Not Found"));
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            order.setUser(null);
+        }
+        return order;
     }
 
     @Override
@@ -63,7 +69,12 @@ public class OrderServiceImpl implements OrderService {
     @LogicBusinessMeasureTime
     @Transactional(readOnly = true)
     public Page<AllOrders> findAllOrders(Pageable pageable, Specification<AllOrders> specification) {
-        return allOrdersRepository.findAll(specification, pageable);
+        Page<AllOrders> orders =  allOrdersRepository.findAll(specification, pageable);
+        if (SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+            orders.forEach(order -> order.setUser(null));
+        }
+        return orders;
     }
 
     @Override
@@ -149,7 +160,10 @@ public class OrderServiceImpl implements OrderService {
             Join<Order, User> owner = root.join("user");
             return criteriaBuilder.equal(owner.get("email"), principal);
         };
-        return allOrdersRepository.findAll(Specification.where(userIsPrincipal).and(specification), pageable);
+        Page<AllOrders> orders = allOrdersRepository
+                .findAll(Specification.where(userIsPrincipal).and(specification), pageable);
+        orders.forEach(order -> order.setUser(null));
+        return orders;
     }
 
     private Order validateOrder(CreateOrderDTO orderDTO, Stock stock, User user) {
