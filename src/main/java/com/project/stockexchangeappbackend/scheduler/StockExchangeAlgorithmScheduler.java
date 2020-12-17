@@ -8,6 +8,7 @@ import com.project.stockexchangeappbackend.service.OrderService;
 import com.project.stockexchangeappbackend.service.TransactionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -87,7 +88,7 @@ public class StockExchangeAlgorithmScheduler {
                                 if (sellingOrder.getRemainingAmount() == 0) {
                                     sellingOrders.remove(sellingOrder);
                                 }
-                            } catch (EntityNotFoundException e) {
+                            } catch (EntityNotFoundException | DataIntegrityViolationException e) {
                                 if (orderService.refreshObjectById(buyingOrder.getId()).isEmpty()) {
                                     buyingOrders.remove(buyingOrder);
                                     sellingOrder.setRemainingAmount(sellingOrder.getRemainingAmount() + transactionAmount);
