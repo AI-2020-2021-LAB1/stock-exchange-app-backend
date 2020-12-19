@@ -11,6 +11,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.AllOrdersRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import com.project.stockexchangeappbackend.security.BannedAccessTokens;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,6 +62,9 @@ public class UserServiceImplTest {
 
     @Mock
     TagService tagService;
+
+    @Mock
+    BannedAccessTokens bannedAccessTokens;
 
     @BeforeEach
     void setup() {
