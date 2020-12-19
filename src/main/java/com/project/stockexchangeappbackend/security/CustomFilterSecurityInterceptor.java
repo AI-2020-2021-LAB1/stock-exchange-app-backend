@@ -26,11 +26,11 @@ public class CustomFilterSecurityInterceptor implements Filter {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
             throws IOException, ServletException {
-        String accessToken = ((OAuth2AuthenticationDetails)SecurityContextHolder.getContext().getAuthentication()
-                .getDetails()).getTokenValue();
-        String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Base64.Decoder decoder = Base64.getUrlDecoder();
         try {
+            String accessToken = ((OAuth2AuthenticationDetails)SecurityContextHolder.getContext().getAuthentication()
+                    .getDetails()).getTokenValue();
+            String username = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Base64.Decoder decoder = Base64.getUrlDecoder();
             Map<String, Object> payload =
                     objectMapper.readValue(new String(decoder.decode(accessToken.split("\\.")[1])), Map.class);
             int accessTokenValidity = Integer.parseInt(
@@ -43,6 +43,7 @@ public class CustomFilterSecurityInterceptor implements Filter {
             }
         } catch (JsonProcessingException e) {
             throw new AccessDeniedException("Re-login is required.");
+        } catch (ClassCastException e) {
         }
         filterChain.doFilter(servletRequest, servletResponse);
     }
