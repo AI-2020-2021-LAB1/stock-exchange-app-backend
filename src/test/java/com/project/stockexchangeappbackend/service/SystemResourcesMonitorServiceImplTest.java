@@ -40,7 +40,6 @@ class SystemResourcesMonitorServiceImplTest {
     @DisplayName("Saving system resource info")
     void shouldAddNewSystemResourcesMonitor() {
         when(globalMemory.getTotal()).thenReturn(1024L);
-        when(globalMemory.getAvailable()).thenReturn(128L);
         when(systemResourcesMonitorRepository.count()).thenReturn(10L);
         when(stockIndexTimeProperties.getSystemResourcesMonitorHistory()).thenReturn(1);
         when(stockIndexTimeProperties.getSystemResourcesMonitorInterval()).thenReturn(500);
@@ -51,7 +50,6 @@ class SystemResourcesMonitorServiceImplTest {
     @DisplayName("Saving system resource info when max records exceeded")
     void shouldAddNewSystemResourcesMonitorWhenMaxRecordsExceeded() {
         when(globalMemory.getTotal()).thenReturn(1024L);
-        when(globalMemory.getAvailable()).thenReturn(128L);
         when(systemResourcesMonitorRepository.count()).thenReturn(7300L);
         when(stockIndexTimeProperties.getSystemResourcesMonitorHistory()).thenReturn(1);
         when(stockIndexTimeProperties.getSystemResourcesMonitorInterval()).thenReturn(500);

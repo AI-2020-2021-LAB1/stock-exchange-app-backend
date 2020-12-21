@@ -5,6 +5,7 @@ import com.project.stockexchangeappbackend.repository.SystemResourcesMonitorRepo
 import com.project.stockexchangeappbackend.util.StockIndexTimeProperties;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class SystemResourcesMonitorServiceImpl implements SystemResourcesMonitorService{
 
     private final SystemResourcesMonitorRepository systemResourcesMonitorRepository;
@@ -27,13 +29,14 @@ public class SystemResourcesMonitorServiceImpl implements SystemResourcesMonitor
     @Override
     @Transactional
     public void addSystemResources() {
-        long memoryUsed = globalMemory.getTotal() - globalMemory.getAvailable();
+        long memoryUsed = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
         systemResourcesMonitorRepository.save(SystemResourcesMonitor.builder()
                 .timestamp(OffsetDateTime.now(ZoneId.systemDefault()))
                 .cpuUsage(ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage())
-                .memoryUsage((double)memoryUsed/globalMemory.getTotal())
+                .memoryUsage((double)memoryUsed/(globalMemory.getTotal())*100)
                 .memoryUsed(memoryUsed)
                 .build());
+
         int records = stockIndexTimeProperties.getSystemResourcesMonitorHistory()*3600000/
                 stockIndexTimeProperties.getSystemResourcesMonitorInterval();
         if (systemResourcesMonitorRepository.count() > records) {
