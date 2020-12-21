@@ -11,6 +11,7 @@ import com.project.stockexchangeappbackend.exception.InvalidInputDataException;
 import com.project.stockexchangeappbackend.repository.AllOrdersRepository;
 import com.project.stockexchangeappbackend.repository.ResourceRepository;
 import com.project.stockexchangeappbackend.repository.UserRepository;
+import com.project.stockexchangeappbackend.security.BannedAccessTokens;
 import com.project.stockexchangeappbackend.util.timemeasuring.LogicBusinessMeasureTime;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final ResourceRepository resourceRepository;
     private final PasswordEncoder passwordEncoder;
     private final TagService tagService;
+    private final BannedAccessTokens bannedAccessTokens;
 
     @Override
     @Transactional
@@ -141,6 +143,9 @@ public class UserServiceImpl implements UserService {
         }
         if (!errors.isEmpty()) {
             throw new InvalidInputDataException("Input Validation.", errors);
+        }
+        if (!editUserDetailsDTO.getIsActive() || !editUserDetailsDTO.getRole().equals(user.getRole())) {
+            bannedAccessTokens.addUser(user.getEmail());
         }
         user.setFirstName(editUserDetailsDTO.getFirstName().trim());
         user.setLastName(editUserDetailsDTO.getLastName().trim());
