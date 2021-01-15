@@ -9,8 +9,10 @@ import com.project.stockexchangeappbackend.service.TransactionService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.UnexpectedRollbackException;
 
 import javax.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
@@ -18,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
@@ -88,16 +91,23 @@ public class StockExchangeAlgorithmScheduler {
                                 if (sellingOrder.getRemainingAmount() == 0) {
                                     sellingOrders.remove(sellingOrder);
                                 }
-                            } catch (EntityNotFoundException | DataIntegrityViolationException e) {
-                                if (orderService.refreshObjectById(buyingOrder.getId()).isEmpty()) {
+                            } catch (EntityNotFoundException | DataIntegrityViolationException |
+                                    ObjectOptimisticLockingFailureException e) {
+                                sellingOrder.setRemainingAmount(sellingOrder.getRemainingAmount() + transactionAmount);
+                                sellingOrder.setDateClosing(null);
+                                buyingOrder.setRemainingAmount(buyingOrder.getRemainingAmount() + transactionAmount);
+                                buyingOrder.setDateClosing(null);
+                                Optional<Order> refreshedBuyingOrder = orderService.refreshObjectById(buyingOrder.getId());
+                                Optional<Order> refreshedSellingOrder = orderService.refreshObjectById(sellingOrder.getId());
+                                if (refreshedBuyingOrder.isEmpty()) {
                                     buyingOrders.remove(buyingOrder);
-                                    sellingOrder.setRemainingAmount(sellingOrder.getRemainingAmount() + transactionAmount);
-                                    sellingOrder.setDateClosing(null);
+                                } else {
+                                    buyingOrder.setUser(refreshedBuyingOrder.get().getUser());
                                 }
-                                if (orderService.refreshObjectById(sellingOrder.getId()).isEmpty()) {
+                                if (refreshedSellingOrder.isEmpty()) {
                                     sellingOrders.remove(sellingOrder);
-                                    buyingOrder.setRemainingAmount(buyingOrder.getRemainingAmount() + transactionAmount);
-                                    buyingOrder.setDateClosing(null);
+                                } else {
+                                    sellingOrder.setUser(refreshedSellingOrder.get().getUser());
                                 }
                             }
                         } else {

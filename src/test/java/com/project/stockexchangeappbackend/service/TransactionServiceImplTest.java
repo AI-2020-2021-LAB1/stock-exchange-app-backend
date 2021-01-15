@@ -176,8 +176,8 @@ class TransactionServiceImplTest {
         User buyer = getUsersList().get(0);
         User seller = getUsersList().get(2);
         Stock stock = getStocksList().get(0);
-        Order buyingOrder = createBuyingOrder(1L, 100,  BigDecimal.ONE, OffsetDateTime.now(), buyer, stock);
-        Order sellingOrder = createSellingOrder(2L, 100,  BigDecimal.ONE, OffsetDateTime.now(), seller, stock);
+        Order buyingOrder = createBuyingOrder(1L, 100, BigDecimal.ONE, OffsetDateTime.now(), buyer, stock);
+        Order sellingOrder = createSellingOrder(2L, 100, BigDecimal.ONE, OffsetDateTime.now(), seller, stock);
         Resource sellerResource = Resource.builder()
                 .id(1L).stock(stock).user(seller).amount(sellingOrder.getAmount()).build();
 
@@ -189,34 +189,8 @@ class TransactionServiceImplTest {
         when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
         when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
         when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.empty());
-        when(userRepository.findById(buyer.getId())).thenReturn(Optional.of(buyer));
         assertAll(() -> transactionService.makeTransaction(buyingOrder, sellingOrder,
                 buyingOrder.getAmount(), sellingOrder.getPrice()));
-    }
-
-    @Test
-    @DisplayName("Performing transaction when user not found")
-    void shouldThrowEntityNotFoundWhenMakingTransactionAndUserNotExist() {
-        User buyer = getUsersList().get(0);
-        User seller = getUsersList().get(2);
-        Stock stock = getStocksList().get(0);
-        Order buyingOrder = createBuyingOrder(1L, 100,  BigDecimal.ONE, OffsetDateTime.now(), buyer, stock);
-        Order sellingOrder = createSellingOrder(2L, 100,  BigDecimal.ONE, OffsetDateTime.now(), seller, stock);
-        Resource sellerResource = Resource.builder()
-                .id(1L).stock(stock).user(seller).amount(sellingOrder.getAmount()).build();
-
-        when(archivedOrderRepository.findById(buyingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(buyingOrder, ArchivedOrder.class)).thenReturn(convertOrder(buyingOrder));
-        when(archivedOrderRepository.findById(sellingOrder.getId())).thenReturn(Optional.empty());
-        when(modelMapper.map(sellingOrder, ArchivedOrder.class)).thenReturn(convertOrder(sellingOrder));
-        when(orderRepository.findById(buyingOrder.getId())).thenReturn(Optional.of(buyingOrder));
-        when(orderRepository.findById(sellingOrder.getId())).thenReturn(Optional.of(sellingOrder));
-        when(resourceRepository.findByUserAndStock(seller, stock)).thenReturn(Optional.of(sellerResource));
-        when(resourceRepository.findByUserAndStock(buyer, stock)).thenReturn(Optional.empty());
-        when(userRepository.findById(buyer.getId())).thenReturn(Optional.empty());
-        assertThrows(EntityNotFoundException.class,
-                () -> transactionService.makeTransaction(buyingOrder, sellingOrder,
-                        buyingOrder.getAmount(), sellingOrder.getPrice()));
     }
 
     @Test
