@@ -6,6 +6,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class MeasureTimeAspect {
 
     private final ProcessingTime processingTime;
+    private final ApplicationContext appContext;
 
     @Around("@annotation(LogicBusinessMeasureTime)")
     public Object measureLogicBusinessExecutionTime (ProceedingJoinPoint joinPoint) throws Throwable {
@@ -28,8 +30,10 @@ public class MeasureTimeAspect {
         } catch (BeanCreationException | IllegalStateException exc) {
             return proceed;
         } catch (Throwable t) {
-            long executionTime = System.nanoTime() - start;
-            processingTime.setBusinessLogicExecutionTime(executionTime);
+            if (appContext.containsBean("processingTime")) {
+                long executionTime = System.nanoTime() - start;
+                processingTime.setBusinessLogicExecutionTime(executionTime);
+            }
             throw t;
         }
 
@@ -45,12 +49,14 @@ public class MeasureTimeAspect {
             processingTime.setDatabaseOperationExecutionTime(
                     processingTime.getDatabaseOperationExecutionTime() + executionTime);
             return proceed;
-        } catch (BeanCreationException | IllegalStateException exc) {
+        } catch (BeanCreationException exc) {
             return proceed;
         } catch (Throwable t) {
-            long executionTime = System.nanoTime() - start;
-            processingTime.setDatabaseOperationExecutionTime(
-                    processingTime.getDatabaseOperationExecutionTime() + executionTime);
+            if (appContext.containsBean("processingTime")) {
+                long executionTime = System.nanoTime() - start;
+                processingTime.setDatabaseOperationExecutionTime(
+                        processingTime.getDatabaseOperationExecutionTime() + executionTime);
+            }
             throw t;
         }
     }
