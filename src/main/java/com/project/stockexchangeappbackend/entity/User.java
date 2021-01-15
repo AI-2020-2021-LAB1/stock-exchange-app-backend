@@ -51,4 +51,8 @@ public class User {
     @JoinColumn(name = "TAG_ID", nullable = false, updatable = false, referencedColumnName = "ID")
     private Tag tag;
 
+    @Column(name = "VERSION", nullable = false)
+    @Version
+    private Long version;
+
 }

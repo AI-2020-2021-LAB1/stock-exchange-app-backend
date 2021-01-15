@@ -202,8 +202,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseGet(() -> Resource.builder()
                         .amount(0)
                         .stock(buyingOrder.getStock())
-                        .user(userRepository.findById(buyingOrder.getUser().getId())
-                                .orElseThrow(() -> new EntityNotFoundException("Data in database not consistent.")))
+                        .user(buyingOrder.getUser())
                         .build());
         sellerResource.setAmount(sellerResource.getAmount() - amount);
         sellerResource.getUser().setMoney(sellerResource.getUser().getMoney()
