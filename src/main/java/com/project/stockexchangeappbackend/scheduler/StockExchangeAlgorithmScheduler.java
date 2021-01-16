@@ -70,8 +70,15 @@ public class StockExchangeAlgorithmScheduler {
                         Order buyingOrder = buyingOrders.get(index);
                         Order sellingOrder = sellingOrders.get(0);
                         if (checkOrderCompatibility(buyingOrder, sellingOrder)) {
-                            BigDecimal transactionPrice = buyingOrder.getPriceType() == PriceType.EQUAL ?
-                                    buyingOrder.getPrice() : sellingOrder.getPrice();
+                            BigDecimal transactionPrice;
+                            if (buyingOrder.getPriceType() == PriceType.EQUAL) {
+                                transactionPrice = buyingOrder.getPrice();
+                            } else if (sellingOrder.getPriceType() == PriceType.EQUAL) {
+                                transactionPrice = sellingOrder.getPrice();
+                            } else {
+                                transactionPrice = BigDecimal.valueOf(buyingOrder.getPrice().doubleValue())
+                                        .add(sellingOrder.getPrice()).divide(BigDecimal.valueOf(2.));
+                            }
                             OffsetDateTime transactionTime = OffsetDateTime.now(ZoneId.systemDefault());
                             int transactionAmount = Math.min(buyingOrder.getRemainingAmount(), sellingOrder.getRemainingAmount());
                             buyingOrder.setRemainingAmount(buyingOrder.getRemainingAmount() - transactionAmount);
